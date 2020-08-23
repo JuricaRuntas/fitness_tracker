@@ -29,6 +29,7 @@ How can one fitness individual track their fitness progress?
 * Workout tracker that tracks exercises, sets and reps, rest...
 * 1 rep max calculator
 * Graphs and charts for visualization
+* Strength calculator that works based on your bodyweight and lifting standards
 
 2. MUSCLE DEFINITION:
 * Notes for tracking weight loss, ability to set goal weight
