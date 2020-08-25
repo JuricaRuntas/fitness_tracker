@@ -1,6 +1,6 @@
-import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget
-from PyQt5.QtCore import Qt
+
+import sys
 from homepage.homepage import Homepage
 
 class FitnessTracker(QMainWindow):
