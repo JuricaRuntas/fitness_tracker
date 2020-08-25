@@ -14,12 +14,6 @@ class Homepage(QWidget):
      self.main_panel = MainPanel(self)
      self.create_grid()
 
-  def paintEvent(self, event):
-    painter = QPainter(self)
-    painter.setPen(QPen(Qt.black, 2))
-    painter.drawLine(0, 125, 10000, 125)
-    painter.drawLine(255, 0, 255, 125)
-
   def create_grid(self):
     grid = QGridLayout()
     grid.addWidget(self.header, 0, 1, 1, 4)
