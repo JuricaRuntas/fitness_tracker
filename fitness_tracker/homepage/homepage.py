@@ -1,16 +1,28 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QGridLayout
 from PyQt5.QtGui import QPainter, QPen, QFont
+
 from .header import Header
+from .side_panel import SidePanel
+from .main_panel import MainPanel
 
 class Homepage(QWidget):
   def __init__(self, parent):
      super().__init__(parent)
-     header = Header(self)
-  
+     self.header = Header(self)
+     self.side_panel = SidePanel(self)
+     self.main_panel = MainPanel(self)
+     self.create_grid()
+
   def paintEvent(self, event):
     painter = QPainter(self)
     painter.setPen(QPen(Qt.black, 2))
-    painter.drawLine(0, 80, 10000, 80)
-    painter.drawLine(248, 0, 248, 78)
-    painter.drawLine(732, 0, 732, 78)
+    painter.drawLine(0, 125, 10000, 125)
+    painter.drawLine(255, 0, 255, 125)
+
+  def create_grid(self):
+    grid = QGridLayout()
+    grid.addWidget(self.header, 0, 1, 1, 4)
+    grid.addWidget(self.side_panel, 1, 1, 8, 1)
+    grid.addWidget(self.main_panel, 1, 2, 8, 3)
+    self.setLayout(grid)
