@@ -9,13 +9,14 @@ class SidePanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
     self.create_panel()
+    self.setStyleSheet("QPushButton{text-align: left}") 
   
   def create_panel(self):
     general_layout = QVBoxLayout()
     
     home_button = QPushButton(QIcon("".join([path, "/icons/home.png"])), "Home", self)
     home_button.setIconSize(icon_size)
-
+    
     user_button = QPushButton(QIcon("".join([path, "/icons/user.png"])), "User Physique", self)
     user_button.setIconSize(icon_size)
      
