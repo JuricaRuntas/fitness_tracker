@@ -11,8 +11,7 @@ class Header(QWidget):
     self.setLayout(grid)
     
     title_layout = QHBoxLayout()
-    title_label = QLabel(self)
-    title_label.setText("Fitness Tracker  ")
+    title_label = QLabel("Fitness Tracker  ", self)
     title_label.setFont(QFont("Arial", 25))
     title_layout.addWidget(title_label)
 
