@@ -20,6 +20,7 @@ class Header(QWidget):
     radio_layout = QHBoxLayout()
     
     s_radio = QRadioButton("Strength")
+    s_radio.setChecked(True)
     wp_radio = QRadioButton("Weight progression")
     n_radio = QRadioButton("Nutrition")
 
@@ -35,6 +36,7 @@ class Header(QWidget):
     units_group = QGroupBox("Units:")
 
     m_radio = QRadioButton("Metric")
+    m_radio.setChecked(True)
     i_radio = QRadioButton("Imperial")
 
     units_layout.addWidget(m_radio)
