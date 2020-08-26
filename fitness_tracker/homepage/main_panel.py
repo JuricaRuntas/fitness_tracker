@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout, QHBoxLayout, QVBoxLayout, QComboBox, QFrame
+from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 
 class MainPanel(QWidget):
@@ -37,14 +38,16 @@ class MainPanel(QWidget):
     graph_frame = QFrame()
     graph_frame.setFrameStyle(QFrame.StyledPanel)
     graph_frame.setLayout(graph_layout)
-     
+ 
     return graph_frame
   
   def create_max_layout(self):
     max_layout = QVBoxLayout()
-    one_rep = QLabel("One Rep Max", self)
-    one_rep.setAlignment(Qt.AlignLeft)
-    one_rep.setFixedSize(100, 20)
+     
+    one_rep_label = QLabel("One Rep Max", self)
+    one_rep_label.setFont(QFont("Ariel", 15))
+    one_rep_label.setAlignment(Qt.AlignLeft)
+    one_rep_label.setFixedSize(135, 25)
      
     max_bench = QLabel("Bench: 80kg", self)
     max_bench.setAlignment(Qt.AlignLeft)
@@ -58,7 +61,7 @@ class MainPanel(QWidget):
     max_squat.setAlignment(Qt.AlignLeft)
     max_squat.setFixedSize(120, 20)
 
-    max_layout.addWidget(one_rep)
+    max_layout.addWidget(one_rep_label)
     max_layout.addWidget(max_bench)
     max_layout.addWidget(max_deadlift)
     max_layout.addWidget(max_squat)
@@ -92,7 +95,12 @@ class MainPanel(QWidget):
 
   def create_general_layout(self):
     general_layout = QVBoxLayout()
-
+    
+    general_label = QLabel("General", self)
+    general_label.setFont(QFont("Ariel", 15))
+    general_label.setAlignment(Qt.AlignLeft)
+    general_label.setFixedSize(135, 25)
+     
     stats_one = QLabel("Chin up count: 10", self)
     stats_one.setAlignment(Qt.AlignLeft)
     stats_one.setFixedSize(200, 20)
@@ -105,6 +113,7 @@ class MainPanel(QWidget):
     stats_three.setAlignment(Qt.AlignLeft)
     stats_three.setFixedSize(250, 20)
     
+    general_layout.addWidget(general_label)
     general_layout.addWidget(stats_one)
     general_layout.addWidget(stats_two)
     general_layout.addWidget(stats_three)
