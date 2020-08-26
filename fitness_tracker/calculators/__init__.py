@@ -1,0 +1,3 @@
+from calculators.one_rep_max.one_rep_max import OneRepMaxCalculator
+from calculators.body_fat.body_fat import BodyFatCalculator
+from calculators.strength_estimator.strength_estimator import StrengthEstimator
