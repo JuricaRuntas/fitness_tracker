@@ -1,16 +1,16 @@
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QGridLayout
-from PyQt5.QtGui import QPainter, QPen, QFont
+from PyQt5.QtCore import Qt
 
 from .header import Header
 from .side_panel import SidePanel
 from .main_panel import MainPanel
 
 class Homepage(QWidget):
-  def __init__(self, parent):
-     super().__init__(parent)
+  def __init__(self, controller):
+     super().__init__()
+     self.controller = controller
      self.header = Header(self)
-     self.side_panel = SidePanel(self)
+     self.side_panel = SidePanel(self, self.controller)
      self.main_panel = MainPanel(self)
      self.create_grid()
 
