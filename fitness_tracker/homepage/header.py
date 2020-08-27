@@ -2,8 +2,9 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QLab
 from PyQt5.QtGui import QFont
 
 class Header(QWidget):
-  def __init__(self, parent):
+  def __init__(self, parent, title):
     super().__init__(parent)
+    self.title = title
     self.create_header()
   
   def create_header(self):
@@ -11,7 +12,7 @@ class Header(QWidget):
     self.setLayout(grid)
     
     title_layout = QHBoxLayout()
-    title_label = QLabel("Fitness Tracker  ", self)
+    title_label = QLabel(self.title, self)
     title_label.setFont(QFont("Arial", 25))
     title_layout.addWidget(title_label)
 
