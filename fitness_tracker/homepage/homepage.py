@@ -9,7 +9,7 @@ class Homepage(QWidget):
   def __init__(self, controller):
      super().__init__()
      self.controller = controller
-     self.header = Header(self)
+     self.header = Header(self, "Fitness Tracker  ")
      self.side_panel = SidePanel(self, self.controller)
      self.main_panel = MainPanel(self)
      self.create_grid()
