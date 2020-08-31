@@ -14,7 +14,7 @@ class FitnessTracker(QMainWindow):
     self.cw = Homepage(self)
     self.setCentralWidget(self.cw)
     self.layouts = {"Home": Homepage, "User Physique": UserPhysique, "Big Lifts": BigLiftsNotes,
-                    "Workouts": WorkoutsNotes, "Calories": CaloriesNotes,
+                    "Workouts": WorkoutsNotes, "Nutrition": CaloriesNotes,
                     "Weight Loss Notes": WeightLossNotes, "1 Rep Max": OneRepMaxCalculator,
                     "Body Fat": BodyFatCalculator, "Strength Estimator": StrengthEstimator,
                     "Strength": StrengthStats, "Weight Loss": WeightLossStats}
