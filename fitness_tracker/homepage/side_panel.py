@@ -27,7 +27,7 @@ class SidePanel(QWidget):
     lifts_button.clicked.connect(lambda: self.controller.display_layout(lifts_button.text()))
     workouts_button = QPushButton(QIcon("".join([path, "/icons/workouts.png"])), "Workouts", self)
     workouts_button.clicked.connect(lambda: self.controller.display_layout(workouts_button.text()))
-    calories_button = QPushButton(QIcon("".join([path, "/icons/calories.png"])) ,"Calories", self)
+    calories_button = QPushButton(QIcon("".join([path, "/icons/calories.png"])) ,"Nutrition", self)
     calories_button.clicked.connect(lambda: self.controller.display_layout(calories_button.text()))
     weight_notes_button = QPushButton(QIcon("".join([path, "/icons/weight_loss.png"])), "Weight Loss Notes", self)
     weight_notes_button.clicked.connect(lambda: self.controller.display_layout(weight_notes_button.text()))
