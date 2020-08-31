@@ -9,7 +9,7 @@ class CaloriesNotes(QWidget):
   def __init__(self, controller):
     super().__init__()
     self.controller = controller
-    self.header = Header(self, "Calories Notes"       )
+    self.header = Header(self, "Nutrition           ")
     self.main_panel = MainPanel(self)
     self.side_panel = SidePanel(self, self.controller)
     self.create_grid()
