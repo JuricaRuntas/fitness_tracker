@@ -23,7 +23,7 @@ class Header(QWidget):
     s_radio = QRadioButton("Notes")
     s_radio.setChecked(True)
     wp_radio = QRadioButton("Calendar")
-    n_radio = QRadioButton("Nutrition")
+    n_radio = QRadioButton("Food Database")
 
     radio_layout.addWidget(s_radio)
     radio_layout.addWidget(wp_radio)
