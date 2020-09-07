@@ -1,11 +1,14 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QFrame, QCalendarWidget
-from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QFont
+from PyQt5.QtCore import Qt, QFileInfo
+
+path = QFileInfo(__file__).absolutePath()
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__()
     self.create_panel()
-
+  
   def create_panel(self):
     grid = QGridLayout()
     grid.addWidget(self.create_stats(), 0, 0, 1, 2)
@@ -125,11 +128,19 @@ class MainPanel(QWidget):
     exercises_layout = QVBoxLayout()
 
     label = QLabel("Exercises", self)
+    label.setFont(QFont("Ariel", 15))
     
     first_row = QHBoxLayout()
 
     chest_muscle_group = QVBoxLayout()
+    
+    chest_image = QLabel(self)
+    chest_pixmap = QPixmap("".join([path, "/muscle_groups/chest_muscles.png"]))
+    chest_image.setPixmap(chest_pixmap)
+    
     chest_label = QLabel("Chest", self)
+    chest_label.setAlignment(Qt.AlignCenter)
+    chest_muscle_group.addWidget(chest_image)
     chest_muscle_group.addWidget(chest_label)
     
     back_muscle_group = QVBoxLayout()
@@ -157,9 +168,16 @@ class MainPanel(QWidget):
     second_row = QHBoxLayout()
     
     core_muscle_group = QVBoxLayout()
-    core_label = QLabel("Core", self)
-    core_muscle_group.addWidget(core_label)
+    
+    core_image = QLabel(self)
+    core_pixmap = QPixmap("".join([path, "/muscle_groups/core_muscles.jpg"]))
+    core_image.setPixmap(core_pixmap)
 
+    core_label = QLabel("Core", self)
+    core_label.setAlignment(Qt.AlignCenter)
+    core_muscle_group.addWidget(core_image)
+    core_muscle_group.addWidget(core_label)
+    
     forearms_muscle_group = QVBoxLayout()
     forearms_label = QLabel("Forearms", self)
     forearms_muscle_group.addWidget(forearms_label)
