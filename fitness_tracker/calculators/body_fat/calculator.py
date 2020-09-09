@@ -1,13 +1,14 @@
 import math
 
 class Calculator:
-  def __init__(self, gender, age, weight, height, neck, waist, units):
+  def __init__(self, gender, age, weight, height, neck, waist, hip, units):
     self.gender = gender
     self.age = age
     self.weight = weight
     self.height = height
     self.neck = neck
     self.waist = waist
+    self.hip = hip
     self.units = units
     
     # Jackson & Pollard Ideal Body Fat Percentages
@@ -29,20 +30,29 @@ class Calculator:
     self.calculate()
 
   def calculate(self):
-    # Body fat percentage (BFP) for males
-    if self.units == "inches":    
-      # U.S. Navy Method
-      # U.S. customary system (USC), inches
-      usc_bfp = 86.010*math.log10(self.waist-self.neck)-70.041*math.log10(height)+36.76
-       
-      # BMI Method
-      BMI_male_usc = 703*(self.weight/self.height**2)
-      bmi_bfp = 1.20*BMI_male_usc+0.23*self.age-16.2
+    if self.units == "inches":
+      if self.gender == "male":
+        # U.S. Navy Method
+        usc_bfp = 86.010*math.log10(self.waist-self.neck)-70.041*math.log10(height)+36.76 
+        # BMI Method
+        BMI_usc = 703*(self.weight/self.height**2)
+        bmi_bfp = 1.20*BMI_usc+0.23*self.age-16.2
+      elif self.gender == "female":
+        # U.S Navy Method
+        usc_bfp = 163.205*math.log10(self.waist+self.hip-self.neck)-97.684*math.log10(self.height)+36.76
+        # BMI Method
+        BMI_usc = 703*(self.weight/self.height**2)
+        bmi_bfp = 1.20*BMI_usc+0.23*self.age-5.4
     else:
-      # U.S. Navy Method
-      # International System of Units, centimeters:
-      si_bfp = 495/(1.0324-0.19077*math.log10(self.waist-self.neck)+0.15456*math.log10(self.height))-450
-  
-      # BMI Method
-      BMI_male_si = self.weight/self.height**2
-      bmi_bfp = 1.20*BMI_male_si+0.23*self.age-16.2
+      if self.gender == "male":
+        # U.S. Navy Method
+        si_bfp = 495/(1.0324-0.19077*math.log10(self.waist-self.neck)+0.15456*math.log10(self.height))-450
+        # BMI Method
+        BMI_si = self.weight/self.height**2
+        bmi_bfp = 1.20*BMI_male_si+0.23*self.age-16.2
+      elif self.gender == "female":
+        # U.S. Navy Method
+        si_bfp = 495/(1.29579-0.35994*math.log10(self.waist+self.hip-self.neck)+0.22100*math.log10(self.height))-450
+        # BMI Method
+        BMI_male_si = self.weight/self.height**2
+        bmi_bfp = 1.20*BMI_male_si+0.23*self.age-5.4
