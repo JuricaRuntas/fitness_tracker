@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QVBoxLayout, QWidget, QLabel, QComboBox, QFrame, QHBoxLayout
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
+from .preferred_lifts import PreferredLifts
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -31,8 +32,8 @@ class MainPanel(QWidget):
     time_graph_graph = QWidget(self)
     time_graph_graph.setStyleSheet("background-color: red")
 
-    time_graph.addWidget(timeline_combobox)
     time_graph.addWidget(time_graph_graph)
+    time_graph.addWidget(timeline_combobox)
     framed_graph = QFrame(self)
     framed_graph.setFrameStyle(QFrame.StyledPanel)
     framed_graph.setLayout(time_graph)
@@ -124,8 +125,17 @@ class MainPanel(QWidget):
     lift_history_button.setText("Lift History")
     preferred_lists_button = QPushButton()
     preferred_lists_button.setText("Preferred Lifts")
+    preferred_lists_button.clicked.connect(self.create_preferred_lists_window)
+
     buttons_panel.addWidget(lift_history_button)
     buttons_panel.addWidget(preferred_lists_button)
     return buttons_panel
+
+  def create_preferred_lists_window(self):
+    global plists_window
+    plists_window = PreferredLifts()
+    plists_window.setGeometry(100, 200, 300, 300)
+    plists_window.show()
+
 
 
