@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QPushButton, QLabel, QComboBox, QLineEdit, QGridLayout, QWidget, QVBoxLayout, QHBoxLayout, QRadioButton, QScrollArea, QTableWidget\
-  , QTableWidgetItem, QAbstractItemView
+  , QTableWidgetItem, QAbstractItemView, QFrame
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 
@@ -11,7 +11,7 @@ class MainPanel(QWidget):
   def CreatePanel(self):
     main_panel_layout = QGridLayout()
     main_panel_layout.addLayout(self.description(), 0, 0, 1, 1)
-    main_panel_layout.addLayout(self.calculator(), 2, 0, 2, 1)
+    main_panel_layout.addWidget(self.calculator(), 2, 0, 2, 1)
     main_panel_layout.addLayout(self.strength_standards(), 6, 0, 4, 1)
     self.setLayout(main_panel_layout)
 
@@ -24,6 +24,7 @@ class MainPanel(QWidget):
     return description_layout
 
   def calculator(self):
+    calculator_framed = QFrame()
     calculator_layout = QHBoxLayout()
     data_layout = QHBoxLayout()
     print_layout = QVBoxLayout()
@@ -84,10 +85,17 @@ class MainPanel(QWidget):
     print_layout.addWidget(strength_level_exercise_label)
     print_layout.addWidget(strength_to_bodyweight_label)
 
-    calculator_layout.addLayout(data_layout)
+    framed_data_layout = QFrame()
+    framed_data_layout.setFrameStyle(QFrame.StyledPanel)
+    framed_data_layout.setLayout(data_layout)
+
+    calculator_layout.addWidget(framed_data_layout)
     calculator_layout.addLayout(print_layout)
 
-    return calculator_layout
+    calculator_framed.setFrameStyle(QFrame.StyledPanel)
+    calculator_framed.setLayout(calculator_layout)
+
+    return calculator_framed
 
   def strength_standards(self):
     strength_standards_layout = QVBoxLayout()
