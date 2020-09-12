@@ -1,9 +1,8 @@
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QVBoxLayout, QLabel, QFrame, QLineEdit,
                              QPushButton, QTableWidget, QTableWidgetItem, QHeaderView)
+from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
-
-from .calculator import Calculator
+from .calculator import OneRepMaxCalculator
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -51,6 +50,7 @@ class MainPanel(QWidget):
     self.reps_entry = QLineEdit()
     
     calculate_button = QPushButton("Calculate", self)
+    calculate_button.setCursor(QCursor(Qt.PointingHandCursor))
     calculate_button.clicked.connect(self.calculate)
 
     calculator_layout.addWidget(weight_label)
@@ -117,7 +117,7 @@ class MainPanel(QWidget):
   def calculate(self):
     weight = self.weight_entry.text()
     repetitions = self.reps_entry.text()
-    calc = Calculator(weight, repetitions)
+    calc = OneRepMaxCalculator(weight, repetitions)
     results = calc.results()
     self.result_label.setText("".join(["Your estimated one rep max is: ", str(results[5]), " kg"]))
     j = 0
