@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QVBoxLayout, QLabel, QFrame, QLineEdit,
                              QPushButton, QTableWidget, QTableWidgetItem, QHeaderView)
+from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from .calculator import OneRepMaxCalculator
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -43,27 +44,29 @@ class MainPanel(QWidget):
     calculator_frame.setFixedWidth(300) 
     
     weight_label = QLabel("Weight", self)
-    weight_entry = QLineEdit()
+    self.weight_entry = QLineEdit()
     
     reps_label = QLabel("Repetitions", self)
-    reps_entry = QLineEdit()
+    self.reps_entry = QLineEdit()
     
     calculate_button = QPushButton("Calculate", self)
+    calculate_button.setCursor(QCursor(Qt.PointingHandCursor))
+    calculate_button.clicked.connect(self.calculate)
 
     calculator_layout.addWidget(weight_label)
-    calculator_layout.addWidget(weight_entry)
+    calculator_layout.addWidget(self.weight_entry)
     calculator_layout.addWidget(reps_label)
-    calculator_layout.addWidget(reps_entry)
+    calculator_layout.addWidget(self.reps_entry)
     calculator_layout.addWidget(calculate_button)
     
     calculator_frame.setLayout(calculator_layout)
     
-    result_label = QLabel("Your estimated one rep max is: 250 kg", self)
+    self.result_label = QLabel(self)
     
     wrapper_layout = QVBoxLayout()
     wrapper_layout.addWidget(title_frame)
     wrapper_layout.addWidget(calculator_frame)
-    wrapper_layout.addWidget(result_label)
+    wrapper_layout.addWidget(self.result_label)
     
     return wrapper_layout
 
@@ -78,33 +81,46 @@ class MainPanel(QWidget):
     progression_layout.addWidget(progression_label)
     frame.setLayout(progression_layout)
     
-    table = QTableWidget(7,5)
-    table.verticalHeader().setVisible(False)
+    self.table = QTableWidget(7,5)
+    self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+    self.table.verticalHeader().setVisible(False)
     
     table_items = {"table_headers": ["Set", "%", "Weight", "Reps", "Rest"], 
                    "sets": ["1", "2", "3", "4", "5", "6", "7", "8"],
-                   "percentages": ["~30%-50%", "~60%", "~70", "~80%", "~90%", "~102%", "~104%"],
+                   "percentages": ["~30%-50%", "~60%", "~70", "~80%", "~90%", "~100%", "~102%"],
+                   "weight": [""]*7,
                    "number_of_reps": ["8", "5", "3", "1", "1", "1", "1"],
                    "rest": ["~2 min", "~2 min", "~3 min", "~3 min", "~5 min", "~5-15 min", "~5-15 min"]}
     
     for key, value in table_items.items():
       for i, item in enumerate(value):
         if key == "table_headers":
-          table.setHorizontalHeaderItem(i, QTableWidgetItem(item))
-          table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+          self.table.setHorizontalHeaderItem(i, QTableWidgetItem(item))
+          self.table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
         else:
           _item = QTableWidgetItem(item)
           _item.setTextAlignment(Qt.AlignCenter)
-          if key == "sets": table.setItem(i, 0, _item)
-          elif key == "percentages": table.setItem(i, 1, _item)
-          elif key == "number_of_reps": table.setItem(i, 3, _item)
-          elif key == "rest": table.setItem(i, 4, _item)
+          if key == "sets": self.table.setItem(i, 0, _item)
+          elif key == "percentages": self.table.setItem(i, 1, _item)
+          elif key == "weight": self.table.setItem(i, 2, _item)
+          elif key == "number_of_reps": self.table.setItem(i, 3, _item)
+          elif key == "rest": self.table.setItem(i, 4, _item)
 
     for i in range(7):
-      table.verticalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+      self.table.verticalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
     
     grid = QGridLayout()
     grid.addWidget(frame, 0, 0)
-    grid.addWidget(table, 1, 0, 1, 1)
+    grid.addWidget(self.table, 1, 0, 1, 1)
+    return grid
 
-    return grid 
+  def calculate(self):
+    weight = self.weight_entry.text()
+    repetitions = self.reps_entry.text()
+    calc = OneRepMaxCalculator(weight, repetitions)
+    results = calc.results()
+    self.result_label.setText("".join(["Your estimated one rep max is: ", str(results[5]), " kg"]))
+    j = 0
+    for i in range(7):
+      self.table.item(i, 2).setText(str(results[j]))
+      j += 1
