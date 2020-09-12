@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-class Calculator:
+class OneRepMaxCalculator:
   def __init__(self, weight, repetitions):
     self.weight = int(weight)
     self.repetitions = int(repetitions)
