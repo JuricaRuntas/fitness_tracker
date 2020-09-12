@@ -1,4 +1,4 @@
-from body_fat_formulas import *
+from .body_fat_formulas import *
 
 class Calculator:
   def __init__(self, gender, age, weight, height, neck, waist, units, hip=None):
@@ -86,5 +86,5 @@ class Calculator:
     weight_to_ideal_body_fat = round(fat_mass(diff_ideal_body_fat, self.weight), 1)
     self.results["Body Fat To Lose To Reach Ideal"] = weight_to_ideal_body_fat
     
-  def results(self):
+  def get_results(self):
     return self.results
