@@ -8,7 +8,7 @@ class MainPanel(QWidget):
 
   def CreatePanel(self):
     main_panel_layout = QGridLayout()
-    main_panel_layout.addLayout(self.CreateTopPanel(), 0, 0, 1, 1)
+    main_panel_layout.addWidget(self.CreateTopPanel(), 0, 0, 1, 1)
     main_panel_layout.addLayout(self.SettingsLayout(), 1, 0, 1, 1)
     self.setLayout(main_panel_layout)
 
@@ -20,9 +20,13 @@ class MainPanel(QWidget):
     top_left_layout.addWidget(user_info_label)
 
     height_label = QLabel("Height:")
+    height_label.setFont(QFont("Ariel", 10))
     weight_label = QLabel("Weight:")
+    weight_label.setFont(QFont("Ariel", 10))
     age_label = QLabel("Age:")
+    age_label.setFont(QFont("Ariel", 10))
     birthday_label = QLabel("Birthday:")
+    birthday_label.setFont(QFont("Ariel", 10))
     height_line_edit = QLineEdit()
     height_unit = QComboBox()
     weight_line_edit = QLineEdit()
@@ -59,22 +63,41 @@ class MainPanel(QWidget):
 
     top_layout.addLayout(top_left_layout)
 
-    return top_layout
+    framed_top_layout = QFrame()
+    framed_top_layout.setFrameStyle(QFrame.StyledPanel)
+    framed_top_layout.setLayout(top_layout)
+
+    return framed_top_layout
 
   def SettingsLayout(self):
+    settings = QVBoxLayout()
+    settings_label = QLabel("Settings")
+    settings_label.setFont(QFont("Ariel", 14))
+    settings.addWidget(settings_label)
     settings_layout = QHBoxLayout()
     settings_left_layout = QVBoxLayout()
     settings_right_layout = QVBoxLayout()
 
     display_units = QHBoxLayout()
     display_units_label = QLabel("Display Units:")
+    display_units_label.setFont(QFont("Ariel", 10))
     display_units_combobox = QComboBox()
     display_units_combobox.addItems(["Metric", "Imperial"])
     display_units.addWidget(display_units_label)
     display_units.addWidget(display_units_combobox)
 
+    app_style = QHBoxLayout()
+    app_style_label = QLabel("Theme")
+
     settings_left_layout.addLayout(display_units)
 
-    settings_layout.addLayout(settings_left_layout)
+    framed_left_layout = QFrame()
+    framed_left_layout.setFrameStyle(QFrame.StyledPanel)
+    framed_left_layout.setLayout(settings_left_layout)
+
+    settings_layout.addWidget(framed_left_layout)
     settings_layout.addLayout(settings_right_layout)
-    return settings_layout
+
+    settings.addLayout(settings_layout)
+
+    return settings
