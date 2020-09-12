@@ -16,7 +16,7 @@ class SidePanel(QWidget):
     general_layout = QVBoxLayout()
     home_button = QPushButton(QIcon("".join([path, "/icons/home.png"])), "Home", self)
     home_button.clicked.connect(lambda: self.controller.display_layout(home_button.text()))
-    user_button = QPushButton(QIcon("".join([path, "/icons/user.png"])), "User Physique", self)
+    user_button = QPushButton(QIcon("".join([path, "/icons/user.png"])), "User Data and Settings", self)
     user_button.clicked.connect(lambda: self.controller.display_layout(user_button.text()))
     
     notes_layout = QVBoxLayout()
