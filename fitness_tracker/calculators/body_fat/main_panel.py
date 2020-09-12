@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QFormLayout, QGridLayout,
                             QTableWidgetItem, QHeaderView)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
-from .calculator import Calculator
+from .calculator import BodyFatCalculator
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -166,7 +166,7 @@ class MainPanel(QWidget):
       units = "metric"  # this should be fetched from database
       try: hip = int(self.hip_entry.text())
       except (AttributeError, RuntimeError): hip = None
-      calc = Calculator(gender, age, weight, height, neck, waist, units, hip)
+      calc = BodyFatCalculator(gender, age, weight, height, neck, waist, units, hip)
       results = calc.get_results()
       self.table.item(0, 1).setText("".join([str(results["Body Fat Navy"]), "%"]))
       self.table.item(1, 1).setText(str(results["Body Fat Category"]))

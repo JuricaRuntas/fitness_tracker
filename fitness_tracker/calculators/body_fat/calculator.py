@@ -1,6 +1,6 @@
 from .body_fat_formulas import *
 
-class Calculator:
+class BodyFatCalculator:
   def __init__(self, gender, age, weight, height, neck, waist, units, hip=None):
     self.gender = gender
     self.age = age
