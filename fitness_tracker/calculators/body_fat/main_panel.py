@@ -101,7 +101,7 @@ class MainPanel(QWidget):
     frame.setLayout(table_layout)
 
     table = QTableWidget(7, 2)
-  
+    table.setEditTriggers(QTableWidget.NoEditTriggers) 
     table.verticalHeader().setVisible(False)
     table.horizontalHeader().setVisible(False)
     

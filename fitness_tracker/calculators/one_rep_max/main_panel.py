@@ -82,6 +82,7 @@ class MainPanel(QWidget):
     frame.setLayout(progression_layout)
     
     self.table = QTableWidget(7,5)
+    self.table.setEditTriggers(QTableWidget.NoEditTriggers)
     self.table.verticalHeader().setVisible(False)
     
     table_items = {"table_headers": ["Set", "%", "Weight", "Reps", "Rest"], 
