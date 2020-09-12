@@ -2,8 +2,9 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QFormLayout, QGridLayout,
                             QVBoxLayout, QLabel, QGroupBox, QRadioButton,
                             QHBoxLayout, QLineEdit, QPushButton, QTableWidget,
                             QTableWidgetItem, QHeaderView)
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
+from .calculator import Calculator
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -41,7 +42,7 @@ class MainPanel(QWidget):
     calculator_frame.setFrameStyle(QFrame.StyledPanel)
     calculator_frame.setFixedWidth(300)
 
-    calculator_layout = QFormLayout()
+    self.calculator_layout = QFormLayout()
     
     gender_label = QLabel("Gender", self)
     
@@ -49,69 +50,88 @@ class MainPanel(QWidget):
     vbox = QHBoxLayout()
     vbox.setAlignment(Qt.AlignCenter)
     
-    male_button = QRadioButton("male")
-    male_button.setChecked(True)
+    self.male_button = QRadioButton("male")
+    self.male_button.setChecked(True)
+    self.female_button = QRadioButton("female")
+    
+    self.male_button.toggled.connect(self.hide_or_show_hip)
 
-    female_button = QRadioButton("female")
-
-    vbox.addWidget(male_button)
-    vbox.addWidget(female_button)
+    vbox.addWidget(self.male_button)
+    vbox.addWidget(self.female_button)
     gbox.setLayout(vbox)
 
     age_label = QLabel("Age", self)
-    line_edit = QLineEdit()
+    self.age_entry = QLineEdit()
 
     weight_label = QLabel("Weight", self)
-    line_edit1 = QLineEdit()
+    self.weight_entry = QLineEdit()
 
     height_label = QLabel("Height", self)
-    line_edit2 = QLineEdit()
+    self.height_entry = QLineEdit()
 
     neck_label = QLabel("Neck", self)
-    line_edit3 = QLineEdit()
+    self.neck_entry = QLineEdit()
     
     waist_label = QLabel("Waist", self)
-    line_edit4 = QLineEdit()
+    self.waist_entry = QLineEdit()
 
-    hip_label = QLabel("Hip", self)
-    line_edit5 = QLineEdit()
-    
-    calculate_button = QPushButton("Calculate", self)
+    self.calculate_button = QPushButton("Calculate", self)
+    self.calculate_button.setCursor(QCursor(Qt.PointingHandCursor))
+    self.calculate_button.clicked.connect(self.calculate)
 
-    calculator_layout.addRow(gender_label, gbox)
-    calculator_layout.addRow(age_label, line_edit)
-    calculator_layout.addRow(weight_label, line_edit1)
-    calculator_layout.addRow(height_label, line_edit2)
-    calculator_layout.addRow(neck_label, line_edit3)
-    calculator_layout.addRow(waist_label, line_edit4)
-    calculator_layout.addRow(hip_label, line_edit5)
-    calculator_layout.addRow(calculate_button)
+    self.calculator_layout.addRow(gender_label, gbox)
+    self.calculator_layout.addRow(age_label, self.age_entry)
+    self.calculator_layout.addRow(weight_label, self.weight_entry)
+    self.calculator_layout.addRow(height_label, self.height_entry)
+    self.calculator_layout.addRow(neck_label, self.neck_entry)
+    self.calculator_layout.addRow(waist_label, self.waist_entry)
+    self.calculator_layout.addRow(self.calculate_button)
     
-    calculator_frame.setLayout(calculator_layout)
+    calculator_frame.setLayout(self.calculator_layout)
 
     wrapper_layout = QVBoxLayout()
     wrapper_layout.addWidget(title_frame)
     wrapper_layout.addWidget(calculator_frame)
     return wrapper_layout
 
+  def hide_or_show_hip(self):
+    if self.female_button.isChecked():
+      self.calculator_layout.removeWidget(self.calculate_button)
+      self.calculate_button.deleteLater()
+      
+      self.hip_label = QLabel("Hip", self)
+      self.hip_entry = QLineEdit()
+      
+      self.calculate_button = QPushButton("Calculate", self)
+      self.calculate_button.setCursor(QCursor(Qt.PointingHandCursor))
+      self.calculate_button.clicked.connect(self.calculate)
+
+      self.calculator_layout.addRow(self.hip_label, self.hip_entry)
+      self.calculator_layout.addRow(self.calculate_button)
+    else:
+      self.calculator_layout.removeWidget(self.hip_label)
+      self.hip_label.deleteLater()
+      self.calculator_layout.removeWidget(self.hip_entry)
+      self.hip_entry.deleteLater()
+  
   def create_table(self):
     frame = QFrame()
     table_layout = QVBoxLayout()
 
     frame.setLayout(table_layout)
 
-    table = QTableWidget(7, 2)
-    table.setEditTriggers(QTableWidget.NoEditTriggers) 
-    table.verticalHeader().setVisible(False)
-    table.horizontalHeader().setVisible(False)
+    self.table = QTableWidget(7, 2)
+    self.table.setEditTriggers(QTableWidget.NoEditTriggers) 
+    self.table.verticalHeader().setVisible(False)
+    self.table.horizontalHeader().setVisible(False)
     
-    rows = [["Body Fat (U.S. Navy Method)", "15.7%"],
-            ["Body Fat Category", "Fitness"],
-            ["Body Fat Mass", "11.0 kgs"],
-            ["Lean Body Mass", "59.0 kgs"],
-            ["Ideal Body Fat for Given Age (Jackson & Pollard)", "10.5%"],
-            ["Body Fat to Lose to Reach Ideal", "3.6 kgs"],
-            ["Body Fat (BMI method)", "16.1%"]]
+    rows = [["Body Fat (U.S. Navy Method)", ""],
+            ["Body Fat Category", ""],
+            ["Body Fat Mass", ""],
+            ["Lean Body Mass", ""],
+            ["Ideal Body Fat for Given Age (Jackson & Pollard)", ""],
+            ["Body Fat to Lose to Reach Ideal", ""],
+            ["Body Fat (BMI method)", ""]]
     
     i = j = 0
     for row in rows:
@@ -119,18 +139,41 @@ class MainPanel(QWidget):
       item2 = QTableWidgetItem(row[1])
       item1.setTextAlignment(Qt.AlignCenter)
       item2.setTextAlignment(Qt.AlignCenter)
-      table.setItem(i, 0, item1)
-      table.setItem(j, 1, item2)
+      self.table.setItem(i, 0, item1)
+      self.table.setItem(j, 1, item2)
       i += 1
       j += 1
     
     for i in range(2):
-      table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+      self.table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
     
     for i in range(7):
-      table.verticalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+      self.table.verticalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
     grid = QGridLayout()
     grid.addWidget(frame, 0, 0)
-    grid.addWidget(table, 1, 0)
+    grid.addWidget(self.table, 1, 0)
     return grid
+
+  def calculate(self):
+    gender = "male" if self.male_button.isChecked() else "female"
+    try:
+      age = int(self.age_entry.text())
+      weight = int(self.weight_entry.text())
+      height = int(self.height_entry.text())
+      neck = int(self.neck_entry.text())
+      waist = int(self.waist_entry.text())
+      units = "metric"  # this should be fetched from database
+      try: hip = int(self.hip_entry.text())
+      except (AttributeError, RuntimeError): hip = None
+      calc = Calculator(gender, age, weight, height, neck, waist, units, hip)
+      results = calc.get_results()
+      self.table.item(0, 1).setText("".join([str(results["Body Fat Navy"]), "%"]))
+      self.table.item(1, 1).setText(str(results["Body Fat Category"]))
+      self.table.item(2, 1).setText(str(results["Fat Mass"]))
+      self.table.item(3, 1).setText(str(results["Lean Body Mass"]))
+      self.table.item(4, 1).setText(str(results["Ideal Body Fat"]))
+      self.table.item(5, 1).setText(str(results["Body Fat To Lose To Reach Ideal"]))
+      self.table.item(6, 1).setText("".join([str(results["Body Fat BMI"]), "%"]))
+    except ValueError:
+      pass
