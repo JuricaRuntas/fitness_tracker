@@ -164,10 +164,14 @@ class MainPanel(QWidget):
       neck = int(self.neck_entry.text())
       waist = int(self.waist_entry.text())
       units = "metric"  # this should be fetched from database
+      
       try: hip = int(self.hip_entry.text())
       except (AttributeError, RuntimeError): hip = None
+      
       calc = BodyFatCalculator(gender, age, weight, height, neck, waist, units, hip)
       results = calc.get_results()
+      
+      if results["Body Fat Navy"] <= 0: return
       self.table.item(0, 1).setText("".join([str(results["Body Fat Navy"]), "%"]))
       self.table.item(1, 1).setText(str(results["Body Fat Category"]))
       self.table.item(2, 1).setText(str(results["Fat Mass"]))
