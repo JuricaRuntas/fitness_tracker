@@ -25,7 +25,7 @@ class BodyFatCalculator:
     self.categorization_women = {"10-13%": "Essential Fat", "14-20%": "Athletes",
                                  "21-24%": "Fitness", "25-31%": "Average", "32+%": "Obese"}
 
-    self.categorization_men = {"02-05%": "Essential Fat", "06-13%": "Athletes",
+    self.categorization_men = {"2-5%": "Essential Fat", "6-13%": "Athletes",
                                "14-17%": "Fitness", "18-25%": "Average", "25+%": "Obese"}
 
     self.calculate_body_fat()
@@ -72,14 +72,18 @@ class BodyFatCalculator:
       age_group = self.binary_search_helper(self.ideal_fat_men.keys(), self.age)
       self.results["Ideal Body Fat"] = self.ideal_fat_women[age_group]
     
-    for key, value in self.categorization_men.items():
-      if key[0] == "0":
-        if int(self.results["Body Fat Navy"]) >= int(key[1]) and int(self.results["Body Fat Navy"]) <= int(key[4]):
-          self.results["Body Fat Category"] = value
-      else:
-        if key == "25%+" and int(self.results["Body Fat Navy"] >= 25): self.results["Body Fat Category"] = value
-        elif int(self.results["Body Fat Navy"]) >= int(key[:2]) and int(self.results["Body Fat Navy"]) <= int(key[3:5]):
-          self.results["Body Fat Category"] = value
+    body_fat_categorization = list(self.categorization_men.keys()) if self.gender == "male" else list(self.categorization_women.keys())
+    percentages = [percentage.rstrip("%").strip("+").split("-") for percentage in list(body_fat_categorization)]
+    for item in percentages:
+      if self.gender == "male" and int(self.results["Body Fat Navy"]) >= 25:
+        self.results["Body Fat Category"] = self.categorization_men["25+%"]
+      elif self.gender == "female" and int(self.results["Body Fat Navy"]) >= 32:
+        self.results["Body Fat Category"] = self.categorization_women["32+%"]
+      elif int(self.results["Body Fat Navy"]) >= int(item[0]) and int(self.results["Body Fat Navy"]) <= int(item[1]):
+        if self.gender == "female":
+          self.results["Body Fat Category"] = self.categorization_women["".join(["-".join(item), "%"])]
+        elif self.gender == "male":
+          self.results["Body Fat Category"] = self.categorization_men["".join(["-".join(item), "%"])]
     
     if self.results["Ideal Body Fat"] == "8.5%":
       diff_ideal_body_fat = round(self.results["Body Fat Navy"]-float(self.results["Ideal Body Fat"][0:3]), 1)
