@@ -66,8 +66,11 @@ class BodyFatCalculator:
 
   def create_info(self):
     if self.gender == "male":
-      self.results["Ideal Body Fat"] = self.ideal_fat_men[self.age]
-    elif self.gender == "female": self.results["Ideal Body Fat"] = self.ideal_fat_women[self.age]
+      age_group = self.binary_search_helper(self.ideal_fat_men.keys(), self.age)
+      self.results["Ideal Body Fat"] = self.ideal_fat_men[age_group]
+    elif self.gender == "female":
+      age_group = self.binary_search_helper(self.ideal_fat_men.keys(), self.age)
+      self.results["Ideal Body Fat"] = self.ideal_fat_women[age_group]
     
     for key, value in self.categorization_men.items():
       if key[0] == "0":
@@ -85,6 +88,18 @@ class BodyFatCalculator:
     
     weight_to_ideal_body_fat = round(fat_mass(diff_ideal_body_fat, self.weight), 1)
     self.results["Body Fat To Lose To Reach Ideal"] = weight_to_ideal_body_fat
-    
+  
+  def binary_search_helper(self, arr, target):
+    arr = list(arr)
+    low = 0
+    high = len(arr)-1
+    while low < high:
+      mid = (high+low)//2
+      if arr[mid] == target: break
+      elif arr[mid] > target: high = mid-1
+      else: low = mid+1
+    mid = (high+low)//2
+    return arr[mid]
+   
   def get_results(self):
     return self.results
