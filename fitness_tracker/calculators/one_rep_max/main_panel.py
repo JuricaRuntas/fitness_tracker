@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QVBoxLayout, QLabel, QFrame, 
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from .calculator import OneRepMaxCalculator
+from user_physique.user_database import UserDatabase
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -115,12 +116,15 @@ class MainPanel(QWidget):
     return grid
 
   def calculate(self):
+    fetch_units = UserDatabase().fetch_units()
     weight = self.weight_entry.text()
     repetitions = self.reps_entry.text()
+    units = "kg" if fetch_units == "metric" else "lb"
+    
     calc = OneRepMaxCalculator(weight, repetitions)
     results = calc.results()
-    self.result_label.setText("".join(["Your estimated one rep max is: ", str(results[5]), " kg"]))
+    self.result_label.setText("".join(["Your estimated one rep max is: ", str(results[5]), " ", units]))
     j = 0
     for i in range(7):
-      self.table.item(i, 2).setText(str(results[j]))
+      self.table.item(i, 2).setText("".join([str(results[j]), " ", units]))
       j += 1
