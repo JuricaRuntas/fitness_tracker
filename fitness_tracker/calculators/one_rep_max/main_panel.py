@@ -116,15 +116,18 @@ class MainPanel(QWidget):
     return grid
 
   def calculate(self):
-    fetch_units = UserDatabase().fetch_units()
-    weight = self.weight_entry.text()
-    repetitions = self.reps_entry.text()
-    units = "kg" if fetch_units == "metric" else "lb"
-    
-    calc = OneRepMaxCalculator(weight, repetitions)
-    results = calc.results()
-    self.result_label.setText("".join(["Your estimated one rep max is: ", str(results[5]), " ", units]))
-    j = 0
-    for i in range(7):
-      self.table.item(i, 2).setText("".join([str(results[j]), " ", units]))
-      j += 1
+    try:
+      fetch_units = UserDatabase().fetch_units()
+      weight = self.weight_entry.text()
+      repetitions = self.reps_entry.text()
+      units = "kg" if fetch_units == "metric" else "lb"
+      
+      calc = OneRepMaxCalculator(weight, repetitions)
+      results = calc.results()
+      self.result_label.setText("".join(["Your estimated one rep max is: ", str(results[5]), " ", units]))
+      j = 0
+      for i in range(7):
+        self.table.item(i, 2).setText("".join([str(results[j]), " ", units]))
+        j += 1
+    except ValueError:
+      pass
