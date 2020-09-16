@@ -1,18 +1,19 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QPushButton, QFrame, QHBoxLayout, QVBoxLayout
 from PyQt5.QtGui import QFont
+from .user_database import UserDatabase
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    self.CreatePanel()
+    self.create_panel()
 
-  def CreatePanel(self):
+  def create_panel(self):
     main_panel_layout = QGridLayout()
-    main_panel_layout.addWidget(self.CreateTopPanel(), 0, 0, 1, 1)
-    main_panel_layout.addLayout(self.SettingsLayout(), 1, 0, 1, 1)
+    main_panel_layout.addWidget(self.create_top_panel(), 0, 0, 1, 1)
+    main_panel_layout.addLayout(self.settings_layout(), 1, 0, 1, 1)
     self.setLayout(main_panel_layout)
 
-  def CreateTopPanel(self):
+  def create_top_panel(self):
     top_layout = QHBoxLayout()
     top_left_layout = QVBoxLayout()
     user_info_label = QLabel("User Info")
@@ -69,7 +70,7 @@ class MainPanel(QWidget):
 
     return framed_top_layout
 
-  def SettingsLayout(self):
+  def settings_layout(self):
     settings = QVBoxLayout()
     settings_label = QLabel("Settings")
     settings_label.setFont(QFont("Ariel", 14))
@@ -81,10 +82,14 @@ class MainPanel(QWidget):
     display_units = QHBoxLayout()
     display_units_label = QLabel("Display Units:")
     display_units_label.setFont(QFont("Ariel", 10))
-    display_units_combobox = QComboBox()
-    display_units_combobox.addItems(["Metric", "Imperial"])
+    self.display_units_combobox = QComboBox()
+    self.display_units_combobox.addItems(["Metric", "Imperial"])
+    current_index = 0 if self.current_units() ==  "metric" else 1
+    self.display_units_combobox.setCurrentIndex(current_index)
+    self.display_units_combobox.activated.connect(self.change_units)
+    
     display_units.addWidget(display_units_label)
-    display_units.addWidget(display_units_combobox)
+    display_units.addWidget(self.display_units_combobox)
 
     app_style = QHBoxLayout()
     app_style_label = QLabel("Theme")
@@ -101,3 +106,9 @@ class MainPanel(QWidget):
     settings.addLayout(settings_layout)
 
     return settings
+
+  def change_units(self):
+    UserDatabase().update_units()
+
+  def current_units(self):
+    return UserDatabase().fetch_units() 
