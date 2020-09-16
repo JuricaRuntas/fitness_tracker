@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QFormLayout, QGridLayout,
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from .calculator import BodyFatCalculator
+from user_physique.user_database import UserDatabase
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -163,21 +164,22 @@ class MainPanel(QWidget):
       height = int(self.height_entry.text())
       neck = int(self.neck_entry.text())
       waist = int(self.waist_entry.text())
-      units = "metric"  # this should be fetched from database
+      fetch_units = UserDatabase().fetch_units()
+      units = "kg" if fetch_units == "metric" else "lb"
       
       try: hip = int(self.hip_entry.text())
       except (AttributeError, RuntimeError): hip = None
       
-      calc = BodyFatCalculator(gender, age, weight, height, neck, waist, units, hip)
+      calc = BodyFatCalculator(gender, age, weight, height, neck, waist, fetch_units, hip)
       results = calc.get_results()
       
       if results["Body Fat Navy"] <= 0: return
       self.table.item(0, 1).setText("".join([str(results["Body Fat Navy"]), "%"]))
       self.table.item(1, 1).setText(str(results["Body Fat Category"]))
-      self.table.item(2, 1).setText(str(results["Fat Mass"]))
-      self.table.item(3, 1).setText(str(results["Lean Body Mass"]))
+      self.table.item(2, 1).setText(" ".join([str(results["Fat Mass"]), units]))
+      self.table.item(3, 1).setText(" ".join([str(results["Lean Body Mass"]), units]))
       self.table.item(4, 1).setText(str(results["Ideal Body Fat"]))
-      self.table.item(5, 1).setText(str(results["Body Fat To Lose To Reach Ideal"]))
+      self.table.item(5, 1).setText(" ".join([str(results["Body Fat To Lose To Reach Ideal"]), units]))
       self.table.item(6, 1).setText("".join([str(results["Body Fat BMI"]), "%"]))
     except ValueError:
       pass
