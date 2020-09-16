@@ -72,18 +72,22 @@ class MainPanel(QWidget):
 
     age_label = QLabel("Age", self)
     self.age_entry = QLineEdit()
-
+    
     weight_label = QLabel("Weight", self)
     self.weight_entry = QLineEdit()
+    self.weight_entry.setPlaceholderText("kg")
 
     height_label = QLabel("Height", self)
     self.height_entry = QLineEdit()
+    self.height_entry.setPlaceholderText("cm")
 
     neck_label = QLabel("Neck", self)
     self.neck_entry = QLineEdit()
+    self.neck_entry.setPlaceholderText("cm")
     
     waist_label = QLabel("Waist", self)
     self.waist_entry = QLineEdit()
+    self.waist_entry.setPlaceholderText("cm")
 
     self.calculate_button = QPushButton("Calculate", self)
     self.calculate_button.setCursor(QCursor(Qt.PointingHandCursor))
@@ -123,11 +127,14 @@ class MainPanel(QWidget):
     
     weight_label = QLabel("Weight", self)
     self.weight_entry = QLineEdit()
+    self.weight_entry.setPlaceholderText("pounds")
 
     height_layout = QHBoxLayout()
     height_label = QLabel("Height", self)
     self.height_feet_entry = QLineEdit()
+    self.height_feet_entry.setPlaceholderText("feet")
     self.height_inches_entry = QLineEdit()
+    self.height_inches_entry.setPlaceholderText("inches")
     
     height_layout.addWidget(self.height_feet_entry)
     height_layout.addWidget(self.height_inches_entry)
@@ -135,7 +142,9 @@ class MainPanel(QWidget):
     neck_layout = QHBoxLayout()
     neck_label = QLabel("Neck", self)
     self.neck_feet_entry = QLineEdit()
+    self.neck_feet_entry.setPlaceholderText("feet")
     self.neck_inches_entry = QLineEdit()
+    self.neck_inches_entry.setPlaceholderText("inches")
     
     neck_layout.addWidget(self.neck_feet_entry)
     neck_layout.addWidget(self.neck_inches_entry)
@@ -143,8 +152,10 @@ class MainPanel(QWidget):
     waist_layout = QHBoxLayout()
     waist_label = QLabel("Waist", self)
     self.waist_feet_entry = QLineEdit()
+    self.waist_feet_entry.setPlaceholderText("feet")
     self.waist_inches_entry = QLineEdit()
-
+    self.waist_inches_entry.setPlaceholderText("inches")
+    
     waist_layout.addWidget(self.waist_feet_entry)
     waist_layout.addWidget(self.waist_inches_entry)
 
@@ -176,12 +187,16 @@ class MainPanel(QWidget):
       self.hip_label = QLabel("Hip", self)
       
       if units == "metric":
-        self.hip_entry = QLineEdit() 
+        self.hip_entry = QLineEdit()
+        self.hip_entry.setPlaceholderText("cm")
         self.calculator_layout.addRow(self.hip_label, self.hip_entry)
       elif units == "imperial":
         self.hip_layout = QHBoxLayout()
         self.hip_feet_entry = QLineEdit()
+        self.hip_feet_entry.setPlaceholderText("feet")
         self.hip_inches_entry = QLineEdit()
+        self.hip_inches_entry.setPlaceholderText("inches")
+        
         self.hip_layout.addWidget(self.hip_feet_entry)
         self.hip_layout.addWidget(self.hip_inches_entry)
         self.calculator_layout.addRow(self.hip_label, self.hip_layout)
@@ -244,12 +259,15 @@ class MainPanel(QWidget):
 
   def calculate(self):
     gender = "male" if self.male_button.isChecked() else "female"
-    units = "kg" if UserDatabase().fetch_units() == "metric" else "lb"
+    units = "kg" if UserDatabase().fetch_units() == "metric" else "lbs"
     m = self.get_measurements()
-    calc = BodyFatCalculator(m["Gender"], m["Age"], m["Weight"], m["Height"], m["Neck"], m["Waist"], m["Units"], m["Hip"])
-    results = calc.get_results()
-    self.set_results(results, units)
- 
+    try:
+      calc = BodyFatCalculator(m["Gender"], m["Age"], m["Weight"], m["Height"], m["Neck"], m["Waist"], m["Units"], m["Hip"])
+      results = calc.get_results()
+      self.set_results(results, units)
+    except TypeError: # dict values are None
+      pass
+  
   def get_measurements(self):
     measurements = {}
     measurements["Gender"] = "male" if self.male_button.isChecked() else "female"
@@ -262,8 +280,10 @@ class MainPanel(QWidget):
         measurements["Height"] = int(self.height_entry.text())
         measurements["Neck"] = int(self.neck_entry.text())
         measurements["Waist"] = int(self.waist_entry.text())
-        try: measurements["Hip"] = int(self.hip_entry.text())
-        except (AttributeError, RuntimeError): measurements["Hip"] = None
+        try:
+          measurements["Hip"] = int(self.hip_entry.text())
+        except (AttributeError, RuntimeError): # hip entry might not exist
+          measurements["Hip"] = None
       elif units == "imperial":
         measurements["Height"] = int(self.height_feet_entry.text())*12+float(self.height_inches_entry.text())
         measurements["Neck"] = int(self.neck_feet_entry.text())*12+float(self.neck_inches_entry.text())
@@ -271,7 +291,7 @@ class MainPanel(QWidget):
         try: measurements["Hip"] = int(self.hip_feet_entry.text())*12+float(self.hip_inches_entry.text())
         except (AttributeError, RuntimeError): measurements["Hip"] = None
       return measurements
-    except ValueError:
+    except ValueError: # values inside entries aren't numbers
       pass
   
   def set_results(self, results, units):
