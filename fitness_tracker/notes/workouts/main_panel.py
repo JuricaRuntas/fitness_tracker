@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QFrame, QCalendarWidget
 from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtCore import Qt, QFileInfo
+from PyQt5.QtCore import Qt, QFileInfo, QLocale
 
 path = QFileInfo(__file__).absolutePath()
 
@@ -75,6 +75,8 @@ class MainPanel(QWidget):
     layout = QHBoxLayout()
     
     calendar = QCalendarWidget(self)
+    calendar.setLocale(QLocale(QLocale.English))
+    calendar.setFirstDayOfWeek(Qt.DayOfWeek.Monday)
 
     my_workouts_frame = QFrame()
     my_workouts_frame.setFrameStyle(QFrame.StyledPanel)
@@ -133,10 +135,10 @@ class MainPanel(QWidget):
     first_row = QHBoxLayout()
 
     chest_muscle_group = QVBoxLayout()
-    
     chest_image = QLabel(self)
-    chest_pixmap = QPixmap("".join([path, "/muscle_groups/chest_muscles.png"]))
-    chest_image.setPixmap(chest_pixmap)
+    chest_image.setAlignment(Qt.AlignCenter)
+    chest_pixmap = QPixmap("".join([path, "/muscle_groups/chest_muscles.jpg"]))
+    chest_image.setPixmap(chest_pixmap.scaled(100, 60, Qt.KeepAspectRatio, Qt.FastTransformation))
     
     chest_label = QLabel("Chest", self)
     chest_label.setAlignment(Qt.AlignCenter)
@@ -144,19 +146,47 @@ class MainPanel(QWidget):
     chest_muscle_group.addWidget(chest_label)
     
     back_muscle_group = QVBoxLayout()
+    back_image = QLabel(self)
+    back_image.setAlignment(Qt.AlignCenter)
+    back_pixmap = QPixmap("".join([path, "/muscle_groups/back_muscles.jpg"]))
+    back_image.setPixmap(back_pixmap.scaled(100, 60, Qt.KeepAspectRatio, Qt.FastTransformation))
+
     back_label = QLabel("Back", self)
+    back_label.setAlignment(Qt.AlignCenter)
+    back_muscle_group.addWidget(back_image)
     back_muscle_group.addWidget(back_label)
     
     triceps_muscle_group = QVBoxLayout()
+    triceps_image = QLabel(self)
+    triceps_image.setAlignment(Qt.AlignCenter)
+    triceps_pixmap = QPixmap("".join([path, "/muscle_groups/triceps_muscles.jpg"]))
+    triceps_image.setPixmap(triceps_pixmap.scaled(100, 60, Qt.KeepAspectRatio, Qt.FastTransformation))
+    
     triceps_label = QLabel("Triceps", self)
+    triceps_label.setAlignment(Qt.AlignCenter)
+    triceps_muscle_group.addWidget(triceps_image)
     triceps_muscle_group.addWidget(triceps_label)
 
     biceps_muscle_group = QVBoxLayout()
+    biceps_image = QLabel(self)
+    biceps_image.setAlignment(Qt.AlignCenter)
+    biceps_pixmap = QPixmap("".join([path, "/muscle_groups/biceps_muscles.jpg"]))
+    biceps_image.setPixmap(biceps_pixmap.scaled(100, 60, Qt.KeepAspectRatio, Qt.FastTransformation))
+    
     biceps_label = QLabel("Biceps", self)
+    biceps_label.setAlignment(Qt.AlignCenter)
+    biceps_muscle_group.addWidget(biceps_image)
     biceps_muscle_group.addWidget(biceps_label)
     
     shoulders_muscle_group = QVBoxLayout()
+    shoulders_image = QLabel(self)
+    shoulders_image.setAlignment(Qt.AlignCenter)
+    shoulders_pixmap = QPixmap("".join([path, "/muscle_groups/shoulder_muscles.jpg"]))
+    shoulders_image.setPixmap(shoulders_pixmap.scaled(100, 60, Qt.KeepAspectRatio, Qt.FastTransformation))
+    
     shoulders_label = QLabel("Shoulders", self)
+    shoulders_label.setAlignment(Qt.AlignCenter)
+    shoulders_muscle_group.addWidget(shoulders_image)
     shoulders_muscle_group.addWidget(shoulders_label)
 
     first_row.addLayout(chest_muscle_group)
@@ -168,10 +198,10 @@ class MainPanel(QWidget):
     second_row = QHBoxLayout()
     
     core_muscle_group = QVBoxLayout()
-    
     core_image = QLabel(self)
+    core_image.setAlignment(Qt.AlignCenter)
     core_pixmap = QPixmap("".join([path, "/muscle_groups/core_muscles.jpg"]))
-    core_image.setPixmap(core_pixmap)
+    core_image.setPixmap(core_pixmap.scaled(100, 60, Qt.KeepAspectRatio, Qt.FastTransformation))
 
     core_label = QLabel("Core", self)
     core_label.setAlignment(Qt.AlignCenter)
@@ -179,19 +209,47 @@ class MainPanel(QWidget):
     core_muscle_group.addWidget(core_label)
     
     forearms_muscle_group = QVBoxLayout()
+    forearms_image = QLabel(self)
+    forearms_image.setAlignment(Qt.AlignCenter)
+    forearms_pixmap = QPixmap("".join([path, "/muscle_groups/forearms_muscles.jpg"]))
+    forearms_image.setPixmap(forearms_pixmap.scaled(100, 60, Qt.KeepAspectRatio, Qt.FastTransformation))
+    
     forearms_label = QLabel("Forearms", self)
+    forearms_label.setAlignment(Qt.AlignCenter)
+    forearms_muscle_group.addWidget(forearms_image)
     forearms_muscle_group.addWidget(forearms_label)
 
     upper_legs_muscle_group = QVBoxLayout()
+    upper_legs_image = QLabel(self)
+    upper_legs_image.setAlignment(Qt.AlignCenter)
+    upper_legs_pixmap = QPixmap("".join([path, "/muscle_groups/upper_legs_muscles.jpg"]))
+    upper_legs_image.setPixmap(upper_legs_pixmap.scaled(100, 60, Qt.KeepAspectRatio, Qt.FastTransformation))
+    
     upper_legs_label = QLabel("Upper Legs", self)
+    upper_legs_label.setAlignment(Qt.AlignCenter)
+    upper_legs_muscle_group.addWidget(upper_legs_image)
     upper_legs_muscle_group.addWidget(upper_legs_label)
 
     calves_muscle_group = QVBoxLayout()
+    calves_image = QLabel(self)
+    calves_image.setAlignment(Qt.AlignCenter)
+    calves_pixmap = QPixmap("".join([path, "/muscle_groups/calf_muscles.jpg"]))
+    calves_image.setPixmap(calves_pixmap.scaled(100, 60, Qt.KeepAspectRatio, Qt.FastTransformation))
+    
     calves_label = QLabel("Calves", self)
+    calves_label.setAlignment(Qt.AlignCenter)
+    calves_muscle_group.addWidget(calves_image)
     calves_muscle_group.addWidget(calves_label)
     
     cardio_group = QVBoxLayout()
+    cardio_image = QLabel(self)
+    cardio_image.setAlignment(Qt.AlignCenter)
+    cardio_pixmap = QPixmap("".join([path, "/muscle_groups/cardio.png"]))
+    cardio_image.setPixmap(cardio_pixmap.scaled(100, 60, Qt.KeepAspectRatio, Qt.FastTransformation))
+    
     cardio_label = QLabel("Cardio", self)
+    cardio_label.setAlignment(Qt.AlignCenter)
+    cardio_group.addWidget(cardio_image)
     cardio_group.addWidget(cardio_label)
     
     second_row.addLayout(core_muscle_group)
