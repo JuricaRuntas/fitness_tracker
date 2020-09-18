@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QFrame, QCalendarWidget
-from PyQt5.QtGui import QPixmap, QFont
+from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QFrame, QCalendarWidget, QPushButton
+from PyQt5.QtGui import QPixmap, QFont, QIcon, QCursor
 from PyQt5.QtCore import Qt, QFileInfo, QLocale
 
 path = QFileInfo(__file__).absolutePath()
@@ -8,7 +8,7 @@ class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__()
     self.create_panel()
-  
+    
   def create_panel(self):
     grid = QGridLayout()
     grid.addWidget(self.create_stats(), 0, 0, 1, 2)
@@ -88,19 +88,27 @@ class MainPanel(QWidget):
     workout1_layout = QHBoxLayout()
     workout1_name_label = QLabel("Upper Lower", self)
     workout1_days_label = QLabel("4 days", self)
-    
+    workout1_delete = QPushButton(QIcon("".join([path, "/icons/x.png"])), "", self)
+    workout1_delete.setStyleSheet("border: none")
+    workout1_delete.setCursor(QCursor(Qt.PointingHandCursor))
+
     workout1_layout.addWidget(workout1_name_label)
     workout1_layout.addWidget(workout1_days_label)
+    workout1_layout.addWidget(workout1_delete)
     workout1_frame.setLayout(workout1_layout)
-    
+     
     workout2_frame = QFrame()
     workout2_frame.setFrameStyle(QFrame.StyledPanel)
     workout2_layout = QHBoxLayout()
     workout2_name_label = QLabel("Push Pull Legs", self)
     workout2_days_label = QLabel("6 days", self)
+    workout2_delete = QPushButton(QIcon("".join([path, "/icons/x.png"])), "", self)
+    workout2_delete.setStyleSheet("border: none")
+    workout2_delete.setCursor(QCursor(Qt.PointingHandCursor))
 
     workout2_layout.addWidget(workout2_name_label)
     workout2_layout.addWidget(workout2_days_label)
+    workout2_layout.addWidget(workout2_delete)
     workout2_frame.setLayout(workout2_layout)
 
     workout3_frame = QFrame()
@@ -108,15 +116,22 @@ class MainPanel(QWidget):
     workout3_layout = QHBoxLayout()
     workout3_name_label = QLabel("My Workout1", self)
     workout3_days_label = QLabel("3 days", self)
+    workout3_delete = QPushButton(QIcon("".join([path, "/icons/x.png"])), "", self)
+    workout3_delete.setStyleSheet("border: none")
+    workout3_delete.setCursor(QCursor(Qt.PointingHandCursor))
 
     workout3_layout.addWidget(workout3_name_label)
     workout3_layout.addWidget(workout3_days_label)
+    workout3_layout.addWidget(workout3_delete)
     workout3_frame.setLayout(workout3_layout)
 
+    add_workout_button = QPushButton("Add Workout", self)
+    add_workout_button.setCursor(QCursor(Qt.PointingHandCursor)) 
     my_workouts_layout.addWidget(my_workouts_label)
     my_workouts_layout.addWidget(workout1_frame)
     my_workouts_layout.addWidget(workout2_frame)
     my_workouts_layout.addWidget(workout3_frame)
+    my_workouts_layout.addWidget(add_workout_button)
     my_workouts_frame.setLayout(my_workouts_layout)
 
     layout.addWidget(calendar)
