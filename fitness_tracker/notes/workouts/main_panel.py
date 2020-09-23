@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QLab
 from PyQt5.QtGui import QFont, QIcon, QCursor
 from PyQt5.QtCore import Qt, QFileInfo, QLocale, QSize
 from .exercises.chest_exercises import ChestExercises
+from .exercises.back_exercises import BackExercises
 
 path = QFileInfo(__file__).absolutePath()
 
@@ -171,6 +172,7 @@ class MainPanel(QWidget):
     back_image.resize(100, 60)
     back_image.setStyleSheet("border: none")
     back_image.setCursor(Qt.PointingHandCursor)
+    back_image.clicked.connect(lambda: self.replace_grid(self.grid, "Back"))
     
     back_label = QLabel("Back", self)
     back_label.setAlignment(Qt.AlignCenter)
@@ -306,3 +308,5 @@ class MainPanel(QWidget):
       grid.itemAt(i).widget().deleteLater()
     if muscle_group == "Chest":
       grid.addWidget(ChestExercises(self), 0, 0)
+    elif muscle_group == "Back":
+      grid.addWidget(BackExercises(self), 0, 0)
