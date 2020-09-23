@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QFrame, QCalendarWidget, QPushButton
 from PyQt5.QtGui import QFont, QIcon, QCursor
 from PyQt5.QtCore import Qt, QFileInfo, QLocale, QSize
+from .exercises.chest_exercises import ChestExercises
 
 path = QFileInfo(__file__).absolutePath()
 
@@ -10,12 +11,12 @@ class MainPanel(QWidget):
     self.create_panel()
     
   def create_panel(self):
-    grid = QGridLayout()
-    grid.addWidget(self.create_stats(), 0, 0, 1, 2)
-    grid.addWidget(self.create_calendar_workouts(), 1, 0, 1, 2)
-    grid.addWidget(self.create_exercises(), 2, 0, 1, 2)
-    self.setLayout(grid)
-
+    self.grid = QGridLayout()
+    self.grid.addWidget(self.create_stats(), 0, 0, 1, 2)
+    self.grid.addWidget(self.create_calendar_workouts(), 1, 0, 1, 2)
+    self.grid.addWidget(self.create_exercises(), 2, 0, 1, 2)
+    self.setLayout(self.grid)
+    
   def create_stats(self):
     frame = QFrame()
     frame.setFrameStyle(QFrame.StyledPanel)
@@ -156,6 +157,7 @@ class MainPanel(QWidget):
     chest_image.resize(100, 60)
     chest_image.setStyleSheet("border: none")
     chest_image.setCursor(Qt.PointingHandCursor)
+    chest_image.clicked.connect(lambda: self.replace_grid(self.grid, "Chest"))
 
     chest_label = QLabel("Chest", self)
     chest_label.setAlignment(Qt.AlignCenter)
@@ -297,5 +299,10 @@ class MainPanel(QWidget):
     exercises_layout.addLayout(first_row)
     exercises_layout.addLayout(second_row)
     frame.setLayout(exercises_layout)
-
     return frame
+
+  def replace_grid(self, grid, muscle_group):
+    for i in reversed(range(grid.count())):
+      grid.itemAt(i).widget().deleteLater()
+    if muscle_group == "Chest":
+      grid.addWidget(ChestExercises(self), 0, 0)
