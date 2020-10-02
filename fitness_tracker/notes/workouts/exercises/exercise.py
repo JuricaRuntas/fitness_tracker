@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt, QSize, QFileInfo
 from .exercise_database import *
 import os
 
-path = QFileInfo(__file__).absolutePath()
+path = os.path.normpath(QFileInfo(__file__).absolutePath())
 
 db_path = path.split(os.path.sep)[:-4]
 db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "chest_exercises.db"])
