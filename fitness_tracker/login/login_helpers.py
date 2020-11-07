@@ -39,26 +39,26 @@ def get_user_info(email, password):
   table_name = get_table_name(email, password)
   columns = None
   user_info = None
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      # this can be changed to fetch something else later on
-      cursor.execute(sql.SQL("SELECT * FROM {table}").format(table=sql.Identifier(table_name)))
-      user_info = cursor.fetchone()[1:]
-      query = """
-              SELECT column_name FROM information_schema.columns 
-              WHERE table_name = %s;
-              """
-      cursor.execute(query, (table_name,))
-      # fetch all column names
-      # change this in the future
-      columns = tuple(value[0] for value in cursor.fetchall()[1:])
-  
+
   with sqlite3.connect(db_path) as conn:
     table_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='{table}';"
-    cursor = conn.cursor()
-    cursor.execute(table_exists.format(table=table_name))
-    if cursor.fetchone() == None: # table doesn't exist
+    sqlite_cursor = conn.cursor()
+    sqlite_cursor.execute(table_exists.format(table=table_name))
+    if sqlite_cursor.fetchone() == None: # table doesn't exist
+      with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                          user=db_info["user"], password=db_info["password"]) as conn:
+        with conn.cursor() as cursor:
+          # this can be changed to fetch something else later on
+          cursor.execute(sql.SQL("SELECT * FROM {table}").format(table=sql.Identifier(table_name)))
+          user_info = cursor.fetchone()[1:]
+          query = """
+                  SELECT column_name FROM information_schema.columns 
+                  WHERE table_name = %s;
+                  """
+          cursor.execute(query, (table_name,))
+          # fetch all column names
+          # change this in the future
+          columns = tuple(value[0] for value in cursor.fetchall()[1:])
       create_table = """
                      CREATE TABLE "{table}" (
                      ID integer NOT NULL,
@@ -68,11 +68,6 @@ def get_user_info(email, password):
                      weight real NOT NULL,
                      PRIMARY KEY (ID));
                      """
-      cursor.execute(create_table.format(table=table_name))
+      sqlite_cursor.execute(create_table.format(table=table_name))
       insert_values = "INSERT INTO '{table}' {columns} VALUES {values}"
-      cursor.execute(insert_values.format(table=table_name, columns=columns, values=user_info))
-    else:
-      delete_table_data = "DELETE FROM '{table}'"
-      cursor.execute(delete_table_data.format(table=table_name))
-      insert_values = "INSERT INTO '{table}' {columns} VALUES {values}"
-      cursor.execute(insert_values.format(table=table_name, columns=columns, values=user_info))
+      sqlite_cursor.execute(insert_values.format(table=table_name, columns=columns, values=user_info))
