@@ -3,3 +3,4 @@ __pycache__
 .*.swo
 .ipynb_checkpoints/
 db/user_info.db
+fitness_tracker/.idea/workspace.xml

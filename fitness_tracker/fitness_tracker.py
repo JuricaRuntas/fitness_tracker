@@ -50,19 +50,16 @@ class FitnessTracker(QMainWindow):
     self.show()
 
   def setup_borders(self):
-    #self.setWindowFlags(Qt.FramelessWindowHint)
+    self.setWindowFlags(Qt.FramelessWindowHint)
     self.show()
 
   def setup_main_layout(self):
     main_layout = QVBoxLayout()
-    main_layout.setSpacing(10)
     main_layout.setContentsMargins(0, 0, 0, 0)
     main_layout.addWidget(self.title_bar)
-    spacer = QSpacerItem(20, 5, QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
-    main_layout.addItem(spacer)
     main_layout.addWidget(self.cw)
-    central_spacer = QSpacerItem(10, 20, QSizePolicy.Minimum, QSizePolicy.Maximum)
-    main_layout.addItem(central_spacer)
+    main_layout.addStretch(1)
+    main_layout.setSpacing(0)
     main_widget = QWidget()
     main_widget.setLayout(main_layout)
     return main_widget
