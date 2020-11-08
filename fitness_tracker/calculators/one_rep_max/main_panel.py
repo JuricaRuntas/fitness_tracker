@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QVBoxLayout, QLabel, QFrame, 
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from .calculator import OneRepMaxCalculator
-from user_physique.user_database import UserDatabase
+from user_physique.user_physique_helpers import fetch_units, fetch_table_name
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -117,10 +117,11 @@ class MainPanel(QWidget):
 
   def calculate(self):
     try:
-      fetch_units = UserDatabase().fetch_units()
+      table_name = fetch_table_name()
+      units = fetch_units(table_name)
       weight = self.weight_entry.text()
       repetitions = self.reps_entry.text()
-      units = "kg" if fetch_units == "metric" else "lb"
+      units = "kg" if units == "metric" else "lb"
       
       calc = OneRepMaxCalculator(weight, repetitions)
       results = calc.results()
