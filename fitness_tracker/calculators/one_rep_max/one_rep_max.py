@@ -14,6 +14,7 @@ class OneRepMaxCalculator(QWidget):
     self.side_panel = SidePanel(self, self.controller)
     self.create_grid()
 
+
   def create_grid(self):
     grid = QGridLayout()
     grid.addWidget(self.header, 0, 1, 1, 4)
