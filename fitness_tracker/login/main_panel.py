@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit, QLabel, QPushButton
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
-from .login_helpers import check_password, get_user_info
+from .login_helpers import Login
 
 class MainPanel(QWidget):
   def __init__(self, parent, controller):
@@ -64,6 +64,7 @@ class MainPanel(QWidget):
   def login(self):
     email = self.email_entry.text()
     password = self.password_entry.text()
-    if check_password(email, password):
-      get_user_info(email, password)
+    interface = Login()
+    if interface.check_password(email, password):
+      interface.get_user_info(email, password)
       self.controller.display_layout("Home")

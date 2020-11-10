@@ -2,14 +2,14 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QComboBox,
                             QFrame, QHBoxLayout, QVBoxLayout)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
-from .user_physique_helpers import (fetch_table_name, fetch_local_user_data, update_units,
-                                   fetch_units, set_weight, convert_weight, update_weight)
+from .user_physique_helpers import UserPhysique
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    self.table_name = fetch_table_name()
-    self.user_data = list(fetch_local_user_data(self.table_name))
+    self.interface = UserPhysique()
+    self.table_name = self.interface.fetch_table_name()
+    self.user_data = list(self.interface.fetch_local_user_data(self.table_name))
     self.create_panel()
 
   def create_panel(self):
@@ -45,7 +45,7 @@ class MainPanel(QWidget):
 
     weight_layout = QHBoxLayout()
     weight_label = QLabel("Weight:")
-    self.weight = QLabel(set_weight(self.user_data))
+    self.weight = QLabel(self.interface.set_weight(self.user_data))
     weight_label.setFont(QFont("Ariel", 10))
     self.weight.setFont(QFont("Ariel", 10))
    
@@ -113,7 +113,7 @@ class MainPanel(QWidget):
     self.display_units_combobox.setCursor(QCursor(Qt.PointingHandCursor))
     self.display_units_combobox.addItems(["Metric", "Imperial"])
     
-    current_index = 0 if fetch_units(self.table_name) == "metric" else 1
+    current_index = 0 if self.interface.fetch_units(self.table_name) == "metric" else 1
     self.display_units_combobox.setCurrentIndex(current_index)
     self.display_units_combobox.activated.connect(lambda: self.change_units(self.display_units_combobox.currentText()))
     
@@ -144,14 +144,14 @@ class MainPanel(QWidget):
       pass
     else:
       # update units in user table
-      update_units(self.table_name)
+      self.interface.update_units(self.table_name)
       # get updated units
-      updated_units = fetch_units(self.table_name)
+      updated_units = self.interface.fetch_units(self.table_name)
       current_weight = self.user_data[3]
-      converted_weight = convert_weight(self.user_data[2], current_weight)
+      converted_weight = self.interface.convert_weight(self.user_data[2], current_weight)
       # update self.user_data
       self.user_data[3] = converted_weight
       self.user_data[2] = updated_units
       # update weight in user table
-      update_weight(self.table_name, converted_weight)
-      self.weight.setText(set_weight(self.user_data))
+      self.interface.update_weight(self.table_name, converted_weight)
+      self.weight.setText(self.interface.set_weight(self.user_data))

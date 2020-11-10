@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLay
                              QLabel, QPushButton, QGroupBox, QRadioButton, QHBoxLayout)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
-from .signup_helpers import get_table_name, create_user_info_after_signup
+from .signup_helpers import Signup
 
 class SignupQuestions(QWidget):
   def __init__(self, controller):
@@ -86,8 +86,10 @@ class SignupQuestions(QWidget):
     units = "metric" if self.metric_button.isChecked() else "imperial"
     user_info = {"name": self.name_entry.text(),
                  "gender": gender, "units": units,
-                 "weight": float(self.weight_entry.text())}
+                 "weight": self.weight_entry.text()}
     if not gender == "" and not units == "" and not self.name_entry.text() == "" and not self.weight_entry.text() == "":
-      table_name = get_table_name()
-      create_user_info_after_signup(user_info, table_name)
+      
+      interface = Signup()
+      email = interface.fetch_user_email()
+      interface.create_user_info_after_signup(user_info, email)
       self.controller.display_layout("Home")
