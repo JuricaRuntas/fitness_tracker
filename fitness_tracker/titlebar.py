@@ -44,6 +44,16 @@ class TitleBar(QWidget):
             "QPushButton:hover{ background-color: rgba(255, 255, 255, 70); }"
             "QPushButton:pressed{ background-color: rgba(255, 255, 255, 40); }")
 
+        self.unmax_icon = QIcon('icons/small.bmp')
+        self.unmax_button = QPushButton()
+        self.unmax_button.clicked.connect(self.un_click)
+        self.unmax_button.setIcon(self.unmax_icon)
+        self.unmax_button.setMaximumSize(24, 24)
+        self.unmax_button.setStyleSheet(
+            "QPushButton{ background-color: rgba(255, 255, 255, 0); }"
+            "QPushButton:hover{ background-color: rgba(255, 255, 255, 70); }"
+            "QPushButton:pressed{ background-color: rgba(255, 255, 255, 40); }")
+
         self.maximize_icon = QIcon('icons/max.bmp')
         self.maximize_button = QPushButton()
         self.maximize_button.clicked.connect(self.max_click)
@@ -92,7 +102,12 @@ class TitleBar(QWidget):
         self.parent.close()
 
     def max_click(self):
+        self.gridlayout.replaceWidget(self.maximize_button, self.unmax_button)
         self.parent.showMaximized()
+
+    def un_click(self):
+        self.gridlayout.replaceWidget(self.unmax_button, self.maximize_button)
+        self.parent.showNormal()
 
     def min_click(self):
         self.parent.showMinimized()
