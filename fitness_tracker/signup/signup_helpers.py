@@ -74,28 +74,37 @@ class Signup:
 
   def create_user_info_after_signup(self, user_info, email):
     table_name = self.fetch_table_name()
-    update_query = "UPDATE users SET"
     with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                           user=db_info["user"], password=db_info["password"]) as conn:
       with conn.cursor() as cursor:
-        columns = tuple(user_info.keys())
-        values = tuple(user_info.values())
-        pairs = [[pair[0], pair[1]] for pair in zip(columns, values)]
-        for pair in pairs:
-          pair[1] = "'%s'" % pair[1]
-          joined_pair = "=".join([pair[0], pair[1]])
-          if pairs.index(pair) == 0: update_query = " ".join([update_query, joined_pair])
-          elif pairs.index(pair) == len(pairs)-1:
-            update_query = ", ".join([update_query, joined_pair])
-            update_query = " ".join([update_query, "WHERE email=%s"])
-          else: update_query = ", ".join([update_query, joined_pair])
-        cursor.execute(update_query, (email,))
+        update_query = self.create_update_query("users", email, user_info)
+        cursor.execute(update_query)
       
-      update_query = update_query.replace("users", "'%s'").replace("email=%s", "email='%s'")
-      update_query = update_query % (table_name, email)
       with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
+        update_query = self.create_update_query(table_name, email, user_info, sqlite=True)
         cursor.execute(update_query)
+
+  def create_update_query(self, table_name, email, columns_values_dict, sqlite=False):
+    update_query = "UPDATE {table} SET"
+    # create list with [column_name, value] pairs
+    pairs = [[pair[0], pair[1]] for pair in zip(columns_values_dict.keys(), columns_values_dict.values())]
+    for pair in pairs:
+      pair[1] = "'%s'" % pair[1] # add ticks to value
+      joined_pair = "=".join([pair[0], pair[1]]) # create column='value' string
+      # if its first pair, join it to update_query with blank space
+      if pairs.index(pair) == 0: update_query = " ".join([update_query, joined_pair])
+      # if its last pair, add WHERE email={email} to the end of update_query
+      elif pairs.index(pair) == len(pairs)-1:
+        update_query = ", ".join([update_query, joined_pair])
+        update_query = " ".join([update_query, "WHERE email='%s'"])
+      else: update_query = ", ".join([update_query, joined_pair])
+    if sqlite: # make adjustments for sqlite3
+      update_query = update_query.replace("{table}", "'%s'")#.replace("email=%s", "email='%s'")
+      return update_query % (table_name, email)
+    else: # make sql query for psycopg2
+      update_query = update_query.format(table=table_name)
+      return update_query % email
 
   def create_user_table(self, email, password):
     status = True
