@@ -9,9 +9,6 @@ db_path = path.split(os.path.sep)[:-3]
 db_path_user_info = os.path.sep.join([os.path.sep.join(db_path), "db", "user_info.db"])
 db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "big_lifts.db"])
 
-#db_info = {"host": "localhost", "port": 5432,
-#           "database": "postgres", "user": "admin", "password": "admin"}
-
 db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
            "database": "postgres", "user": "admin", "password": "admin"}
 
