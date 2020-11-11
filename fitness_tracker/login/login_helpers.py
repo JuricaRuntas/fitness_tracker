@@ -24,7 +24,7 @@ class Login():
         if not hashlib.sha256(password.encode('UTF-8')).hexdigest() == database_password: status = False
     return status
 
-  def get_user_info(self, email, password):
+  def fetch_user_info(self, email, password):
     table_name = "".join([email, "_table"])
     columns = None
     user_info = None

@@ -66,5 +66,5 @@ class MainPanel(QWidget):
     password = self.password_entry.text()
     interface = Login()
     if interface.check_password(email, password):
-      interface.get_user_info(email, password)
+      interface.fetch_user_info(email, password)
       self.controller.display_layout("Home")
