@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, QVBoxLayout, QWidget, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, QVBoxLayout, QWidget, QSpacerItem, QSizeGrip
 from PyQt5.QtCore import QFileInfo, Qt
 from PyQt5.QtGui import QColor
 import sys
@@ -60,6 +60,9 @@ class FitnessTracker(QMainWindow):
     main_layout.addWidget(self.cw)
     main_layout.addStretch(1)
     main_layout.setSpacing(0)
+    sizegrip = QSizeGrip(self)
+    sizegrip.setMaximumWidth(16)
+    main_layout.addWidget(sizegrip)
     main_widget = QWidget()
     main_widget.setLayout(main_layout)
     return main_widget

@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QSpacerItem, QSizePolicy
-from PyQt5.QtGui import QFont, QIcon
-from PyQt5.QtCore import QPoint
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QSpacerItem, QSizePolicy, QSizeGrip
+from PyQt5.QtGui import QFont, QIcon, QPainter, QBrush, QColor
+from PyQt5.QtCore import QPoint, Qt
 
 class TitleBar(QWidget):
     def __init__(self, parent):
@@ -31,8 +31,8 @@ class TitleBar(QWidget):
         self.close_button.setMaximumSize(24, 24)
         self.close_button.setStyleSheet(
             "QPushButton{ background-color: rgba(237, 17, 17, 0); }"
-            "QPushButton:hover{ background-color: rgba(237, 17, 17, 60); }"
-            "QPushButton:pressed{ background-color: rgba(255, 0, 0, 80); }")
+            "QPushButton:hover{ background-color: rgba(237, 17, 17, 75); }"
+            "QPushButton:pressed{ background-color: rgba(255, 0, 0, 100); }")
 
         self.minimise_icon = QIcon('icons/min.bmp')
         self.minimise_button = QPushButton()
@@ -58,7 +58,6 @@ class TitleBar(QWidget):
         self.layout.addWidget(self.title)
         self.layout.addItem(version_space)
         self.layout.addWidget(self.version)
-
         self.layout.addStretch(-1)
 
         self.gridlayout.addLayout(self.layout)
@@ -97,3 +96,9 @@ class TitleBar(QWidget):
 
     def min_click(self):
         self.parent.showMinimized()
+
+    def paintEvent(self, event):
+        painter = QPainter()
+        painter.begin(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.fillRect(event.rect(), QBrush(QColor(68, 13, 15, 255)))
