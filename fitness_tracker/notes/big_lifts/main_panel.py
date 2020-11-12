@@ -159,11 +159,11 @@ class MainPanel(QWidget):
   def create_update_1RM_window(self):
     global update_1RM_window
     update_1RM_window = Update1RMWindow()
-    update_1RM_window.setGeometry(100, 200, 300, 300)
+    update_1RM_window.setGeometry(100, 200, 200, 200)
     update_1RM_window.show()
 
   def create_update_lifts_for_reps_window(self):
     global lifts_for_reps
     lifts_for_reps = UpdateLiftsForRepsWindow()
-    lifts_for_reps.setGeometry(100, 200, 300, 300)
+    lifts_for_reps.setGeometry(100, 200, 200, 200)
     lifts_for_reps.show()
