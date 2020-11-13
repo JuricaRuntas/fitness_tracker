@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import psycopg2
+import json
 from psycopg2 import sql
 from PyQt5.QtCore import QFileInfo
 
@@ -83,9 +84,12 @@ class BigLifts:
     default_exercises = ["Bench Press", "Deadlift", "Back Squat", "Overhead Press"]
     email = self.fetch_user_email()
     table_name = self.fetch_user_info_table_name()
-    one_RM_dict = self.stringify_lifts_dict({exercise:"0" for exercise in default_exercises})
-    lifts_for_reps = self.stringify_lifts_dict({exercise:"0" for exercise in default_exercises})
-    preferred_lifts = self.stringify_lifts_dict({"Horizontal Press": default_exercises[0],
+    #one_RM_dict = self.stringify_lifts_dict({exercise:"0" for exercise in default_exercises})
+    one_RM_dict = json.dumps({exercise:"0" for exercise in default_exercises})
+    #lifts_for_reps = self.stringify_lifts_dict({exercise:"0" for exercise in default_exercises})
+    lifts_for_reps = json.dumps({exercise:"0" for exercise in default_exercises})
+    #preferred_lifts = self.stringify_lifts_dict({"Horizontal Press": default_exercises[0],
+    preferred_lifts = json.dumps({"Horizontal Press": default_exercises[0],
                                                  "Floor Pull": default_exercises[1],
                                                  "Squat": default_exercises[2],
                                                  "Vertical Press": default_exercises[3]})
@@ -126,17 +130,6 @@ class BigLifts:
     else: # make sql query for psycopg2
       return sql.SQL(update_query).format(table=sql.Identifier(table_name), email=sql.Identifier(email))
   
-  def stringify_lifts_dict(self, lifts_dict):
-    # make tuple with "lift_name->weight" pairs
-    parse_dict = tuple(("->".join([lift[0], lift[1]])) for lift in zip(lifts_dict.keys(), lifts_dict.values()))
-    lifts_string = ",".join(parse_dict)
-    return lifts_string
-
-  def parse_lifts_string(self, lifts_string):
-    parsed_lifts_string = [lift_pair.split("->") for lift_pair in lifts_string.split(",")]
-    lifts_dict = {lift_pair[0]:lift_pair[1] for lift_pair in parsed_lifts_string}
-    return lifts_dict
-
   def create_big_lifts_table(self):
     with sqlite3.connect(db_path) as conn:
       cursor = conn.cursor()
@@ -154,7 +147,8 @@ class BigLifts:
       cursor.execute(create_table)
 
   def update_preferred_lifts(self, new_preferred_lifts):
-    new_preferred_lifts = self.stringify_lifts_dict(new_preferred_lifts)
+    new_preferred_lifts = json.dumps(new_preferred_lifts)
+    #new_preferred_lifts = self.stringify_lifts_dict(new_preferred_lifts)
     email = self.fetch_user_email()
     update_query = "UPDATE big_lifts SET preferred_lifts='%s' WHERE email='%s'" % (new_preferred_lifts, email)
     with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -168,13 +162,12 @@ class BigLifts:
 
   def update_1RM_and_lifts_for_reps(self):
     email = self.fetch_user_email()
-    preferred_lifts = list(self.parse_lifts_string(self.fetch_preferred_lifts()).values())
-    one_rep_maxes = self.parse_lifts_string(self.fetch_one_rep_maxes())
-    lifts_for_reps = self.parse_lifts_string(self.fetch_lifts_for_reps())
+    preferred_lifts = list(json.loads(self.fetch_preferred_lifts()).values())
+    one_rep_maxes = json.loads(self.fetch_one_rep_maxes())
+    lifts_for_reps = json.loads(self.fetch_lifts_for_reps())
 
-    new_one_rep_maxes = self.stringify_lifts_dict({preferred_lifts[i]:value for i, value in enumerate(one_rep_maxes.values())})
-    new_lifts_for_reps = self.stringify_lifts_dict({preferred_lifts[i]:value for i, value in enumerate(lifts_for_reps.values())})
-    
+    new_one_rep_maxes = json.dumps({preferred_lifts[i]:value for i, value in enumerate(one_rep_maxes.values())})
+    new_lifts_for_reps = json.dumps({preferred_lifts[i]:value for i, value in enumerate(lifts_for_reps.values())})
     update_query1 = """UPDATE big_lifts SET "1RM"='%s' WHERE email='%s'""" % (new_one_rep_maxes, email)
     update_query2 = "UPDATE big_lifts SET lifts_for_reps='%s' WHERE email='%s'" % (new_lifts_for_reps, email)
         

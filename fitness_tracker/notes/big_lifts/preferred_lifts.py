@@ -1,3 +1,4 @@
+import json
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QComboBox
 from PyQt5.QtGui import  QFont
 from PyQt5.QtCore import pyqtSignal
@@ -10,8 +11,7 @@ class PreferredLifts(QWidget):
     super().__init__()
     self.setWindowTitle("Edit Preferred Lifts")
     self.interface = BigLifts()
-    self.preferred_lifts = self.interface.fetch_preferred_lifts()
-    self.preferred_lifts = self.interface.parse_lifts_string(self.preferred_lifts)
+    self.preferred_lifts = json.loads(self.interface.fetch_preferred_lifts())
     self.setLayout(self.create_panel())
     self.set_preferred_lifts()
   

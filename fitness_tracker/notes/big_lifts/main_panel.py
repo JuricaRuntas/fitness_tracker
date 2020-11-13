@@ -1,3 +1,4 @@
+import json
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QVBoxLayout, QWidget, QLabel, QComboBox, QFrame, QHBoxLayout
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt, pyqtSlot
@@ -14,8 +15,8 @@ class MainPanel(QWidget):
     self.interface.create_big_lifts_table()
     if self.interface.table_is_empty(): self.interface.insert_default_values()
     self.units = "kg" if self.interface.fetch_units() == "metric" else "lb"
-    self.one_RM = [[lift, weight, self.units] for lift, weight in self.interface.parse_lifts_string(self.interface.fetch_one_rep_maxes()).items()]
-    self.lifts_reps = [[lift, weight, self.units] for lift, weight in self.interface.parse_lifts_string(self.interface.fetch_lifts_for_reps()).items()]
+    self.one_RM = [[lift, weight, self.units] for lift, weight in json.loads(self.interface.fetch_one_rep_maxes()).items()]
+    self.lifts_reps = [[lift, weight, self.units] for lift, weight in json.loads(self.interface.fetch_lifts_for_reps()).items()]
     self.plists_window = PreferredLifts()
     self.plists_window.change_lifts_signal.connect(self.changed_preferred_lifts)
     self.create_panel()
@@ -149,8 +150,7 @@ class MainPanel(QWidget):
   def changed_preferred_lifts(self, changed):
     if changed:
       fetch_lifts = self.interface.fetch_preferred_lifts()
-      parsed_lifts = list(self.interface.parse_lifts_string(fetch_lifts).values())
-      
+      parsed_lifts = list(json.loads(fetch_lifts).values())
       one_RM_labels = [self.horizontal_press_label_ORM, self.floor_pull_label_ORM,
                        self.squat_label_ORM, self.vertical_press_label_ORM]
 
