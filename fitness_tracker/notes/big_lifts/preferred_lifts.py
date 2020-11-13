@@ -1,12 +1,20 @@
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QComboBox
 from PyQt5.QtGui import  QFont
+from PyQt5.QtCore import pyqtSignal
+from .big_lifts_helpers import BigLifts
 
 class PreferredLifts(QWidget):
+  change_lifts_signal = pyqtSignal(bool)
+
   def __init__(self):
     super().__init__()
     self.setWindowTitle("Edit Preferred Lifts")
+    self.interface = BigLifts()
+    self.preferred_lifts = self.interface.fetch_preferred_lifts()
+    self.preferred_lifts = self.interface.parse_lifts_string(self.preferred_lifts)
     self.setLayout(self.create_panel())
-
+    self.set_preferred_lifts()
+  
   def create_panel(self):
     form_layout = QFormLayout()
 
@@ -27,6 +35,7 @@ class PreferredLifts(QWidget):
     self.vertical_press_dropdown.addItems(["Overhead Press", "Push Press"])
     
     save_button = QPushButton("Save")
+    save_button.clicked.connect(lambda: self.save_preferred_lifts())
     cancel_button = QPushButton("Cancel")
 
     form_layout.addRow(horizontal_press_label, self.horizontal_press_dropdown)
@@ -36,9 +45,25 @@ class PreferredLifts(QWidget):
     form_layout.addRow(save_button, cancel_button)
     return form_layout
 
-  def fetch_current_exercises(self):
+  def set_preferred_lifts(self):
+    horizontal_press_index = self.horizontal_press_dropdown.findText(self.preferred_lifts["Horizontal Press"])
+    floor_pull_index = self.floor_pull_dropdown.findText(self.preferred_lifts["Floor Pull"])
+    squat_index = self.squat_dropdown.findText(self.preferred_lifts["Squat"])
+    vertical_press_index = self.vertical_press_dropdown.findText(self.preferred_lifts["Vertical Press"])
+
+    self.horizontal_press_dropdown.setCurrentIndex(horizontal_press_index)
+    self.floor_pull_dropdown.setCurrentIndex(floor_pull_index)
+    self.squat_dropdown.setCurrentIndex(squat_index)
+    self.vertical_press_dropdown.setCurrentIndex(vertical_press_index)
+
+  def save_preferred_lifts(self):
     horizontal_press = str(self.horizontal_press_dropdown.currentText())
     floor_pull = str(self.floor_pull_dropdown.currentText())
     squat = str(self.squat_dropdown.currentText())
     vertical_press = str(self.vertical_press_dropdown.currentText())
-    return [horizontal_press, floor_pull, squat, vertical_press]
+    new_preferred_lifts = {"Horizontal Press": horizontal_press, "Floor Pull":floor_pull,
+                           "Squat": squat, "Vertical Press": vertical_press}
+    self.interface.update_preferred_lifts(new_preferred_lifts)
+    self.interface.update_1RM_and_lifts_for_reps()
+    self.change_lifts_signal.emit(True)
+    self.close()

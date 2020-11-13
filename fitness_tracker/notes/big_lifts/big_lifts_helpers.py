@@ -18,7 +18,7 @@ class BigLifts:
       cursor = conn.cursor()
       cursor.execute("SELECT COUNT (*) FROM big_lifts")
       if cursor.fetchone()[0] == 0: return True
-      else: return False
+    return False
 
   def fetch_user_info_table_name(self):
     table_name = None
@@ -60,7 +60,7 @@ class BigLifts:
       cursor = conn.cursor()
       cursor.execute("""SELECT "1RM" FROM big_lifts""")
       one_rep_maxes = cursor.fetchone()[0]
-    return self.parse_lifts_string(one_rep_maxes)
+    return one_rep_maxes
 
   def fetch_lifts_for_reps(self):
     lifts_for_reps = None
@@ -68,15 +68,28 @@ class BigLifts:
       cursor = conn.cursor()
       cursor.execute("SELECT lifts_for_reps FROM big_lifts")
       lifts_for_reps = cursor.fetchone()[0]
-    return self.parse_lifts_string(lifts_for_reps)
-  
-  def insert_default_values(self, exercises):
+    return lifts_for_reps
+ 
+  def fetch_preferred_lifts(self):
+    email = self.fetch_user_email()
+    preferred_lifts = None
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      cursor.execute("SELECT preferred_lifts FROM big_lifts WHERE email='%s'" % email)
+      preferred_lifts = cursor.fetchone()[0]
+    return preferred_lifts
+
+  def insert_default_values(self):
+    default_exercises = ["Bench Press", "Deadlift", "Back Squat", "Overhead Press"]
     email = self.fetch_user_email()
     table_name = self.fetch_user_info_table_name()
-    one_RM_dict = self.stringify_lifts_dict({exercise:"0" for exercise in exercises})
-    lifts_for_reps = self.stringify_lifts_dict({exercise:"0" for exercise in exercises})
-    preferred_lifts = ",".join(exercises)
-    
+    one_RM_dict = self.stringify_lifts_dict({exercise:"0" for exercise in default_exercises})
+    lifts_for_reps = self.stringify_lifts_dict({exercise:"0" for exercise in default_exercises})
+    preferred_lifts = self.stringify_lifts_dict({"Horizontal Press": default_exercises[0],
+                                                 "Floor Pull": default_exercises[1],
+                                                 "Squat": default_exercises[2],
+                                                 "Vertical Press": default_exercises[3]})
+
     default_dict = {"1RM": one_RM_dict, "lifts_for_reps": lifts_for_reps,
                     "preferred_lifts": preferred_lifts, "email": email}
 
@@ -139,3 +152,39 @@ class BigLifts:
                      PRIMARY KEY(id));
                      """
       cursor.execute(create_table)
+
+  def update_preferred_lifts(self, new_preferred_lifts):
+    new_preferred_lifts = self.stringify_lifts_dict(new_preferred_lifts)
+    email = self.fetch_user_email()
+    update_query = "UPDATE big_lifts SET preferred_lifts='%s' WHERE email='%s'" % (new_preferred_lifts, email)
+    with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                          user=db_info["user"], password=db_info["password"]) as conn:
+      with conn.cursor() as cursor:
+        cursor.execute(update_query)
+
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      cursor.execute(update_query)
+
+  def update_1RM_and_lifts_for_reps(self):
+    email = self.fetch_user_email()
+    preferred_lifts = list(self.parse_lifts_string(self.fetch_preferred_lifts()).values())
+    one_rep_maxes = self.parse_lifts_string(self.fetch_one_rep_maxes())
+    lifts_for_reps = self.parse_lifts_string(self.fetch_lifts_for_reps())
+
+    new_one_rep_maxes = self.stringify_lifts_dict({preferred_lifts[i]:value for i, value in enumerate(one_rep_maxes.values())})
+    new_lifts_for_reps = self.stringify_lifts_dict({preferred_lifts[i]:value for i, value in enumerate(lifts_for_reps.values())})
+    
+    update_query1 = """UPDATE big_lifts SET "1RM"='%s' WHERE email='%s'""" % (new_one_rep_maxes, email)
+    update_query2 = "UPDATE big_lifts SET lifts_for_reps='%s' WHERE email='%s'" % (new_lifts_for_reps, email)
+        
+    with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                          user=db_info["user"], password=db_info["password"]) as conn:
+      with conn.cursor() as cursor:
+        cursor.execute(update_query1)
+        cursor.execute(update_query2)
+
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      cursor.execute(update_query1)
+      cursor.execute(update_query2)

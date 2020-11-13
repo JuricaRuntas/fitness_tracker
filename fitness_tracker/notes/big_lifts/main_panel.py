@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QVBoxLayout, QWidget, QLabel, QComboBox, QFrame, QHBoxLayout
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSlot
 from .preferred_lifts import PreferredLifts
 from .update_1RM_window import Update1RMWindow
 from .update_lifts_for_reps_window import UpdateLiftsForRepsWindow
@@ -12,12 +12,12 @@ class MainPanel(QWidget):
     super().__init__(parent)
     self.interface = BigLifts()
     self.interface.create_big_lifts_table()
-    if self.interface.table_is_empty():
-      exercises = PreferredLifts().fetch_current_exercises()
-      self.interface.insert_default_values(exercises)
+    if self.interface.table_is_empty(): self.interface.insert_default_values()
     self.units = "kg" if self.interface.fetch_units() == "metric" else "lb"
-    self.one_RM = [[lift, weight, self.units] for lift, weight in self.interface.fetch_one_rep_maxes().items()]
-    self.lifts_reps = [[lift, weight, self.units] for lift, weight in self.interface.fetch_lifts_for_reps().items()]
+    self.one_RM = [[lift, weight, self.units] for lift, weight in self.interface.parse_lifts_string(self.interface.fetch_one_rep_maxes()).items()]
+    self.lifts_reps = [[lift, weight, self.units] for lift, weight in self.interface.parse_lifts_string(self.interface.fetch_lifts_for_reps()).items()]
+    self.plists_window = PreferredLifts()
+    self.plists_window.change_lifts_signal.connect(self.changed_preferred_lifts)
     self.create_panel()
 
   def create_panel(self):
@@ -62,17 +62,17 @@ class MainPanel(QWidget):
     main_label = QLabel("One Rep Max")
     main_label.setFont(QFont("Ariel", 18, weight=QFont.Bold))
 
-    horizontal_press_label = QLabel(": ".join(self.one_RM[0]))
-    horizontal_press_label.setFont(QFont("Ariel", 10))
+    self.horizontal_press_label_ORM = QLabel(": ".join(self.one_RM[0]))
+    self.horizontal_press_label_ORM.setFont(QFont("Ariel", 10))
 
-    floor_pull_label = QLabel(": ".join(self.one_RM[1]))
-    floor_pull_label.setFont(QFont("Ariel", 10))
+    self.floor_pull_label_ORM = QLabel(": ".join(self.one_RM[1]))
+    self.floor_pull_label_ORM.setFont(QFont("Ariel", 10))
 
-    squat_label = QLabel(": ".join(self.one_RM[2]))
-    squat_label.setFont(QFont("Ariel", 10))
+    self.squat_label_ORM = QLabel(": ".join(self.one_RM[2]))
+    self.squat_label_ORM.setFont(QFont("Ariel", 10))
 
-    vertical_press_label = QLabel(": ".join(self.one_RM[3]))
-    vertical_press_label.setFont(QFont("Ariel", 10))
+    self.vertical_press_label_ORM = QLabel(": ".join(self.one_RM[3]))
+    self.vertical_press_label_ORM.setFont(QFont("Ariel", 10))
 
     orm_buttons = QHBoxLayout()
     update_button = QPushButton("Update")
@@ -82,10 +82,10 @@ class MainPanel(QWidget):
     orm_buttons.addWidget(clear_button)
 
     orm_panel.addWidget(main_label)
-    orm_panel.addWidget(horizontal_press_label)
-    orm_panel.addWidget(floor_pull_label)
-    orm_panel.addWidget(squat_label)
-    orm_panel.addWidget(vertical_press_label)
+    orm_panel.addWidget(self.horizontal_press_label_ORM)
+    orm_panel.addWidget(self.floor_pull_label_ORM)
+    orm_panel.addWidget(self.squat_label_ORM)
+    orm_panel.addWidget(self.vertical_press_label_ORM)
     orm_panel.addLayout(orm_buttons)
 
     orm_panel.setSpacing(5)
@@ -100,17 +100,17 @@ class MainPanel(QWidget):
     main_label = QLabel("Lifts For Reps")
     main_label.setFont(QFont("Ariel", 18, weight=QFont.Bold))
 
-    horizontal_press_label = QLabel(": ".join(self.lifts_reps[0]))
-    horizontal_press_label.setFont(QFont("Ariel", 10))
+    self.horizontal_press_label_reps = QLabel(": ".join(self.lifts_reps[0]))
+    self.horizontal_press_label_reps.setFont(QFont("Ariel", 10))
 
-    floor_pull_label = QLabel(": ".join(self.lifts_reps[1]))
-    floor_pull_label.setFont(QFont("Ariel", 10))
+    self.floor_pull_label_reps = QLabel(": ".join(self.lifts_reps[1]))
+    self.floor_pull_label_reps.setFont(QFont("Ariel", 10))
 
-    squat_label = QLabel(": ".join(self.lifts_reps[2]))
-    squat_label.setFont(QFont("Ariel", 10))
+    self.squat_label_reps = QLabel(": ".join(self.lifts_reps[2]))
+    self.squat_label_reps.setFont(QFont("Ariel", 10))
 
-    vertical_press_label = QLabel(": ".join(self.lifts_reps[3]))
-    vertical_press_label.setFont(QFont("Ariel", 10))
+    self.vertical_press_label_reps = QLabel(": ".join(self.lifts_reps[3]))
+    self.vertical_press_label_reps.setFont(QFont("Ariel", 10))
 
     reps_buttons = QHBoxLayout()
     update_button = QPushButton("Update")
@@ -120,10 +120,10 @@ class MainPanel(QWidget):
     reps_buttons.addWidget(clear_button)
 
     reps_panel.addWidget(main_label)
-    reps_panel.addWidget(horizontal_press_label)
-    reps_panel.addWidget(floor_pull_label)
-    reps_panel.addWidget(squat_label)
-    reps_panel.addWidget(vertical_press_label)
+    reps_panel.addWidget(self.horizontal_press_label_reps)
+    reps_panel.addWidget(self.floor_pull_label_reps)
+    reps_panel.addWidget(self.squat_label_reps)
+    reps_panel.addWidget(self.vertical_press_label_reps)
     reps_panel.addLayout(reps_buttons)
 
     framed_layout = QFrame()
@@ -139,16 +139,33 @@ class MainPanel(QWidget):
     lift_history_button.clicked.connect(self.create_lift_history_window)
     preferred_lists_button = QPushButton()
     preferred_lists_button.setText("Preferred Lifts")
-    preferred_lists_button.clicked.connect(self.create_preferred_lists_window)
+    preferred_lists_button.clicked.connect(lambda: self.plists_window.show())
 
     buttons_panel.addWidget(lift_history_button)
     buttons_panel.addWidget(preferred_lists_button)
     return buttons_panel
+  
+  @pyqtSlot(bool)
+  def changed_preferred_lifts(self, changed):
+    if changed:
+      fetch_lifts = self.interface.fetch_preferred_lifts()
+      parsed_lifts = list(self.interface.parse_lifts_string(fetch_lifts).values())
+      
+      one_RM_labels = [self.horizontal_press_label_ORM, self.floor_pull_label_ORM,
+                       self.squat_label_ORM, self.vertical_press_label_ORM]
 
-  def create_preferred_lists_window(self):
-    global plists_window
-    plists_window = PreferredLifts()
-    plists_window.show()
+      lifts_for_reps_labels = [self.horizontal_press_label_reps, self.floor_pull_label_reps,
+                               self.squat_label_reps, self.vertical_press_label_reps]
+      
+      for i, label in enumerate(one_RM_labels):
+        label_text = label.text().split(":")
+        label_text[0] = parsed_lifts[i]
+        label.setText(": ".join(label_text))
+
+      for i, label in enumerate(lifts_for_reps_labels):
+        label_text = label.text().split(":")
+        label_text[0] = parsed_lifts[i]
+        label.setText(": ".join(label_text))
 
   def create_lift_history_window(self):
     global lift_history_window
