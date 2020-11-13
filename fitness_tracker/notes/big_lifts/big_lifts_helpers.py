@@ -84,11 +84,8 @@ class BigLifts:
     default_exercises = ["Bench Press", "Deadlift", "Back Squat", "Overhead Press"]
     email = self.fetch_user_email()
     table_name = self.fetch_user_info_table_name()
-    #one_RM_dict = self.stringify_lifts_dict({exercise:"0" for exercise in default_exercises})
     one_RM_dict = json.dumps({exercise:"0" for exercise in default_exercises})
-    #lifts_for_reps = self.stringify_lifts_dict({exercise:"0" for exercise in default_exercises})
     lifts_for_reps = json.dumps({exercise:"0" for exercise in default_exercises})
-    #preferred_lifts = self.stringify_lifts_dict({"Horizontal Press": default_exercises[0],
     preferred_lifts = json.dumps({"Horizontal Press": default_exercises[0],
                                                  "Floor Pull": default_exercises[1],
                                                  "Squat": default_exercises[2],
@@ -148,7 +145,6 @@ class BigLifts:
 
   def update_preferred_lifts(self, new_preferred_lifts):
     new_preferred_lifts = json.dumps(new_preferred_lifts)
-    #new_preferred_lifts = self.stringify_lifts_dict(new_preferred_lifts)
     email = self.fetch_user_email()
     update_query = "UPDATE big_lifts SET preferred_lifts='%s' WHERE email='%s'" % (new_preferred_lifts, email)
     with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
