@@ -17,10 +17,13 @@ class MainPanel(QWidget):
     self.units = "kg" if self.interface.fetch_units() == "metric" else "lb"
     self.one_RM = [[lift, " ".join([weight, self.units])] for lift, weight in json.loads(self.interface.fetch_one_rep_maxes()).items()]
     self.lifts_reps = [[lift, " ".join(["x".join(weight), self.units])] for lift, weight in json.loads(self.interface.fetch_lifts_for_reps()).items()]
+    
     self.plists_window = PreferredLifts()
     self.plists_window.change_lifts_signal.connect(self.changed_preferred_lifts)
+    
     self.update_1RM_window = Update1RMWindow()
     self.update_1RM_window.change_1RM_lifts_signal.connect(self.changed_1RM_lifts)
+    
     self.lifts_for_reps = UpdateLiftsForRepsWindow()
     self.lifts_for_reps.change_lifts_for_reps_signal.connect(self.changed_lifts_for_reps)
     self.create_panel()
@@ -83,6 +86,7 @@ class MainPanel(QWidget):
     update_button = QPushButton("Update")
     update_button.clicked.connect(lambda: self.update_1RM_window.show())
     clear_button = QPushButton("Clear")
+    clear_button.clicked.connect(lambda: self.clear_one_rep_maxes())
     orm_buttons.addWidget(update_button)
     orm_buttons.addWidget(clear_button)
 
@@ -121,6 +125,7 @@ class MainPanel(QWidget):
     update_button = QPushButton("Update")
     update_button.clicked.connect(lambda: self.lifts_for_reps.show())
     clear_button = QPushButton("Clear")
+    clear_button.clicked.connect(lambda: self.clear_lifts_for_reps())
     reps_buttons.addWidget(update_button)
     reps_buttons.addWidget(clear_button)
 
@@ -175,25 +180,42 @@ class MainPanel(QWidget):
   def changed_1RM_lifts(self, changed):
     if changed:
       fetch_weight = list(json.loads(self.interface.fetch_one_rep_maxes()).values())
-      one_RM_labels = [self.horizontal_press_label_ORM, self.floor_pull_label_ORM,
-                       self.squat_label_ORM, self.vertical_press_label_ORM]
-      
-      for i, label in enumerate(one_RM_labels):
-        label_text = label.text().split(": ")
-        label_text[1] = " ".join([fetch_weight[i], self.units])
-        label.setText(": ".join(label_text))
+      self.set_1RM_labels_text(fetch_weight)
 
   @pyqtSlot(bool)
   def changed_lifts_for_reps(self, changed):
     if changed:
       fetch_reps_and_weight = list(json.loads(self.interface.fetch_lifts_for_reps()).values())
-      lifts_for_reps_labels = [self.horizontal_press_label_reps, self.floor_pull_label_reps,
-                               self.squat_label_reps, self.vertical_press_label_reps]
+      self.set_lifts_for_reps_labels_text(fetch_reps_and_weight)
+  
+  def set_lifts_for_reps_labels_text(self, text):
+    lifts_for_reps_labels = [self.horizontal_press_label_reps, self.floor_pull_label_reps,
+                             self.squat_label_reps, self.vertical_press_label_reps]
       
-      for i, label in enumerate(lifts_for_reps_labels):
-        label_text = label.text().split(": ")
-        label_text[1] = " ".join(["x".join(fetch_reps_and_weight[i]), self.units])
-        label.setText(": ".join(label_text))
+    for i, label in enumerate(lifts_for_reps_labels):
+      label_text = label.text().split(": ")
+      label_text[1] = " ".join(["x".join(text[i]), self.units])
+      label.setText(": ".join(label_text))
+  
+  def set_1RM_labels_text(self, text):
+    one_RM_labels = [self.horizontal_press_label_ORM, self.floor_pull_label_ORM,
+                       self.squat_label_ORM, self.vertical_press_label_ORM]
+    for i, label in enumerate(one_RM_labels):
+      label_text = label.text().split(": ")
+      label_text[1] = " ".join([text[i], self.units])
+      label.setText(": ".join(label_text))
+
+  def clear_one_rep_maxes(self):
+    self.interface.clear_one_rep_maxes()
+    fetch_weight = list(json.loads(self.interface.fetch_one_rep_maxes()).values())
+    self.set_1RM_labels_text(fetch_weight)
+    self.update_1RM_window.set_line_edit_values()
+   
+  def clear_lifts_for_reps(self):
+    self.interface.clear_lifts_for_reps()
+    fetch_reps_and_weight = list(json.loads(self.interface.fetch_lifts_for_reps()).values())
+    self.set_lifts_for_reps_labels_text(fetch_reps_and_weight)
+    self.lifts_for_reps.set_line_edit_values()
 
   def create_lift_history_window(self):
     global lift_history_window

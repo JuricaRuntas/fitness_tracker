@@ -197,3 +197,41 @@ class BigLifts:
     with sqlite3.connect(db_path) as conn:
       cursor = conn.cursor()
       cursor.execute(update_query)
+
+  def clear_one_rep_maxes(self):
+    email = self.fetch_user_email()
+    one_rep_maxes = json.loads(self.fetch_one_rep_maxes())
+    for exercise, value in one_rep_maxes.items():
+      one_rep_maxes[exercise] = "0"
+
+    one_rep_maxes = json.dumps(one_rep_maxes)
+    
+    clear = """UPDATE big_lifts SET "1RM"='%s' WHERE email='%s'"""% (one_rep_maxes, email)
+
+    with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                          user=db_info["user"], password=db_info["password"]) as conn:
+      with conn.cursor() as cursor:
+        cursor.execute(clear)
+
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      cursor.execute(clear)
+
+  def clear_lifts_for_reps(self):
+    email = self.fetch_user_email()
+    lifts_for_reps = json.loads(self.fetch_lifts_for_reps())
+    for exercise, values in lifts_for_reps.items():
+      lifts_for_reps[exercise] = ["0", "0"]
+
+    lifts_for_reps = json.dumps(lifts_for_reps)
+
+    clear = "UPDATE big_lifts SET lifts_for_reps='%s' WHERE email='%s'" % (lifts_for_reps, email)
+
+    with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                          user=db_info["user"], password=db_info["password"]) as conn:
+      with conn.cursor() as cursor:
+        cursor.execute(clear)
+
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      cursor.execute(clear)

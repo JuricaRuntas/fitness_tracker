@@ -13,6 +13,7 @@ class Update1RMWindow(QWidget):
     self.preferred_lifts = json.loads(self.interface.fetch_preferred_lifts())
     self.setWindowTitle("Update One Rep Max Lifts")
     self.setLayout(self.create_panel())
+    self.set_line_edit_values()
 
   def create_panel(self):
     form_layout = QFormLayout()
@@ -70,6 +71,14 @@ class Update1RMWindow(QWidget):
       new_maxes = [horizontal_press_max, floor_pull_max, squat_max, vertical_press_max]
       self.interface.update_1RM_lifts(new_maxes)
       self.change_1RM_lifts_signal.emit(True)
+      self.set_line_edit_values()
       self.close()
     except ValueError: # user submitted text/empty string
       pass
+
+  def set_line_edit_values(self):
+    one_rep_maxes = list(json.loads(self.interface.fetch_one_rep_maxes()).values())
+    self.horizontal_press_edit.setText(one_rep_maxes[0])
+    self.floor_pull_edit.setText(one_rep_maxes[1])
+    self.squat_edit.setText(one_rep_maxes[2])
+    self.vertical_press_edit.setText(one_rep_maxes[3])

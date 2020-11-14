@@ -13,6 +13,7 @@ class UpdateLiftsForRepsWindow(QWidget):
     self.preferred_lifts = json.loads(self.interface.fetch_preferred_lifts())
     self.setWindowTitle("Update Lifts For Reps")
     self.setLayout(self.create_panel())
+    self.set_line_edit_values()
 
   def create_panel(self):
     form_layout = QFormLayout()
@@ -91,7 +92,7 @@ class UpdateLiftsForRepsWindow(QWidget):
       horizontal_press_reps = str(int(self.horizontal_press_reps_edit.text()))      
       floor_pull_reps = str(int(self.floor_pull_reps_edit.text()))
       squat_reps = str(int(self.squat_reps_edit.text()))
-      vertical_press_reps = str(int(self.vertical_press_edit.text()))
+      vertical_press_reps = str(int(self.vertical_press_reps_edit.text()))
     
       new_lifts_for_reps = [[horizontal_press_reps, horizontal_press_weight],
                             [floor_pull_reps, floor_pull_weight],
@@ -99,6 +100,28 @@ class UpdateLiftsForRepsWindow(QWidget):
                             [vertical_press_reps, vertical_press_weight]]
       self.interface.update_lifts_for_reps(new_lifts_for_reps)
       self.change_lifts_for_reps_signal.emit(True)
+      self.set_line_edit_values()
       self.close()
     except ValueError:
       pass
+
+  def set_line_edit_values(self):
+    lift_values = list(json.loads(self.interface.fetch_lifts_for_reps()).values())
+    reps = [lift[0] for lift in lift_values]
+    weight = [lift[1] for lift in lift_values]
+    
+    reps_line_edit = [self.horizontal_press_reps_edit,
+                      self.floor_pull_reps_edit,
+                      self.squat_reps_edit,
+                      self.vertical_press_reps_edit]
+
+    weight_line_edit = [self.horizontal_press_edit,
+                        self.floor_pull_edit,
+                        self.squat_edit,
+                        self.vertical_press_edit]
+
+    for i, line_edit in enumerate(reps_line_edit):
+      line_edit.setText(reps[i])
+
+    for i, line_edit in enumerate(weight_line_edit):
+      line_edit.setText(weight[i])
