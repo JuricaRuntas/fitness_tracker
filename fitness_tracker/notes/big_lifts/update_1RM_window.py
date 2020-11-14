@@ -1,8 +1,16 @@
+import json
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QLineEdit, QHBoxLayout
+from PyQt5.QtCore import pyqtSignal
+from .big_lifts_helpers import BigLifts
 
 class Update1RMWindow(QWidget):
+  change_1RM_lifts_signal = pyqtSignal(bool)
+  
   def __init__(self):
     super().__init__()
+    self.interface = BigLifts()
+    self.units = "kg" if self.interface.fetch_units() == "metric" else "lb"
+    self.preferred_lifts = json.loads(self.interface.fetch_preferred_lifts())
     self.setWindowTitle("Update One Rep Max Lifts")
     self.setLayout(self.create_panel())
 
@@ -12,36 +20,38 @@ class Update1RMWindow(QWidget):
     exercise_label = QLabel("Exercise")
     weight_label = QLabel("Weight")
     
-    units_label = QLabel("kg")
-    horizontal_press_label = QLabel("Bench Press")
-    horizontal_press_edit = QLineEdit()
+    horizontal_press_label = QLabel(self.preferred_lifts["Horizontal Press"])
+    self.horizontal_press_edit = QLineEdit()
+    units_label = QLabel(self.units)
     hbox = QHBoxLayout()
-    hbox.addWidget(horizontal_press_edit)
+    hbox.addWidget(self.horizontal_press_edit)
     hbox.addWidget(units_label)
 
-    units_label1 = QLabel("kg")
-    floor_pull_label = QLabel("Deadlift")
-    floor_pull_edit = QLineEdit()
+    floor_pull_label = QLabel(self.preferred_lifts["Floor Pull"])
+    self.floor_pull_edit = QLineEdit()
+    units_label1 = QLabel(self.units)
     hbox1 = QHBoxLayout()
-    hbox1.addWidget(floor_pull_edit)
+    hbox1.addWidget(self.floor_pull_edit)
     hbox1.addWidget(units_label1)
 
-    units_label2 = QLabel("kg")
-    squat_label = QLabel("Back Squat")
-    squat_edit = QLineEdit()
+    squat_label = QLabel(self.preferred_lifts["Squat"])
+    self.squat_edit = QLineEdit()
+    units_label2 = QLabel(self.units)
     hbox2 = QHBoxLayout()
-    hbox2.addWidget(squat_edit)
+    hbox2.addWidget(self.squat_edit)
     hbox2.addWidget(units_label2)
 
-    units_label3 = QLabel("kg")
-    vertical_press_label = QLabel("Overhead Press")
-    vertical_press_edit = QLineEdit()
+    vertical_press_label = QLabel(self.preferred_lifts["Vertical Press"])
+    self.vertical_press_edit = QLineEdit()
+    units_label3 = QLabel(self.units)
     hbox3 = QHBoxLayout()
-    hbox3.addWidget(vertical_press_edit)
+    hbox3.addWidget(self.vertical_press_edit)
     hbox3.addWidget(units_label3)
 
     save_button = QPushButton("Save")
+    save_button.clicked.connect(lambda: self.save_1RM_lifts())
     cancel_button = QPushButton("Cancel")
+    cancel_button.clicked.connect(lambda: self.close())
 
     form_layout.addRow(exercise_label, weight_label)
     form_layout.addRow(horizontal_press_label, hbox)
@@ -50,3 +60,16 @@ class Update1RMWindow(QWidget):
     form_layout.addRow(vertical_press_label, hbox3)
     form_layout.addRow(save_button, cancel_button)
     return form_layout
+
+  def save_1RM_lifts(self):
+    try:
+      horizontal_press_max = str(float(self.horizontal_press_edit.text()))
+      floor_pull_max = str(float(self.floor_pull_edit.text()))
+      squat_max = str(float(self.squat_edit.text()))
+      vertical_press_max = str(float(self.vertical_press_edit.text()))
+      new_maxes = [horizontal_press_max, floor_pull_max, squat_max, vertical_press_max]
+      self.interface.update_1RM_lifts(new_maxes)
+      self.change_1RM_lifts_signal.emit(True)
+      self.close()
+    except ValueError: # user submitted text/empty string
+      pass

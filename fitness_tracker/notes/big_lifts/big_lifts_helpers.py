@@ -85,7 +85,7 @@ class BigLifts:
     email = self.fetch_user_email()
     table_name = self.fetch_user_info_table_name()
     one_RM_dict = json.dumps({exercise:"0" for exercise in default_exercises})
-    lifts_for_reps = json.dumps({exercise:"0" for exercise in default_exercises})
+    lifts_for_reps = json.dumps({exercise:["0", "0"] for exercise in default_exercises})
     preferred_lifts = json.dumps({"Horizontal Press": default_exercises[0],
                                                  "Floor Pull": default_exercises[1],
                                                  "Squat": default_exercises[2],
@@ -107,26 +107,6 @@ class BigLifts:
       insert_query = "INSERT INTO big_lifts {columns} VALUES {values}"
       cursor.execute(insert_query.format(columns=tuple(default_dict.keys()), values=tuple(default_dict.values())))
 
-  def create_update_query(self, table_name, email, columns_values_dict, sqlite=False):
-    update_query = "UPDATE {table} SET"
-    # create list with [column_name, value] pairs
-    pairs = [[pair[0], pair[1]] for pair in zip(columns_values_dict.keys(), columns_values_dict.values())]
-    for pair in pairs:
-      pair[1] = "'%s'" % pair[1] # add ticks to value
-      joined_pair = "=".join([pair[0], pair[1]]) # create column='value' string
-      # if its first pair, join it to update_query with blank space
-      if pairs.index(pair) == 0: update_query = " ".join([update_query, joined_pair])
-      # if its last pair, add WHERE email={email} to the end of update_query
-      elif pairs.index(pair) == len(pairs)-1:
-        update_query = ", ".join([update_query, joined_pair])
-        update_query = " ".join([update_query, "WHERE email={email}"])
-      else: update_query = ", ".join([update_query, joined_pair])
-    if sqlite: # make adjustments for sqlite3
-      update_query = update_query.replace("{table}", "'%s'").replace("email={email}", "email='%s'")
-      return update_query % (table_name, email)
-    else: # make sql query for psycopg2
-      return sql.SQL(update_query).format(table=sql.Identifier(table_name), email=sql.Identifier(email))
-  
   def create_big_lifts_table(self):
     with sqlite3.connect(db_path) as conn:
       cursor = conn.cursor()
@@ -155,7 +135,8 @@ class BigLifts:
     with sqlite3.connect(db_path) as conn:
       cursor = conn.cursor()
       cursor.execute(update_query)
-
+  
+  # updates exercises
   def update_1RM_and_lifts_for_reps(self):
     email = self.fetch_user_email()
     preferred_lifts = list(json.loads(self.fetch_preferred_lifts()).values())
@@ -177,3 +158,42 @@ class BigLifts:
       cursor = conn.cursor()
       cursor.execute(update_query1)
       cursor.execute(update_query2)
+  
+  # updates weight
+  def update_1RM_lifts(self, new_values):
+    email = self.fetch_user_email()
+    units = self.fetch_units()
+    one_rep_max_lifts = json.loads(self.fetch_one_rep_maxes())
+    for i, lift in enumerate(one_rep_max_lifts.keys()):
+      one_rep_max_lifts[lift] = new_values[i]
+
+    one_rep_max_lifts = json.dumps(one_rep_max_lifts)
+   
+    update_query = """UPDATE big_lifts SET "1RM"='%s' WHERE email='%s'""" % (one_rep_max_lifts, email)
+    with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                          user=db_info["user"], password=db_info["password"]) as conn:
+      with conn.cursor() as cursor:
+        cursor.execute(update_query)
+
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      cursor.execute(update_query)
+  
+  # updates reps and weight
+  def update_lifts_for_reps(self, new_lifts_for_reps):
+    email = self.fetch_user_email()
+    big_lifts = json.loads(self.fetch_lifts_for_reps())
+    for i, lift in enumerate(big_lifts.keys()):
+      big_lifts[lift] = new_lifts_for_reps[i]
+
+    big_lifts = json.dumps(big_lifts)
+
+    update_query = "UPDATE big_lifts SET lifts_for_reps='%s' WHERE email='%s'" % (big_lifts, email)
+    with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                          user=db_info["user"], password=db_info["password"]) as conn:
+      with conn.cursor() as cursor:
+        cursor.execute(update_query)
+
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      cursor.execute(update_query)

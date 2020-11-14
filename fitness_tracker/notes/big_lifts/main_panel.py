@@ -15,10 +15,14 @@ class MainPanel(QWidget):
     self.interface.create_big_lifts_table()
     if self.interface.table_is_empty(): self.interface.insert_default_values()
     self.units = "kg" if self.interface.fetch_units() == "metric" else "lb"
-    self.one_RM = [[lift, weight, self.units] for lift, weight in json.loads(self.interface.fetch_one_rep_maxes()).items()]
-    self.lifts_reps = [[lift, weight, self.units] for lift, weight in json.loads(self.interface.fetch_lifts_for_reps()).items()]
+    self.one_RM = [[lift, " ".join([weight, self.units])] for lift, weight in json.loads(self.interface.fetch_one_rep_maxes()).items()]
+    self.lifts_reps = [[lift, " ".join(["x".join(weight), self.units])] for lift, weight in json.loads(self.interface.fetch_lifts_for_reps()).items()]
     self.plists_window = PreferredLifts()
     self.plists_window.change_lifts_signal.connect(self.changed_preferred_lifts)
+    self.update_1RM_window = Update1RMWindow()
+    self.update_1RM_window.change_1RM_lifts_signal.connect(self.changed_1RM_lifts)
+    self.lifts_for_reps = UpdateLiftsForRepsWindow()
+    self.lifts_for_reps.change_lifts_for_reps_signal.connect(self.changed_lifts_for_reps)
     self.create_panel()
 
   def create_panel(self):
@@ -77,7 +81,7 @@ class MainPanel(QWidget):
 
     orm_buttons = QHBoxLayout()
     update_button = QPushButton("Update")
-    update_button.clicked.connect(self.create_update_1RM_window)
+    update_button.clicked.connect(lambda: self.update_1RM_window.show())
     clear_button = QPushButton("Clear")
     orm_buttons.addWidget(update_button)
     orm_buttons.addWidget(clear_button)
@@ -115,7 +119,7 @@ class MainPanel(QWidget):
 
     reps_buttons = QHBoxLayout()
     update_button = QPushButton("Update")
-    update_button.clicked.connect(self.create_update_lifts_for_reps_window)
+    update_button.clicked.connect(lambda: self.lifts_for_reps.show())
     clear_button = QPushButton("Clear")
     reps_buttons.addWidget(update_button)
     reps_buttons.addWidget(clear_button)
@@ -166,21 +170,33 @@ class MainPanel(QWidget):
         label_text = label.text().split(":")
         label_text[0] = parsed_lifts[i]
         label.setText(": ".join(label_text))
+  
+  @pyqtSlot(bool)
+  def changed_1RM_lifts(self, changed):
+    if changed:
+      fetch_weight = list(json.loads(self.interface.fetch_one_rep_maxes()).values())
+      one_RM_labels = [self.horizontal_press_label_ORM, self.floor_pull_label_ORM,
+                       self.squat_label_ORM, self.vertical_press_label_ORM]
+      
+      for i, label in enumerate(one_RM_labels):
+        label_text = label.text().split(": ")
+        label_text[1] = " ".join([fetch_weight[i], self.units])
+        label.setText(": ".join(label_text))
+
+  @pyqtSlot(bool)
+  def changed_lifts_for_reps(self, changed):
+    if changed:
+      fetch_reps_and_weight = list(json.loads(self.interface.fetch_lifts_for_reps()).values())
+      lifts_for_reps_labels = [self.horizontal_press_label_reps, self.floor_pull_label_reps,
+                               self.squat_label_reps, self.vertical_press_label_reps]
+      
+      for i, label in enumerate(lifts_for_reps_labels):
+        label_text = label.text().split(": ")
+        label_text[1] = " ".join(["x".join(fetch_reps_and_weight[i]), self.units])
+        label.setText(": ".join(label_text))
 
   def create_lift_history_window(self):
     global lift_history_window
     lift_history_window = LiftHistory()
     lift_history_window.setGeometry(100, 200, 300, 300)
     lift_history_window.show()
-
-  def create_update_1RM_window(self):
-    global update_1RM_window
-    update_1RM_window = Update1RMWindow()
-    update_1RM_window.setGeometry(100, 200, 200, 200)
-    update_1RM_window.show()
-
-  def create_update_lifts_for_reps_window(self):
-    global lifts_for_reps
-    lifts_for_reps = UpdateLiftsForRepsWindow()
-    lifts_for_reps.setGeometry(100, 200, 200, 200)
-    lifts_for_reps.show()
