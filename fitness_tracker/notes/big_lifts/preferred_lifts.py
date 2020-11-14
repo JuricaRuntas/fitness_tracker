@@ -37,6 +37,7 @@ class PreferredLifts(QWidget):
     save_button = QPushButton("Save")
     save_button.clicked.connect(lambda: self.save_preferred_lifts())
     cancel_button = QPushButton("Cancel")
+    cancel_button.clicked.connect(lambda: self.close())
 
     form_layout.addRow(horizontal_press_label, self.horizontal_press_dropdown)
     form_layout.addRow(floor_pull_label, self.floor_pull_dropdown)
