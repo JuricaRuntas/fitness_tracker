@@ -5,7 +5,8 @@ from .big_lifts_helpers import BigLifts
 
 class Update1RMWindow(QWidget):
   change_1RM_lifts_signal = pyqtSignal(bool)
-  
+  history_signal = pyqtSignal(bool)
+
   def __init__(self):
     super().__init__()
     self.interface = BigLifts()
@@ -52,7 +53,7 @@ class Update1RMWindow(QWidget):
     save_button = QPushButton("Save")
     save_button.clicked.connect(lambda: self.save_1RM_lifts())
     cancel_button = QPushButton("Cancel")
-    cancel_button.clicked.connect(lambda: self.close())
+    cancel_button.clicked.connect(lambda: self.close_update_1RM())
 
     form_layout.addRow(exercise_label, weight_label)
     form_layout.addRow(horizontal_press_label, hbox)
@@ -64,17 +65,27 @@ class Update1RMWindow(QWidget):
 
   def save_1RM_lifts(self):
     try:
+      exercises = list(json.loads(self.interface.fetch_one_rep_maxes()).keys())
       horizontal_press_max = str(float(self.horizontal_press_edit.text()))
       floor_pull_max = str(float(self.floor_pull_edit.text()))
       squat_max = str(float(self.squat_edit.text()))
       vertical_press_max = str(float(self.vertical_press_edit.text()))
-      new_maxes = [horizontal_press_max, floor_pull_max, squat_max, vertical_press_max]
+      new_maxes = {exercises[0]:horizontal_press_max, exercises[1]:floor_pull_max,
+                   exercises[2]:squat_max, exercises[3]:vertical_press_max}
+      
+      diff = self.interface.lift_difference(new_maxes, one_RM=True)
+      self.interface.update_lift_history(diff) 
+      self.history_signal.emit(True)
       self.interface.update_1RM_lifts(new_maxes)
       self.change_1RM_lifts_signal.emit(True)
       self.set_line_edit_values()
-      self.close()
+      self.close() 
     except ValueError: # user submitted text/empty string
       pass
+  
+  def close_update_1RM(self):
+    self.close()
+    self.set_line_edit_values()
 
   def set_line_edit_values(self):
     one_rep_maxes = list(json.loads(self.interface.fetch_one_rep_maxes()).values())

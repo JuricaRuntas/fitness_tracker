@@ -17,15 +17,22 @@ class MainPanel(QWidget):
     self.units = "kg" if self.interface.fetch_units() == "metric" else "lb"
     self.one_RM = [[lift, " ".join([weight, self.units])] for lift, weight in json.loads(self.interface.fetch_one_rep_maxes()).items()]
     self.lifts_reps = [[lift, " ".join(["x".join(weight), self.units])] for lift, weight in json.loads(self.interface.fetch_lifts_for_reps()).items()]
+ 
+    self.lift_history_window = LiftHistory()
+    self.lift_history_window.setGeometry(100, 200, 300, 300)   
     
     self.plists_window = PreferredLifts()
     self.plists_window.change_lifts_signal.connect(self.changed_preferred_lifts)
     
     self.update_1RM_window = Update1RMWindow()
     self.update_1RM_window.change_1RM_lifts_signal.connect(self.changed_1RM_lifts)
+    self.update_1RM_window.history_signal.connect(
+    lambda signal: self.lift_history_window.create_history(signal))
     
     self.lifts_for_reps = UpdateLiftsForRepsWindow()
     self.lifts_for_reps.change_lifts_for_reps_signal.connect(self.changed_lifts_for_reps)
+    self.lifts_for_reps.history_signal.connect(lambda signal: self.lift_history_window.create_history(signal))
+
     self.create_panel()
 
   def create_panel(self):
@@ -146,7 +153,7 @@ class MainPanel(QWidget):
     buttons_panel = QHBoxLayout()
     lift_history_button = QPushButton()
     lift_history_button.setText("Lift History")
-    lift_history_button.clicked.connect(self.create_lift_history_window)
+    lift_history_button.clicked.connect(lambda: self.lift_history_window.show())
     preferred_lists_button = QPushButton()
     preferred_lists_button.setText("Preferred Lifts")
     preferred_lists_button.clicked.connect(lambda: self.plists_window.show())
@@ -216,9 +223,3 @@ class MainPanel(QWidget):
     fetch_reps_and_weight = list(json.loads(self.interface.fetch_lifts_for_reps()).values())
     self.set_lifts_for_reps_labels_text(fetch_reps_and_weight)
     self.lifts_for_reps.set_line_edit_values()
-
-  def create_lift_history_window(self):
-    global lift_history_window
-    lift_history_window = LiftHistory()
-    lift_history_window.setGeometry(100, 200, 300, 300)
-    lift_history_window.show()

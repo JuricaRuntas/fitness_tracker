@@ -5,6 +5,7 @@ from .big_lifts_helpers import BigLifts
 
 class UpdateLiftsForRepsWindow(QWidget):
   change_lifts_for_reps_signal = pyqtSignal(bool)
+  history_signal = pyqtSignal(bool)
 
   def __init__(self):
     super().__init__()
@@ -72,7 +73,7 @@ class UpdateLiftsForRepsWindow(QWidget):
     save_button = QPushButton("Save")
     save_button.clicked.connect(lambda: self.save_lifts_for_reps())
     cancel_button = QPushButton("Cancel")
-    cancel_button.clicked.connect(lambda: self.close())
+    cancel_button.clicked.connect(lambda: self.close_update_lifts_for_reps())
     
     form_layout.addRow(exercise_label, header_layout)
     form_layout.addRow(horizontal_press_label, hbox)
@@ -84,6 +85,7 @@ class UpdateLiftsForRepsWindow(QWidget):
 
   def save_lifts_for_reps(self):
     try:
+      exercises = list(json.loads(self.interface.fetch_lifts_for_reps()).keys())
       horizontal_press_weight = str(float(self.horizontal_press_edit.text()))
       floor_pull_weight = str(float(self.floor_pull_edit.text()))
       squat_weight = str(float(self.squat_edit.text()))
@@ -94,16 +96,23 @@ class UpdateLiftsForRepsWindow(QWidget):
       squat_reps = str(int(self.squat_reps_edit.text()))
       vertical_press_reps = str(int(self.vertical_press_reps_edit.text()))
     
-      new_lifts_for_reps = [[horizontal_press_reps, horizontal_press_weight],
-                            [floor_pull_reps, floor_pull_weight],
-                            [squat_reps, squat_weight],
-                            [vertical_press_reps, vertical_press_weight]]
+      new_lifts_for_reps = {exercises[0]: [horizontal_press_reps, horizontal_press_weight],
+                            exercises[1]: [floor_pull_reps, floor_pull_weight],
+                            exercises[2]: [squat_reps, squat_weight],
+                            exercises[3]: [vertical_press_reps, vertical_press_weight]}
+      diff = self.interface.lift_difference(new_lifts_for_reps, lifts_reps=True)
+      self.interface.update_lift_history(diff)
+      self.history_signal.emit(True)
       self.interface.update_lifts_for_reps(new_lifts_for_reps)
       self.change_lifts_for_reps_signal.emit(True)
       self.set_line_edit_values()
       self.close()
     except ValueError:
       pass
+  
+  def close_update_lifts_for_reps(self):
+    self.close()
+    self.set_line_edit_values()
 
   def set_line_edit_values(self):
     lift_values = list(json.loads(self.interface.fetch_lifts_for_reps()).values())
