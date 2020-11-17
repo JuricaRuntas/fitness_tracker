@@ -30,14 +30,16 @@ class LiftHistory(QWidget):
         self.layouts[i] = QHBoxLayout()
         self.labels[i] = QLabel(self)
         self.delete_buttons[i] = QPushButton("X", self)
-        self.delete_buttons[i].clicked.connect(partial(self.delete_history_entry, i))
       
       for j, exercise in enumerate(lift_history):
         try:
           self.labels[j].setText(": ".join([exercise[0], " ".join([exercise[1], self.units])]))
         except TypeError: # joining lift for reps as 1RM lift 
           self.labels[j].setText(": ".join([exercise[0], " ".join(["x".join(exercise[1]), self.units])]))
-
+        
+        self.delete_buttons[j].setProperty("entry_index", exercise[-1])
+        self.delete_buttons[j].clicked.connect(partial(self.delete_history_entry, j, self.delete_buttons[j].property("entry_index")))
+        
         self.layouts[j].addWidget(self.labels[j])
         self.layouts[j].addWidget(self.delete_buttons[j])
         self.layout.addLayout(self.layouts[j])
@@ -52,7 +54,8 @@ class LiftHistory(QWidget):
         history_entry_widget.setParent(None)
       self.layout.removeItem(self.layouts[i])
   
-  def delete_history_entry(self, i):
+  def delete_history_entry(self, i, entry_index):
     self.labels[i].setParent(None)
     self.delete_buttons[i].setParent(None)
     self.layout.removeItem(self.layouts[i])
+    self.interface.delete_history_entry(entry_index)

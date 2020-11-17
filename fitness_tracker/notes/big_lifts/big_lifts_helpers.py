@@ -253,10 +253,16 @@ class BigLifts:
     lift_history = [[exercise, value] for exercise, value in lift_history.items()]
     new_lift_history = None
     if current_lift_history == None:
+      indices = list(reversed(range(len(lift_history))))
+      for i, lift in enumerate(lift_history): lift.append(indices[i])
       new_lift_history = json.dumps(lift_history)
     else:
+      last_index = json.loads(current_lift_history)[0][-1]+1
       current_lift_history = list(reversed(json.loads(current_lift_history)))
-      for lift in reversed(lift_history): current_lift_history.append(lift)
+      for lift in reversed(lift_history):
+        lift.append(last_index)
+        current_lift_history.append(lift)
+        last_index += 1
       new_lift_history = json.dumps(list(reversed(current_lift_history)))
 
     update = "UPDATE big_lifts SET lift_history='%s' WHERE email='%s'" % (new_lift_history, email)
@@ -327,3 +333,20 @@ class BigLifts:
       diff = list(new_lifts.difference(db_lifts))
       difference = {exercise.split(":")[0]:exercise.split(":")[1].split("x") for exercise in diff}
     return {key: value for key, value in sorted(difference.items(), key=lambda exercise: self.sort_exercises(exercise[0]))}
+
+  def delete_history_entry(self, entry_index):
+    email = self.fetch_user_email()
+    lift_history = json.loads(self.fetch_lift_history())
+    lift_history = [lift for lift in lift_history if not lift[-1] == entry_index]
+    
+    update_query1 = "UPDATE big_lifts SET lift_history='%s' WHERE email='%s'" % (json.dumps(lift_history), email)
+    update_query2 = "UPDATE big_lifts SET lift_history=NULL WHERE email='%s'" % (email)
+    update = update_query1 if not len(lift_history) == 0 else update_query2
+    with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                          user=db_info["user"], password=db_info["password"]) as conn:
+      with conn.cursor() as cursor:
+        cursor.execute(update)
+
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      cursor.execute(update)
