@@ -14,10 +14,38 @@ class MainPanel(QWidget):
     self.interface = BigLifts()
     self.interface.create_big_lifts_table()
     if self.interface.table_is_empty(): self.interface.insert_default_values()
+    
     self.units = "kg" if self.interface.fetch_units() == "metric" else "lb"
-    self.one_RM = [[lift, " ".join([weight, self.units])] for lift, weight in json.loads(self.interface.fetch_one_rep_maxes()).items()]
-    self.lifts_reps = [[lift, " ".join(["x".join(weight), self.units])] for lift, weight in json.loads(self.interface.fetch_lifts_for_reps()).items()]
- 
+    big_lifts_units = "kg" if self.interface.fetch_units_from_big_lifts() == "metric" else "lb"
+    
+    one_rep_maxes = json.loads(self.interface.fetch_one_rep_maxes())
+    lifts_for_reps = json.loads(self.interface.fetch_lifts_for_reps())
+
+    self.one_RM = [[lift, " ".join([weight, self.units])] for lift, weight in one_rep_maxes.items()]
+    self.lifts_reps = [[lift, " ".join(["x".join(weight), self.units])] for lift, weight in lifts_for_reps.items()]
+    
+    if not self.units == big_lifts_units:
+      self.interface.update_big_lifts_units()
+      self.interface.add_common_to_path()
+      from common.units_conversion import kg_to_pounds, pounds_to_kg
+      if self.units == "kg":
+        self.one_RM = [[lift[0], " ".join([str(pounds_to_kg(float(lift[1].split(" ")[0]))), self.units])] for lift in self.one_RM]
+        self.lifts_reps = [[lift[0], " ".join(["x".join([lift[1].split("x")[0],
+                                              str(pounds_to_kg(float(lift[1].split("x")[1].split(" ")[0])))]),
+                                              self.units])] for lift in self.lifts_reps]
+      elif self.units == "lb":
+        self.one_RM = [[lift[0], " ".join([str(kg_to_pounds(float(lift[1].split(" ")[0]))), self.units])] for lift in self.one_RM]
+        self.lifts_reps = [[lift[0], " ".join(["x".join([lift[1].split("x")[0],
+                                              str(kg_to_pounds(float(lift[1].split("x")[1].split(" ")[0])))]),
+                                              self.units])] for lift in self.lifts_reps]
+      
+      new_one_RM_lifts = {lift[0]:lift[1].split(" ")[0] for lift in self.one_RM}
+      new_lifts_for_reps = {lift[0]: [lift[1].split("x")[0], lift[1].split("x")[1].split(" ")[0]] for lift in self.lifts_reps}
+      
+      self.interface.update_1RM_lifts(new_one_RM_lifts)
+      self.interface.update_lifts_for_reps(new_lifts_for_reps)
+      self.interface.convert_lift_history_weight(self.units)
+
     self.lift_history_window = LiftHistory()
     self.lift_history_window.setGeometry(100, 200, 300, 300)   
     

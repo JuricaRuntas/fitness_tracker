@@ -1,4 +1,5 @@
 import os
+import sys
 import sqlite3
 import psycopg2
 import json
@@ -55,6 +56,15 @@ class BigLifts:
       units = cursor.fetchone()[0]
     return units
 
+  def fetch_units_from_big_lifts(self):
+    units = None
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      fetch_current_units = "SELECT units FROM big_lifts"
+      cursor.execute(fetch_current_units)
+      units = cursor.fetchone()[0]
+    return units
+
   def fetch_one_rep_maxes(self):
     one_rep_maxes = None
     with sqlite3.connect(db_path) as conn:
@@ -94,11 +104,13 @@ class BigLifts:
     select_lifts_for_reps = "SELECT lifts_for_reps FROM big_lifts WHERE email=%s"
     select_preferred_lifts = "SELECT preferred_lifts FROM big_lifts WHERE email=%s"
     select_lift_history = "SELECT lift_history FROM big_lifts WHERE email=%s"
+    select_units = "SELECT units FROM big_lifts WHERE email=%s"
 
     one_rep_maxes = None
     lifts_for_reps = None
     preferred_lifts = None
     lift_history = None
+    units = None
 
     with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                           user=db_info["user"], password=db_info["password"]) as conn:
@@ -115,18 +127,22 @@ class BigLifts:
         cursor.execute(select_lift_history, (email,))
         lift_history = cursor.fetchone()[0]
 
+        cursor.execute(select_units, (email,))
+        units = cursor.fetchone()[0]
+
     if self.table_is_empty():
       insert_values = """
-                      INSERT INTO big_lifts (email, '1RM', lifts_for_reps, preferred_lifts, lift_history) VALUES
-                      ('%s', ?, ?, ?, ?)
+                      INSERT INTO big_lifts (email, '1RM', lifts_for_reps, preferred_lifts, lift_history, units) VALUES
+                      ('%s', ?, ?, ?, ?, ?)
                       """ % email
       with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
-        cursor.execute(insert_values, (one_rep_maxes, lifts_for_reps, preferred_lifts, lift_history,))
+        cursor.execute(insert_values, (one_rep_maxes, lifts_for_reps, preferred_lifts, lift_history, units,))
 
   def insert_default_values(self):
     default_exercises = ["Bench Press", "Deadlift", "Back Squat", "Overhead Press"]
     email = self.fetch_user_email()
+    units = self.fetch_units()
     table_name = self.fetch_user_info_table_name()
     one_RM_dict = json.dumps({exercise:"0" for exercise in default_exercises})
     lifts_for_reps = json.dumps({exercise:["0", "0"] for exercise in default_exercises})
@@ -136,7 +152,7 @@ class BigLifts:
                                                  "Vertical Press": default_exercises[3]})
 
     default_dict = {"1RM": one_RM_dict, "lifts_for_reps": lifts_for_reps,
-                    "preferred_lifts": preferred_lifts, "email": email}
+                    "preferred_lifts": preferred_lifts, "email": email, "units": units}
 
     try:
       with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -165,6 +181,7 @@ class BigLifts:
                      lifts_for_reps text,
                      preferred_lifts text,
                      lift_history text,
+                     units text,
                      id integer NOT NULL,
                      PRIMARY KEY(id));
                      """
@@ -210,7 +227,6 @@ class BigLifts:
   def update_1RM_lifts(self, new_values):
     new_values = list(new_values.values())
     email = self.fetch_user_email()
-    units = self.fetch_units()
     one_rep_max_lifts = json.loads(self.fetch_one_rep_maxes())
     for i, lift in enumerate(one_rep_max_lifts.keys()):
       one_rep_max_lifts[lift] = new_values[i]
@@ -275,6 +291,19 @@ class BigLifts:
       cursor = conn.cursor()
       cursor.execute(update)
 
+  def update_big_lifts_units(self):
+    email = self.fetch_user_email()
+    units = self.fetch_units()
+    update = "UPDATE big_lifts SET units='%s' WHERE email='%s'" % (units, email)
+    with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                          user=db_info["user"], password=db_info["password"]) as conn:
+      with conn.cursor() as cursor:
+        cursor.execute(update)
+
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      cursor.execute(update)
+
   def clear_one_rep_maxes(self):
     email = self.fetch_user_email()
     one_rep_maxes = json.loads(self.fetch_one_rep_maxes())
@@ -324,12 +353,12 @@ class BigLifts:
     difference = None
     if one_RM:
       db_lifts = set(": ".join([exercise, weight]) for exercise, weight in json.loads(self.fetch_one_rep_maxes()).items())
-      new_lifts = set(": ".join([exercise, weight]) for exercise, weight in new_lifts.items())
+      new_lifts = set(": ".join([exercise, weight]) for exercise, weight in new_lifts.items() if not weight == '0.0')
       diff = list(new_lifts.difference(db_lifts)) # local lifts that are not in db
       difference = {exercise.split(": ")[0]:exercise.split(": ")[1] for exercise in diff}
     elif lifts_reps:
       db_lifts = set(":".join([exercise, "x".join(values)]) for exercise, values in json.loads(self.fetch_lifts_for_reps()).items())
-      new_lifts = set(":".join([exercise, "x".join(values)]) for exercise, values in new_lifts.items())
+      new_lifts = set(":".join([exercise, "x".join(values)]) for exercise, values in new_lifts.items() if not values[1] == '0.0')
       diff = list(new_lifts.difference(db_lifts))
       difference = {exercise.split(":")[0]:exercise.split(":")[1].split("x") for exercise in diff}
     return {key: value for key, value in sorted(difference.items(), key=lambda exercise: self.sort_exercises(exercise[0]))}
@@ -350,3 +379,41 @@ class BigLifts:
     with sqlite3.connect(db_path) as conn:
       cursor = conn.cursor()
       cursor.execute(update)
+
+  def convert_lift_history_weight(self, convert_to_units):
+    self.add_common_to_path()
+    from common.units_conversion import kg_to_pounds, pounds_to_kg
+    email = self.fetch_user_email()
+    try:
+      lift_history = json.loads(self.fetch_lift_history())
+    except TypeError: # lift history is empty
+      return
+    if convert_to_units == "kg":
+      for lift in lift_history:
+        if isinstance(lift[1], list): # second element of history entry is list, it is lifts_for_reps entry
+          lift[1][1] = str(pounds_to_kg(float(lift[1][1])))
+        else:
+          lift[1] = str(pounds_to_kg(float(lift[1])))
+    elif convert_to_units == "lb":
+      for lift in lift_history:
+        if isinstance(lift[1], list):
+          lift[1][1] = str(kg_to_pounds(float(lift[1][1])))
+        else:
+          lift[1] = str(kg_to_pounds(float(lift[1])))
+    
+    update = "UPDATE big_lifts SET lift_history='%s' WHERE email='%s'" % (json.dumps(lift_history), email)
+    
+    with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                          user=db_info["user"], password=db_info["password"]) as conn:
+      with conn.cursor() as cursor:
+        cursor.execute(update)
+
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      cursor.execute(update)
+
+  def add_common_to_path(self):
+    path = os.path.normpath(QFileInfo(__file__).absolutePath())
+    path = path.split(os.path.sep)[:-2]
+    path = os.path.sep.join(path)
+    sys.path.append(path)
