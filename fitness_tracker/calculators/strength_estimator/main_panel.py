@@ -1,11 +1,21 @@
-from PyQt5.QtWidgets import QPushButton, QLabel, QComboBox, QLineEdit, QGridLayout, QWidget, QVBoxLayout, QHBoxLayout, QRadioButton, QScrollArea, QTableWidget\
-  , QTableWidgetItem, QAbstractItemView, QFrame
+import sqlite3
+import os
+from PyQt5.QtWidgets import (QPushButton, QLabel, QComboBox, QLineEdit, QGridLayout, QWidget,
+                             QVBoxLayout, QHBoxLayout, QRadioButton, QScrollArea, QTableWidget,
+                             QTableWidgetItem, QAbstractItemView, QFrame, QFormLayout)
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QFileInfo
+from .estimator import StrengthLevelEstimator
+from .exercise_standards import LiftStandards
+
+path = os.path.normpath(QFileInfo(__file__).absolutePath())
+db_path = path.split(os.path.sep)[:-3]
+db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "user_info.db"])
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
+    self.units = "kg" if fetch_units() == "metric" else "lb"
     self.CreatePanel()
 
   def CreatePanel(self):
@@ -26,64 +36,62 @@ class MainPanel(QWidget):
   def calculator(self):
     calculator_framed = QFrame()
     calculator_layout = QHBoxLayout()
-    data_layout = QHBoxLayout()
+    data_layout = QFormLayout()
     print_layout = QVBoxLayout()
-
-    data_labels = QVBoxLayout()
-    data_inputs = QVBoxLayout()
-
+    
     gender_age_label = QLabel("Gender/Age")
     gender_age_label.setFont(QFont("Ariel", 10))
+    self.gender_combobox = QComboBox(self)
+    self.gender_combobox.addItems(["Male", "Female"])
+    self.age_combobox = QComboBox(self)
+    self.age_combobox.addItems(["14-17", "18-23", "24-39", "40-49", "50-59", "60-69", "70-79", "80-89"]) 
+    
+    gender_age_layout = QHBoxLayout()
+    gender_age_layout.addWidget(self.gender_combobox)
+    gender_age_layout.addWidget(self.age_combobox)
+
+    bodyweight_layout = QHBoxLayout()
+    units_label = QLabel(self.units)
     bodyweight_label = QLabel("Bodyweight")
     bodyweight_label.setFont(QFont("Ariel", 10))
+    self.bodyweight_line_edit = QLineEdit()
+    bodyweight_layout.addWidget(self.bodyweight_line_edit)
+    bodyweight_layout.addWidget(units_label)
+    
     exercise_label = QLabel("Exercise")
     exercise_label.setFont(QFont("Ariel", 10))
+    self.exercise_combobox = QComboBox()
+    self.exercise_combobox.addItems(["Bench Press", "Deadlift", "Squat"])
+
+    weight_layout = QHBoxLayout()
+    units_label1 = QLabel(self.units)
     weight_label = QLabel("Weight")
     weight_label.setFont(QFont("Ariel", 10))
-    repetition_label = QLabel("Repetitions")
-    repetition_label.setFont(QFont("Ariel", 10))
-    data_labels.addWidget(gender_age_label)
-    data_labels.addWidget(bodyweight_label)
-    data_labels.addWidget(exercise_label)
-    data_labels.addWidget(weight_label)
-    data_labels.addWidget(repetition_label)
-
-    gender_combobox = QComboBox(self)
-    gender_combobox.addItems(["Male", "Female"])
-    age_combobox = QComboBox(self)
-    age_combobox.addItems(["14-17", "18-23", "24-30", "31-39", "40-49", "50-59", "60-69", "70+"])
-    gender_age_layout = QHBoxLayout()
-    gender_age_layout.addWidget(gender_combobox)
-    gender_age_layout.addWidget(age_combobox)
-
-    bodyweight_line_edit = QLineEdit()
-    exercise_combobox = QComboBox()
-    #exercise_combobox.addItems()
-
-    weight_line_edit = QLineEdit()
-    repetitions_line_edit = QLineEdit()
-
-    data_inputs.addLayout(gender_age_layout)
-    data_inputs.addWidget(bodyweight_line_edit)
-    data_inputs.addWidget(exercise_combobox)
-    data_inputs.addWidget(weight_line_edit)
-    data_inputs.addWidget(repetitions_line_edit)
-
-    data_layout.addLayout(data_labels)
-    data_layout.addLayout(data_inputs)
+    self.weight_line_edit = QLineEdit()
+    weight_layout.addWidget(self.weight_line_edit)
+    weight_layout.addWidget(units_label1)
+    
+    self.calculate_button = QPushButton("Calculate strength")
+    self.calculate_button.clicked.connect(lambda: self.calculate())
+    
+    data_layout.addRow(gender_age_label, gender_age_layout)
+    data_layout.addRow(bodyweight_label, bodyweight_layout)
+    data_layout.addRow(exercise_label, self.exercise_combobox)
+    data_layout.addRow(weight_label, weight_layout)
+    data_layout.addRow(self.calculate_button)
 
     strength_estimator_exercise_label = QLabel("Your strength level for deadlift is")
     strength_estimator_exercise_label.setFont(QFont("Ariel", 14))
 
-    strength_level_exercise_label = QLabel("****Advanced")
-    strength_level_exercise_label.setFont(QFont("Ariel", 14))
+    self.strength_level_exercise_label = QLabel()
+    self.strength_level_exercise_label.setFont(QFont("Ariel", 14))
 
-    strength_to_bodyweight_label = QLabel("Your lift is 1.88 times your bodyweight")
-    strength_to_bodyweight_label.setFont(QFont("Ariel", 14))
+    self.strength_to_bodyweight_label = QLabel()
+    self.strength_to_bodyweight_label.setFont(QFont("Ariel", 14))
 
     print_layout.addWidget(strength_estimator_exercise_label)
-    print_layout.addWidget(strength_level_exercise_label)
-    print_layout.addWidget(strength_to_bodyweight_label)
+    print_layout.addWidget(self.strength_level_exercise_label)
+    print_layout.addWidget(self.strength_to_bodyweight_label)
 
     framed_data_layout = QFrame()
     framed_data_layout.setFrameStyle(QFrame.StyledPanel)
@@ -97,6 +105,22 @@ class MainPanel(QWidget):
 
     return calculator_framed
 
+  def calculate(self):
+    try:
+      gender = self.gender_combobox.currentText()
+      age = self.age_combobox.currentText()
+      bodyweight = float(self.bodyweight_line_edit.text())
+      exercise = self.exercise_combobox.currentText()
+      weight = float(self.weight_line_edit.text())
+      estimator = StrengthLevelEstimator(gender, age, bodyweight, exercise, weight)
+      strength_group = estimator.find_strength_group()
+      self.strength_level_exercise_label.setText(strength_group)
+
+      lift_weight_ratio = estimator.lift_weight_ratio()
+      self.strength_to_bodyweight_label.setText(" ".join(["Your lift is", str(lift_weight_ratio), "times your bodyweight."]))
+    except ValueError: # user submitted text in bodyweight or weight line edit
+      pass
+
   def strength_standards(self):
     strength_standards_layout = QVBoxLayout()
     standards_label = QLabel("Strength Standards")
@@ -104,66 +128,97 @@ class MainPanel(QWidget):
     strength_standards_layout.addWidget(standards_label)
 
     standards_info_layout = QHBoxLayout()
-    male_button = QRadioButton("Male")
-    male_button.setChecked(True)
-    standards_info_layout.addWidget(male_button)
-    female_button = QRadioButton("Female")
-    standards_info_layout.addWidget(female_button)
+    self.male_button = QRadioButton("Male")
+    self.male_button.setChecked(True)
+    standards_info_layout.addWidget(self.male_button)
+    self.female_button = QRadioButton("Female")
+    standards_info_layout.addWidget(self.female_button)
 
-    age_combobox = QComboBox(self)
-    age_combobox.addItems(["14-17", "18-23", "24-30", "31-39", "40-49", "50-59", "60-69", "70+"])
-    age_combobox.setFixedWidth(80)
-    exercise_combobox = QComboBox()
-    exercise_combobox.setFixedWidth(120)
-    standards_info_layout.addWidget(age_combobox)
-    standards_info_layout.addWidget(exercise_combobox)
+    self.table_age_combobox = QComboBox(self)
+    self.table_age_combobox.addItems(["14-17", "18-23", "24-39", "40-49", "50-59", "60-69", "70+"])
+    self.table_age_combobox.setFixedWidth(80)
+    self.table_exercise_combobox = QComboBox()
+    self.table_exercise_combobox.addItems(["Bench Press", "Deadlift", "Squat"])
+    self.table_exercise_combobox.setFixedWidth(120)
+    self.table_exercise_combobox.activated[str].connect(self.update_standards_table)
+    standards_info_layout.addWidget(self.table_age_combobox)
+    standards_info_layout.addWidget(self.table_exercise_combobox)
     standards_info_layout.addStretch(1)
     standards_info_layout.setSpacing(10)
 
     strength_standards_layout.addLayout(standards_info_layout)
+    strength_standards_layout.addWidget(self.create_standards_table())
+    
+    return strength_standards_layout
 
+  def create_standards_table(self):
     standards_table_scroll_area = QScrollArea()
 
-
-    standards_table = QTableWidget()
-    standards_table.setRowCount(20)
-    standards_table.setColumnCount(6)
-    standards_table.horizontalHeader().setVisible(False)
-    standards_table.verticalHeader().setVisible(False)
-
-    standards_table_info = [["Bodyweight", "Beginner", "Novice", "Intermediate", "Advanced", "Elite"],
-            ["50", "43", "64", "91", "123", "158"],
-            ["55", "50", "64", "91", "123", "158"],
-            ["60", "57", "64", "91", "123", "158"],
-            ["65", "65", "64", "91", "123", "158"],
-            ["70", "72", "64", "91", "123", "158"],
-            ["75", "79", "64", "91", "123", "158"],
-            ["80", "85", "64", "91", "123", "158"],
-            ["85", "92", "64", "91", "123", "158"],
-            ["90", "98", "64", "91", "123", "158"],
-            ["95", "105", "64", "91", "123", "158"],
-            ["100", "111", "64", "91", "123", "158"],
-            ["105", "117", "64", "91", "123", "158"],
-            ["110", "123", "64", "91", "123", "158"],
-            ["115", "129", "64", "91", "123", "158"],
-            ["120", "134", "64", "91", "123", "158"],
-            ["125", "140", "64", "91", "123", "158"],
-            ["130", "145", "64", "91", "123", "158"],
-            ["135", "151", "64", "91", "123", "158"],
-            ["140", "156", "64", "91", "123", "158"]]
-
+    self.standards_table = QTableWidget()
+    self.standards_table.setRowCount(20)
+    self.standards_table.setColumnCount(6)
+    self.standards_table.horizontalHeader().setVisible(False)
+    self.standards_table.verticalHeader().setVisible(False)
+    
+    exercise = self.table_exercise_combobox.currentText()
+    age_range = self.table_age_combobox.currentText()
+    gender = "Male" if self.male_button.isChecked() else "Female"
+    fetch_standard = LiftStandards(exercise, age_range, gender).standard()
+    standards_table_info = [fetch_standard[0]]
+    for standard in fetch_standard[1:]:
+      standards_table_info.append(list(map(str, standard)))
+    
     currentRow = 0
     for row in standards_table_info:
       currentColumn = 0
       for item in row:
         table_item = QTableWidgetItem(item)
         table_item.setFlags(Qt.ItemIsEnabled)
-        standards_table.setItem(currentRow, currentColumn, table_item)
+        self.standards_table.setItem(currentRow, currentColumn, table_item)
         currentColumn += 1
       currentRow += 1
 
-    standards_table_scroll_area.setWidget(standards_table)
+    standards_table_scroll_area.setWidget(self.standards_table)
     standards_table_scroll_area.setWidgetResizable(True)
 
-    strength_standards_layout.addWidget(standards_table_scroll_area)
-    return strength_standards_layout
+    return standards_table_scroll_area
+
+  def update_standards_table(self):
+    exercise = self.table_exercise_combobox.currentText()
+    age_range = self.table_age_combobox.currentText()
+    gender = "Male" if self.male_button.isChecked() else "Female"
+    fetch_standard = LiftStandards(exercise, age_range, gender).standard()
+    standards_table_info = [fetch_standard[0]]
+    for standard in fetch_standard[1:]:
+      standards_table_info.append(list(map(str, standard)))
+    
+    currentRow = 0
+    for row in standards_table_info:
+      currentColumn = 0
+      for item in row:
+        table_item = QTableWidgetItem(item)
+        table_item.setFlags(Qt.ItemIsEnabled)
+        self.standards_table.setItem(currentRow, currentColumn, table_item)
+        currentColumn += 1
+      currentRow += 1
+
+def fetch_user_info_table_name():
+  table_name = None
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+    try:
+      table_name = cursor.fetchone()[0]
+    except TypeError:
+      pass
+  return table_name
+
+def fetch_units():
+  table_name = fetch_user_info_table_name()
+  units = None
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    fetch_current_units = "SELECT units from '{table}'"
+    cursor.execute(fetch_current_units.format(table=table_name))
+    units = cursor.fetchone()[0]
+  return units
