@@ -76,7 +76,10 @@ class FitnessTracker(QMainWindow):
   def display_layout(self, layout):
     for key, value in self.layouts.items():
       if layout == key:
-        self.setCentralWidget(value(self))
+        self.cw = value(self)
+        self.layout = QWidget()
+        self.layout = self.setup_main_layout()
+        self.setCentralWidget(self.layout)
 
   def user_info_exists(self):
     table_exists = True

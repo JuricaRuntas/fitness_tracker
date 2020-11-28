@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QSpacerItem, QSizePolicy, QSizeGrip
 from PyQt5.QtGui import QFont, QIcon, QPainter, QBrush, QColor
-from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtCore import QPoint, Qt, QSize
 
 class TitleBar(QWidget):
     def __init__(self, parent):
@@ -24,11 +24,14 @@ class TitleBar(QWidget):
         self.version.setFont(title_font)
         self.version.setStyleSheet("color: #A5A5A5;")
 
+        icon_max_size_x = 32
+        icon_max_size_y = 24
+
         self.close_icon = QIcon('icons/close.bmp')
         self.close_button = QPushButton()
         self.close_button.clicked.connect(self.close_click)
         self.close_button.setIcon(self.close_icon)
-        self.close_button.setMaximumSize(24, 24)
+        self.close_button.setMaximumSize(icon_max_size_x, icon_max_size_y)
         self.close_button.setStyleSheet(
             "QPushButton{ background-color: rgba(237, 17, 17, 0); }"
             "QPushButton:hover{ background-color: rgba(237, 17, 17, 75); }"
@@ -38,28 +41,28 @@ class TitleBar(QWidget):
         self.minimise_button = QPushButton()
         self.minimise_button.clicked.connect(self.min_click)
         self.minimise_button.setIcon(self.minimise_icon)
-        self.minimise_button.setMaximumSize(24, 24)
+        self.minimise_button.setMaximumSize(icon_max_size_x, icon_max_size_y)
         self.minimise_button.setStyleSheet(
             "QPushButton{ background-color: rgba(255, 255, 255, 0); }"
             "QPushButton:hover{ background-color: rgba(255, 255, 255, 70); }"
             "QPushButton:pressed{ background-color: rgba(255, 255, 255, 40); }")
 
+        self.maximize_icon = QIcon('icons/max.bmp')
         self.unmax_icon = QIcon('icons/small.bmp')
-        self.unmax_button = QPushButton()
-        self.unmax_button.clicked.connect(self.un_click)
-        self.unmax_button.setIcon(self.unmax_icon)
-        self.unmax_button.setMaximumSize(24, 24)
-        self.unmax_button.setStyleSheet(
+        self.maximize_button = QPushButton()
+        self.maximize_button.setIcon(self.maximize_icon)
+        self.maximize_button.clicked.connect(self.max_click)
+        self.maximize_button.setMaximumSize(icon_max_size_x, icon_max_size_y)
+        self.maximize_button.setStyleSheet(
             "QPushButton{ background-color: rgba(255, 255, 255, 0); }"
             "QPushButton:hover{ background-color: rgba(255, 255, 255, 70); }"
             "QPushButton:pressed{ background-color: rgba(255, 255, 255, 40); }")
 
-        self.maximize_icon = QIcon('icons/max.bmp')
-        self.maximize_button = QPushButton()
-        self.maximize_button.clicked.connect(self.max_click)
-        self.maximize_button.setIcon(self.maximize_icon)
-        self.maximize_button.setMaximumSize(24, 24)
-        self.maximize_button.setStyleSheet(
+        self.settings_icon = QIcon('icons/settings.png')
+        self.settings_button = QPushButton()
+        self.settings_button.setIcon(self.settings_icon)
+        self.settings_button.setMaximumSize(icon_max_size_x, icon_max_size_y)
+        self.settings_button.setStyleSheet(
             "QPushButton{ background-color: rgba(255, 255, 255, 0); }"
             "QPushButton:hover{ background-color: rgba(255, 255, 255, 70); }"
             "QPushButton:pressed{ background-color: rgba(255, 255, 255, 40); }")
@@ -73,6 +76,7 @@ class TitleBar(QWidget):
         self.gridlayout.addLayout(self.layout)
         self.gridlayout.addStretch(1)
         self.gridlayout.setSpacing(0)
+        self.gridlayout.addWidget(self.settings_button)
         self.gridlayout.addWidget(self.minimise_button)
         self.gridlayout.addWidget(self.maximize_button)
         self.gridlayout.addWidget(self.close_button)
@@ -80,15 +84,16 @@ class TitleBar(QWidget):
 
         self.start = QPoint(0, 0)
         self.pressing = False
+        self.maximized = False
 
     def mousePressEvent(self, event):
         self.start = self.mapToGlobal(event.pos())
         self.pressing = True
 
     def mouseMoveEvent(self, event):
-        if self.pressing:
+        if self.pressing & self.maximized is False:
             self.end = self.mapToGlobal(event.pos())
-            self.movement = self.end-self.start
+            self.movement = self.end - self.start
             self.parent.setGeometry(self.mapToGlobal(self.movement).x(),
             self.mapToGlobal(self.movement).y(),
             self.parent.width(),
@@ -102,12 +107,14 @@ class TitleBar(QWidget):
         self.parent.close()
 
     def max_click(self):
-        self.gridlayout.replaceWidget(self.maximize_button, self.unmax_button)
-        self.parent.showMaximized()
-
-    def un_click(self):
-        self.gridlayout.replaceWidget(self.unmax_button, self.maximize_button)
-        self.parent.showNormal()
+        if self.maximized:
+            self.maximized = False
+            self.parent.showNormal()
+            self.maximize_button.setIcon(self.maximize_icon)
+        else:
+            self.maximized = True
+            self.maximize_button.setIcon(self.unmax_icon)
+            self.parent.showMaximized()
 
     def min_click(self):
         self.parent.showMinimized()
