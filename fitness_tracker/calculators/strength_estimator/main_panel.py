@@ -129,8 +129,8 @@ class MainPanel(QWidget):
 
     standards_info_layout = QHBoxLayout()
     self.male_button = QRadioButton("Male")
-    self.male_button.toggled.connect(self.update_standards_table)
     self.male_button.setChecked(True)
+    self.male_button.toggled.connect(self.update_standards_table)
     standards_info_layout.addWidget(self.male_button)
     self.female_button = QRadioButton("Female")
     self.female_button.toggled.connect(self.update_standards_table)
