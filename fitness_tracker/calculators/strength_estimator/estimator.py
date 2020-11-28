@@ -1,20 +1,23 @@
 from .exercise_standards import LiftStandards
 
 class StrengthLevelEstimator:
-  def __init__(self, gender, age_range, bodyweight, exercise, one_RM):
+  def __init__(self, gender, age_range, bodyweight, exercise, one_RM, units):
     self.gender = gender
     self.age = age_range
     self.bodyweight = bodyweight
     self.exercise = exercise
     self.one_RM = one_RM
-    self.lift_standard = LiftStandards(exercise, age_range, gender).standard()
+    self.units = units
+    self.lift_standard = LiftStandards(exercise, age_range, gender, self.units).standard()
 
   def standard(self):
     return self.lift_standard
   
   def find_strength_group(self):
-    if self.gender == "Male": bodyweight_groups = [x for x in range(40, 125, 5)]
-    elif self.gender == "Female": bodyweight_groups = [x for x in range(50, 145, 5)]
+    if self.gender == "Male" and self.units == "kg": bodyweight_groups = [bodyweight_group for bodyweight_group in range(40, 125, 5)]
+    elif self.gender == "Female" and self.units == "kg": bodyweight_groups = [bodyweight_group for bodyweight_group in range(50, 145, 5)]
+    elif self.gender == "Male" and self.units == "lb": bodyweight_groups = [bodyweight_group for bodyweight_group in range(110, 320, 10)]
+    elif self.gender == "Female" and self.units == "lb": bodyweight_groups = [bodyweight_group for bodyweight_group in range(90, 270, 10)]
 
     bodyweight_group = self.binary_search(bodyweight_groups, self.bodyweight)
     for standard in self.lift_standard:

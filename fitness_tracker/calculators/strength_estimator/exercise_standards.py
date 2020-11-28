@@ -1,8 +1,14 @@
+import math
+import sys
+import os
+from PyQt5.QtCore import QFileInfo
+
 class LiftStandards:
-  def __init__(self, exercise, age_range, gender):
+  def __init__(self, exercise, age_range, gender, units):
     self.exercise = exercise
     self.age_range = age_range
     self.gender = gender
+    self.units = units
     self.lift_standard = self.create_standard()
 
   def create_standard(self):
@@ -31,13 +37,37 @@ class LiftStandards:
                    "50-59": 17/100, "60-69": 31/100,
                    "70-79": 45/100, "80-89": 56/100}
     age_group_standards = [standards[0]]
-    for age_group in standards[1:]:
+    
+    if self.units == "lb":
+      self.add_common_to_path()
+      from common.units_conversion import kg_to_pounds, pounds_to_kg
+      old_standards = standards
+      standards = []
+      for bodyweight_group in old_standards[1:]:
+        converted_weight = []
+        for weight in map(kg_to_pounds, bodyweight_group):
+          index = bodyweight_group.index(round(pounds_to_kg(weight)))
+          if index == 0:
+            # round number to next 10
+            if int(str(int(weight))[-1]) > 4: weight = math.ceil(weight/10.0)*10
+            # round number to previous 10
+            elif int(str(int(weight))[-1]) <= 4: weight = math.floor(weight/10.0)*10
+          converted_weight.append(round(weight))
+        standards.append(converted_weight)
+
+    for age_group in standards:
+      if isinstance(age_group[0], str): continue
       bodyweight = age_group[0]
       weight = list(map(lambda n: round(n - (n * percentages[age_range])), age_group[1:]))
       weight.insert(0, bodyweight)
       age_group_standards.append(weight)
     return age_group_standards
 
+  def add_common_to_path(self):
+    path = os.path.normpath(QFileInfo(__file__).absolutePath())
+    path = path.split(os.path.sep)[:-1]
+    path = os.path.sep.join(path)
+    sys.path.append(path) 
 
 male_bench_press_kg = [["Bodyweight", "Beginner", "Novice", "Intermediate", "Advanced", "Elite"],
                        [50, 23, 37, 55, 77, 102],

@@ -112,7 +112,7 @@ class MainPanel(QWidget):
       bodyweight = float(self.bodyweight_line_edit.text())
       exercise = self.exercise_combobox.currentText()
       weight = float(self.weight_line_edit.text())
-      estimator = StrengthLevelEstimator(gender, age, bodyweight, exercise, weight)
+      estimator = StrengthLevelEstimator(gender, age, bodyweight, exercise, weight, self.units)
       strength_group = estimator.find_strength_group()
       self.strength_level_exercise_label.setText(strength_group)
 
@@ -129,13 +129,16 @@ class MainPanel(QWidget):
 
     standards_info_layout = QHBoxLayout()
     self.male_button = QRadioButton("Male")
+    self.male_button.toggled.connect(self.update_standards_table)
     self.male_button.setChecked(True)
     standards_info_layout.addWidget(self.male_button)
     self.female_button = QRadioButton("Female")
+    self.female_button.toggled.connect(self.update_standards_table)
     standards_info_layout.addWidget(self.female_button)
 
     self.table_age_combobox = QComboBox(self)
-    self.table_age_combobox.addItems(["14-17", "18-23", "24-39", "40-49", "50-59", "60-69", "70+"])
+    self.table_age_combobox.addItems(["14-17", "18-23", "24-39", "40-49", "50-59", "60-69", "70-79", "80-89"])
+    self.table_age_combobox.activated[str].connect(self.update_standards_table)
     self.table_age_combobox.setFixedWidth(80)
     self.table_exercise_combobox = QComboBox()
     self.table_exercise_combobox.addItems(["Bench Press", "Deadlift", "Squat"])
@@ -163,7 +166,7 @@ class MainPanel(QWidget):
     exercise = self.table_exercise_combobox.currentText()
     age_range = self.table_age_combobox.currentText()
     gender = "Male" if self.male_button.isChecked() else "Female"
-    fetch_standard = LiftStandards(exercise, age_range, gender).standard()
+    fetch_standard = LiftStandards(exercise, age_range, gender, self.units).standard()
     standards_table_info = [fetch_standard[0]]
     for standard in fetch_standard[1:]:
       standards_table_info.append(list(map(str, standard)))
@@ -187,7 +190,7 @@ class MainPanel(QWidget):
     exercise = self.table_exercise_combobox.currentText()
     age_range = self.table_age_combobox.currentText()
     gender = "Male" if self.male_button.isChecked() else "Female"
-    fetch_standard = LiftStandards(exercise, age_range, gender).standard()
+    fetch_standard = LiftStandards(exercise, age_range, gender, self.units).standard()
     standards_table_info = [fetch_standard[0]]
     for standard in fetch_standard[1:]:
       standards_table_info.append(list(map(str, standard)))
