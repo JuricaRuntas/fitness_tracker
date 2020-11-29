@@ -20,7 +20,7 @@ class FitnessTracker(QMainWindow):
     self.create_window()
     self.cw = Homepage(self) if self.user_info_exists() else Login(self)
     self.layouts = {"Login": Login, "Signup": Signup, "Continue": SignupQuestions,
-                    "Home": Homepage, "User Data and Settings": UserPhysique,
+                    "Home": Homepage, "Profile": UserPhysique, "Logout": Login,
                     "Big Lifts": BigLiftsNotes, "Workouts": WorkoutsNotes, "Nutrition": CaloriesNotes,
                     "Weight Loss Notes": WeightLossNotes, "1 Rep Max": OneRepMaxCalculator,
                     "Body Fat": BodyFatCalculator, "Strength Estimator": StrengthEstimator,
