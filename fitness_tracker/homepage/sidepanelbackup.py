@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout, QPushButton, QVBoxLayout
-from PyQt5.QtCore import Qt, QFileInfo, QSize, QPoint
-from PyQt5.QtGui import QFont, QIcon, QCursor, QPainter, QColor, QBrush
+from PyQt5.QtCore import Qt, QFileInfo, QSize
+from PyQt5.QtGui import QFont, QIcon, QCursor
 
 path = QFileInfo(__file__).absolutePath()
 icon_size = QSize(24, 24)
@@ -67,9 +67,3 @@ class SidePanel(QWidget):
           widget.setIconSize(icon_size)
           widget.setCursor(QCursor(Qt.PointingHandCursor))
       grid.addLayout(key, i, 0)
-
-  def paintEvent(self, event):
-    painter = QPainter()
-    painter.begin(self)
-    painter.setRenderHint(QPainter.Antialiasing)
-    painter.fillRect(event.rect(), QBrush(QColor(20, 18, 17, 255)))
