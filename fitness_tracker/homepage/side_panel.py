@@ -10,15 +10,28 @@ class SidePanel(QWidget):
     super().__init__(parent)
     self.controller = controller
     self.create_panel()
-    self.setStyleSheet("QPushButton{text-align: left}") 
+    self.setStyleSheet("""
+                       QPushButton{
+                         text-align: left;
+                         background-color: #440D0F;
+                         color:white;}
+                       QLabel{
+                         color:white;
+                       }
+                       """) 
   
   def create_panel(self):
     general_layout = QVBoxLayout()
+    overview_label = QLabel("Overview", self)
+    overview_label.setFont(QFont("Ariel", 15))
+    overview_label.setFixedSize(100, 20)
     home_button = QPushButton(QIcon("".join([path, "/icons/home.png"])), "Home", self)
     home_button.clicked.connect(lambda: self.controller.display_layout(home_button.text()))
-    user_button = QPushButton(QIcon("".join([path, "/icons/user.png"])), "User Data and Settings", self)
+    user_button = QPushButton(QIcon("".join([path, "/icons/user.png"])), "Profile", self)
     user_button.clicked.connect(lambda: self.controller.display_layout(user_button.text()))
-    
+    logout_button = QPushButton(QIcon("".join([path, "/icons/logout.png"])), "Logout", self)
+    logout_button.clicked.connect(lambda: self.controller.display_layout(logout_button.text()))
+
     notes_layout = QVBoxLayout()
     notes_label = QLabel("Notes", self)
     notes_label.setFont(QFont("Ariel", 15))
@@ -52,7 +65,7 @@ class SidePanel(QWidget):
     weight_loss_button = QPushButton(QIcon("".join([path, "/icons/weight_loss.png"])), "Weight Loss", self)
     weight_loss_button.clicked.connect(lambda: self.controller.display_layout(weight_loss_button.text()))
     
-    layouts = {general_layout: [home_button, user_button], 
+    layouts = {general_layout: [overview_label, home_button, user_button, logout_button], 
                notes_layout: [notes_label, lifts_button, workouts_button, calories_button, weight_notes_button], 
                calculators_layout: [calculators_label, max_button, fat_button, strength_es_button],
                stats_layout: [stats_label, strength_button, weight_loss_button]}
