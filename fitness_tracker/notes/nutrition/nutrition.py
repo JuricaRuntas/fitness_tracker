@@ -1,0 +1,55 @@
+from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import pyqtSlot
+from .notes_panel import NotesPanel
+from .food_database_panel import FoodDatabasePanel
+from .search_results_panel import SearchResultsPanel
+from .food_panel import FoodPanel
+from homepage.side_panel import SidePanel
+from .header import Header
+
+class NutritionNotes(QWidget):
+  def __init__(self, controller):
+    super().__init__()
+    self.controller = controller
+    self.notes_panel = NotesPanel(self)
+    self.header = Header(self)
+    self.side_panel = SidePanel(self, self.controller)
+    self.create_grid()
+    self.header.change_layout_signal.connect(lambda name: self.change_layout(name))
+       
+  def create_grid(self):
+    self.grid = QGridLayout()
+    self.grid.addWidget(self.side_panel, 0, 0, 8, 1)
+    self.grid.addWidget(self.header, 0, 1, 1, 2)
+    self.grid.addWidget(self.notes_panel, 1, 1, 8, 3)
+    self.setLayout(self.grid)
+  
+  @pyqtSlot(str)
+  def change_layout(self, name):
+    grid_items = list(reversed([type(self.grid.itemAt(i).widget()).__name__ for i in reversed(range(self.grid.count()))]))
+    if name == "Food Database" and not "FoodDatabasePanel" in grid_items or name == "Return to FoodDatabase":
+      if "NotesPanel" in grid_items or "SearchResultsPanel" in grid_items or "FoodPanel" in grid_items:
+        self.grid.itemAt(2).widget().setParent(None)
+        self.food_database_panel = FoodDatabasePanel(self)
+        self.food_database_panel.search_signal.connect(lambda name: self.change_layout(name))
+        self.grid.addWidget(self.food_database_panel, 1, 1, 8, 3)
+        self.header.set_current_layout_button(name)
+
+    elif name == "Notes" and not "NotesPanel" in grid_items:
+      if "FoodDatabasePanel" in grid_items or "SearchResultsPanel" in grid_items or "FoodPanel" in grid_items:
+       self.grid.itemAt(2).widget().setParent(None)
+       self.grid.addWidget(self.notes_panel, 1, 1, 8, 3)
+       self.header.set_current_layout_button(name)
+
+    elif name == "Search" and "FoodDatabasePanel" in grid_items:
+      self.grid.itemAt(2).widget().setParent(None)  
+      self.search_results_panel = SearchResultsPanel(self)
+      self.search_results_panel.return_to_food_db_signal.connect(lambda name: self.change_layout(name))
+      self.search_results_panel.show_scrambled_eggs_signal.connect(lambda name: self.change_layout(name))
+      self.grid.addWidget(self.search_results_panel, 1, 1, 8, 3)
+    
+    elif name == "Scrambled Eggs":
+      self.grid.itemAt(2).widget().setParent(None)
+      self.panel = FoodPanel(self)
+      self.grid.addWidget(self.panel, 1, 1, 8, 3)
