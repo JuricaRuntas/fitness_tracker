@@ -30,7 +30,7 @@ class Spoonacular:
 
   def get_recipe_information(self, ID, include_nutrition):
     endpoint = "recipes/{ID}/information".format(ID=ID)
-    params = {"include_nutrition": include_nutrition}
+    params = {"includeNutrition": include_nutrition}
     return self.make_request(endpoint, params)
 
   def get_similar_recipes(self, ID, number=1):
