@@ -5,6 +5,7 @@ import psycopg2
 import json
 from psycopg2 import sql
 from PyQt5.QtCore import QFileInfo
+from common.units_conversion import kg_to_pounds, pounds_to_kg
 
 path = os.path.normpath(QFileInfo(__file__).absolutePath())
 db_path = path.split(os.path.sep)[:-3]
@@ -381,8 +382,6 @@ class BigLifts:
       cursor.execute(update)
 
   def convert_lift_history_weight(self, convert_to_units):
-    self.add_common_to_path()
-    from common.units_conversion import kg_to_pounds, pounds_to_kg
     email = self.fetch_user_email()
     try:
       lift_history = json.loads(self.fetch_lift_history())
@@ -411,9 +410,3 @@ class BigLifts:
     with sqlite3.connect(db_path) as conn:
       cursor = conn.cursor()
       cursor.execute(update)
-
-  def add_common_to_path(self):
-    path = os.path.normpath(QFileInfo(__file__).absolutePath())
-    path = path.split(os.path.sep)[:-2]
-    path = os.path.sep.join(path)
-    sys.path.append(path)
