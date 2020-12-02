@@ -6,3 +6,6 @@ db/user_info.db
 fitness_tracker/.idea/
 *.ipynb
 db/big_lifts.db
+build/
+dist/
+fitness_tracker.egg-info/
