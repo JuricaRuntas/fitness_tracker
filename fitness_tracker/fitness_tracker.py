@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, QVBoxLayout, QWidget, QSpacerItem, QSizeGrip
 from PyQt5.QtCore import QFileInfo, Qt
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QFontDatabase
 import sys
 import sqlite3
 import os
@@ -35,6 +35,7 @@ class FitnessTracker(QMainWindow):
     self.colorize_foreground()
     self.setup_borders()
     self.title_bar = TitleBar(self)
+    QFontDatabase.addApplicationFont("font/Ubuntu-Regular.ttf")
     main_widget = self.setup_main_layout()
     self.setCentralWidget(main_widget)
 
