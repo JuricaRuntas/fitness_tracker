@@ -4,6 +4,7 @@ import psycopg2
 from psycopg2 import sql
 import sqlite3
 from PyQt5.QtCore import QFileInfo
+from common.units_conversion import kg_to_pounds, pounds_to_kg
 
 path = os.path.normpath(QFileInfo(__file__).absolutePath())
 db_path = path.split(os.path.sep)[:-2]
@@ -59,8 +60,6 @@ class UserPhysique:
     elif "imperial" in user_data: return " ".join([str(weight), "lb"])
     
   def convert_weight(self, current_units, weight):
-    self.add_common_to_path()
-    from common.units_conversion import kg_to_pounds, pounds_to_kg
     if current_units == "metric":
       return kg_to_pounds(weight)
     elif current_units == "imperial":
@@ -99,9 +98,3 @@ class UserPhysique:
         set_units_metric = "UPDATE users SET units='metric' WHERE email=%s"
         update_units = set_units_imperial if current_units == "metric" else set_units_metric
         cursor.execute(update_units, (email,))
-
-  def add_common_to_path(self):
-    path = os.path.normpath(QFileInfo(__file__).absolutePath())
-    path = path.split(os.path.sep)[:-1]
-    path = os.path.sep.join(path)
-    sys.path.append(path)

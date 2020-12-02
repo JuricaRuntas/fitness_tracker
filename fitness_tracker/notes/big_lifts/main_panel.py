@@ -7,6 +7,7 @@ from .update_1RM_window import Update1RMWindow
 from .update_lifts_for_reps_window import UpdateLiftsForRepsWindow
 from .lift_history import LiftHistory
 from .big_lifts_helpers import BigLifts
+from common.units_conversion import kg_to_pounds, pounds_to_kg
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -26,8 +27,6 @@ class MainPanel(QWidget):
     
     if not self.units == big_lifts_units:
       self.interface.update_big_lifts_units()
-      self.interface.add_common_to_path()
-      from common.units_conversion import kg_to_pounds, pounds_to_kg
       if self.units == "kg":
         self.one_RM = [[lift[0], " ".join([str(pounds_to_kg(float(lift[1].split(" ")[0]))), self.units])] for lift in self.one_RM]
         self.lifts_reps = [[lift[0], " ".join(["x".join([lift[1].split("x")[0],

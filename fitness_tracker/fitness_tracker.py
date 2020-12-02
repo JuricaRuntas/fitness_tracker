@@ -6,9 +6,15 @@ import sqlite3
 import os
 from homepage.homepage import Homepage
 from user_physique.user_physique import UserPhysique
-from calculators import *
-from notes import *
-from statistics import *
+from calculators.one_rep_max.one_rep_max import OneRepMaxCalculator
+from calculators.body_fat.body_fat import BodyFatCalculator
+from calculators.strength_estimator.strength_estimator import StrengthEstimator
+from notes.big_lifts.big_lifts import BigLiftsNotes
+from notes.weight_loss.weight_loss import WeightLossNotes
+from notes.workouts.workouts import WorkoutsNotes
+from notes.nutrition.nutrition import NutritionNotes
+from statistics.strength.strength import StrengthStats
+from statistics.weight_loss.weight_loss import WeightLossStats
 from login.login import Login
 from signup.signup import Signup
 from signup.signup_questions_panel import SignupQuestions
