@@ -49,23 +49,17 @@ class TestSpoonacular(unittest.TestCase):
     self.assertEqual(result.status_code, 200, self.err_msg)
 
   def test_ingredient_search(self):
-    query = "banana"
-    params = {"number": 2, "sort": "calories", "sortDirection": "desc"}
-    result = self.api.ingredient_search(query, **params)
+    query = "banan"
+    number = 1
+    result = self.api.ingredient_search(query, number)
     self.assertEqual(result.status_code, 200, self.err_msg)
 
   def test_get_ingredient_information(self):
     ID = 9266
-    params = {"amount": 1}
+    params = {"amount": 1, "unit": "g"}
     result = self.api.get_ingredient_information(ID, **params)
     self.assertEqual(result.status_code, 200, self.err_msg)
     
-  def test_autocomplete_ingredient_search(self):
-    query = "appl"
-    params = {"number": 5}
-    result = self.api.autocomplete_ingredient_search(query, **params)
-    self.assertEqual(result.status_code, 200, self.err_msg)
-
   def test_generate_meal_plan(self):
     params = {"timeFrame": "day"}
     result = self.api.generate_meal_plan(**params)
