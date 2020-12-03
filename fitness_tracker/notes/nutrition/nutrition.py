@@ -32,6 +32,7 @@ class NutritionNotes(QWidget):
       if "NotesPanel" in grid_items or "SearchResultsPanel" in grid_items or "FoodPanel" in grid_items:
         self.grid.itemAt(2).widget().setParent(None)
         self.food_database_panel = FoodDatabasePanel(self)
+        self.food_database_panel.emit_search_results.connect(lambda search_results: self.save_search_results(search_results))
         self.food_database_panel.search_signal.connect(lambda name: self.change_layout(name))
         self.grid.addWidget(self.food_database_panel, 1, 1, 8, 3)
         self.header.set_current_layout_button(name)
@@ -44,12 +45,17 @@ class NutritionNotes(QWidget):
 
     elif name == "Search" and "FoodDatabasePanel" in grid_items:
       self.grid.itemAt(2).widget().setParent(None)  
-      self.search_results_panel = SearchResultsPanel(self)
+      self.search_results_panel = SearchResultsPanel(self, self.search_results)
       self.search_results_panel.return_to_food_db_signal.connect(lambda name: self.change_layout(name))
-      self.search_results_panel.show_scrambled_eggs_signal.connect(lambda name: self.change_layout(name))
+      self.search_results_panel.food_panel_signal.connect(lambda food_id: self.show_food_panel(food_id))
       self.grid.addWidget(self.search_results_panel, 1, 1, 8, 3)
-    
-    elif name == "Scrambled Eggs":
-      self.grid.itemAt(2).widget().setParent(None)
-      self.panel = FoodPanel(self)
-      self.grid.addWidget(self.panel, 1, 1, 8, 3)
+  
+  @pyqtSlot(object)
+  def save_search_results(self, search_results):
+    self.search_results = search_results
+
+  @pyqtSlot(int)
+  def show_food_panel(self, food_id):
+    self.grid.itemAt(2).widget().setParent(None)
+    self.food_panel = FoodPanel(self, food_id)
+    self.grid.addWidget(self.food_panel, 1, 1, 8, 3)

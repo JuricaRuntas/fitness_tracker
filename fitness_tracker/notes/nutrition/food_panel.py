@@ -1,12 +1,17 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout, QVBoxLayout, QTableWidget, QAbstractItemView, QTableWidgetItem, QHeaderView
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import QFileInfo
+from .spoonacular import FoodDatabase
 
 path = QFileInfo(__file__).absolutePath()
 
 class FoodPanel(QWidget):
-  def __init__(self, parent):
+  def __init__(self, parent, food_id):
     super().__init__()
+    self.api = FoodDatabase()
+    self.food_info = self.api.food_info(food_id)
+    self.nutrients = {nutrient["title"]: " ".join([str(nutrient["amount"]), nutrient["unit"]])
+                      for nutrient in self.food_info["nutrition"]["nutrients"]}
     self.create_panel()
     self.setStyleSheet("QLabel{color:white;}")
 
@@ -19,37 +24,27 @@ class FoodPanel(QWidget):
   def create_left_section(self):
     section_layout = QVBoxLayout()
 
-    food_title = QLabel("Scrambled Eggs")
+    food_title = QLabel(self.food_info["name"].capitalize())
     food_title.setFont(QFont("Ariel", 25))
     
     food_image = QLabel()
-    food_pixmap = QPixmap("".join([path, "/placeholder_images/scrambled_eggs_2.jpg"]))
+    food_pixmap = QPixmap("".join([path, "/food_images/", self.food_info["image"]]))
     food_image.setPixmap(food_pixmap)
-
-    food_description = QLabel("""
-                              <html><head/><body><p>Lorem ipsum dolor sit amet, consectetur.</p>
-                              <p>Praesent laoreet rutrum odio eget convallis. </p>
-                              <p>Etiam tristique imperdiet molestie. Donec</p><p>eu mattis odio euismod in. </p>
-                              <p>Sed rutrum luctus ex, non vehicula elit facilisis vitae. </p>
-                              <p>Maecenas sollicitudin mauris eu ultricies tincidunt. </p>
-                              <p>Praesent laoreet velit et congue efficitur.</p></body></html> 
-                              """)
-
+    
     section_layout.addWidget(food_title)
     section_layout.addWidget(food_image)
-    section_layout.addWidget(food_description)
 
     return section_layout
 
   def create_right_section(self):
     section_layout = QVBoxLayout()
 
-    food_info_label = QLabel("High Protein")
+    food_info_label = QLabel("*important food info*")
     food_info_label.setFont(QFont("Ariel", 25))
 
     graph = QLabel()
     graph.setStyleSheet("background-color: white;")
-    graph_pixmap = QPixmap("".join([path, "/placeholder_images/eggs_chart.png"]))
+    graph_pixmap = QPixmap("".join([path, "/chart_placeholder.png"]))
     graph.setPixmap(graph_pixmap)
 
     nutrition_table = QTableWidget(15, 1)
@@ -57,13 +52,16 @@ class FoodPanel(QWidget):
     nutrition_table.horizontalHeader().setVisible(False)
     nutrition_table.setStyleSheet("background-color:white;")
 
-    items = ["Calories", "Fat", "Saturated Fat", "Trans Fat",
-             "Cholesterol", "Sodium", "Potassium", "Carbohydrates",
-             "Dietary Fiber", "Sugars", "Protein", "Vitamin A",
-             "Vitamin C", "Calcium", "Iron"]
+    amount = " ".join([str(self.food_info["amount"]), self.food_info["unit"]])
+    nutrients = list(self.nutrients.keys())
+    nutrient_values = list(self.nutrients.values())
     
-    for i, item in enumerate(items):
-      nutrition_table.setVerticalHeaderItem(i, QTableWidgetItem(item))
+    for i, nutrient in enumerate(nutrients):
+      if nutrient == "Calories": nutrient += " (%s)" % amount
+      nutrition_table.setVerticalHeaderItem(i, QTableWidgetItem(nutrient))
+    
+    for i, value in enumerate(nutrient_values):
+      nutrition_table.setItem(i, 0, QTableWidgetItem(value))
 
     section_layout.addWidget(food_info_label)
     section_layout.addWidget(graph)

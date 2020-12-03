@@ -2,9 +2,11 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayou
                              QGridLayout, QHBoxLayout, QSpacerItem, QSizePolicy)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt, pyqtSignal
+from .spoonacular import FoodDatabase
 
 class FoodDatabasePanel(QWidget):
   search_signal = pyqtSignal(str)
+  emit_search_results = pyqtSignal(object)
 
   def __init__(self, parent):
     super().__init__(parent)
@@ -58,4 +60,9 @@ class FoodDatabasePanel(QWidget):
 
   def emit_search_signal(self):
     if not self.search_bar.text() == '':
+      api = FoodDatabase()
+      search = self.search_bar.text()
+      search_results = api.food_search(search, 6)
+      api.download_food_images(search_results, 250)
+      self.emit_search_results.emit([search_results, search])
       self.search_signal.emit("Search")

@@ -1,3 +1,4 @@
+from functools import partial
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QGridLayout, QSpacerItem, QSizePolicy
 from PyQt5.QtGui import QCursor, QIcon, QFont, QPixmap
 from PyQt5.QtCore import Qt, QSize, QFileInfo, pyqtSignal
@@ -6,10 +7,12 @@ path = QFileInfo(__file__).absolutePath()
 
 class SearchResultsPanel(QWidget):
   return_to_food_db_signal = pyqtSignal(str)
-  show_scrambled_eggs_signal = pyqtSignal(str)
+  food_panel_signal = pyqtSignal(int)
 
-  def __init__(self, parent):
+  def __init__(self, parent, search_results):
     super().__init__(parent)
+    self.search = search_results[1]
+    self.search_results = search_results[0]
     self.create_panel()
     self.setStyleSheet("QLabel{color:white;}")
 
@@ -28,7 +31,7 @@ class SearchResultsPanel(QWidget):
     back_button.setCursor(QCursor(Qt.PointingHandCursor))
     back_button.clicked.connect(lambda: self.return_to_food_db_signal.emit("Return to FoodDatabase"))
 
-    results_label = QLabel('Found 25 results for "eggs"')
+    results_label = QLabel('Found %s results for "%s"' % (len(self.search_results), self.search))
     results_label.setFont(QFont("Ariel", 15))
     
     spacer = QSpacerItem(40, 20, QSizePolicy.Expanding)
@@ -52,48 +55,31 @@ class SearchResultsPanel(QWidget):
   def create_results(self):
     results_grid = QGridLayout()
     
-    result_layout = QVBoxLayout()
-    result_image = QLabel()
-    result_image = QPushButton()
-    result_image.setFlat(True)
-    result_image.setIcon(QIcon("".join([path, "/placeholder_images/eggs.jpg"])))
-    result_image.setIconSize(QSize(250, 200))
-    result_image.setCursor(QCursor(Qt.PointingHandCursor))
-    result_label = QLabel("Eggs")
-    result_label.setAlignment(Qt.AlignCenter)
-
-    result_layout.addWidget(result_image)
-    result_layout.addWidget(result_label)
+    result_layouts = [None] * len(self.search_results)
+    result_images = [None] * len(self.search_results)
+    result_labels = [None] * len(self.search_results)
     
-    result_layout1 = QVBoxLayout()
-    result_image1 = QPushButton()
-    result_image1.setFlat(True)
-    result_image1.setIcon(QIcon("".join([path, "/placeholder_images/boiled_eggs.jpg"])))
-    result_image1.setIconSize(QSize(250, 200))
-    result_image1.setCursor(QCursor(Qt.PointingHandCursor))
+    i = 0
+    row = 0
+    for result in self.search_results:
+      result_layouts[i] = QVBoxLayout()
+      result_images[i] = QPushButton()
+      result_labels[i] = QLabel()
 
-    result_label1 = QLabel("Boiled Eggs")
-    result_label1.setAlignment(Qt.AlignCenter)
+      result_images[i].setProperty("food_id", result["id"])
+      result_images[i].clicked.connect(partial(self.food_panel_signal.emit, result_images[i].property("food_id")))
+      result_images[i].setFlat(True)
+      result_images[i].setIcon(QIcon("".join([path, "/food_images/", result["image"]])))
+      result_images[i].setIconSize(QSize(250, 200))
+      result_images[i].setCursor(QCursor(Qt.PointingHandCursor))
+      result_labels[i].setText(result["name"].capitalize())
+      result_labels[i].setAlignment(Qt.AlignCenter)
 
-    result_layout1.addWidget(result_image1)
-    result_layout1.addWidget(result_label1)
-    
-    result_layout2 = QVBoxLayout()
-    result_image2 = QPushButton()
-    result_image2.setFlat(True)
-    result_image2.setIcon(QIcon("".join([path, "/placeholder_images/scrambled_eggs.jpg"])))
-    result_image2.setIconSize(QSize(250, 200))
-    result_image2.setCursor(QCursor(Qt.PointingHandCursor))
-    result_image2.clicked.connect(lambda: self.show_scrambled_eggs_signal.emit("Scrambled Eggs"))
-
-    result_label2 = QLabel("Scrambled Eggs")
-    result_label2.setAlignment(Qt.AlignCenter)
-
-    result_layout2.addWidget(result_image2)
-    result_layout2.addWidget(result_label2)
-
-    results_grid.addLayout(result_layout, 0, 0)
-    results_grid.addLayout(result_layout1, 0, 1)
-    results_grid.addLayout(result_layout2, 0, 2) 
-    
-    return results_grid
+      result_layouts[i].addWidget(result_images[i])
+      result_layouts[i].addWidget(result_labels[i])
+      results_grid.addLayout(result_layouts[i], row, i)
+      i += 1
+      if i == 3: 
+        i = 0
+        row += 1
+    return results_grid 
