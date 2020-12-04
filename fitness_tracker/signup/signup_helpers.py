@@ -58,7 +58,6 @@ class Signup:
   def create_user(self, user_email, user_password):
     self.email = user_email
     status = True
-    #table_name = "".join([user_email, "_table"])6
     with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                           user=db_info["user"], password=db_info["password"]) as conn:
       try:
@@ -116,8 +115,11 @@ class Signup:
                    name text,
                    gender text,
                    units text,
-                   weight real,
-                   id integer NOT NULL,
+                   weight text,
+                   height text,
+                   goal text,
+                   goalparams text,
+                   ID integer NOT NULL,
                    PRIMARY KEY (ID));
                    """ % table_name
                    

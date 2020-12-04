@@ -10,3 +10,4 @@ build/
 dist/
 fitness_tracker.egg-info/
 food_images/
+db/nutrition.db

@@ -147,7 +147,7 @@ class MainPanel(QWidget):
       self.interface.update_units(self.table_name)
       # get updated units
       updated_units = self.interface.fetch_units(self.table_name)
-      current_weight = self.user_data[3]
+      current_weight = float(self.user_data[3])
       converted_weight = self.interface.convert_weight(self.user_data[2], current_weight)
       # update self.user_data
       self.user_data[3] = converted_weight

@@ -1,9 +1,13 @@
+import os
 from functools import partial
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QGridLayout, QSpacerItem, QSizePolicy
 from PyQt5.QtGui import QCursor, QIcon, QFont, QPixmap
-from PyQt5.QtCore import Qt, QSize, QFileInfo, pyqtSignal
+from PyQt5.QtCore import Qt, QSize, pyqtSignal
 
-path = QFileInfo(__file__).absolutePath()
+path = os.path.abspath(os.path.dirname(__file__))
+
+icons_path = os.path.join(path, "icons")
+images_path = os.path.join(path, "food_images")
 
 class SearchResultsPanel(QWidget):
   return_to_food_db_signal = pyqtSignal(str)
@@ -26,7 +30,7 @@ class SearchResultsPanel(QWidget):
     summary_layout = QHBoxLayout()
     back_button = QPushButton()
     back_button.setFlat(True)
-    back_button.setIcon(QIcon("".join([path, "/icons/back.png"])))
+    back_button.setIcon(QIcon(os.path.join(icons_path, "back.png")))
     back_button.setIconSize(QSize(24, 24))
     back_button.setCursor(QCursor(Qt.PointingHandCursor))
     back_button.clicked.connect(lambda: self.return_to_food_db_signal.emit("Return to FoodDatabase"))
@@ -69,7 +73,7 @@ class SearchResultsPanel(QWidget):
       result_images[i].setProperty("food_id", result["id"])
       result_images[i].clicked.connect(partial(self.food_panel_signal.emit, result_images[i].property("food_id")))
       result_images[i].setFlat(True)
-      result_images[i].setIcon(QIcon("".join([path, "/food_images/", result["image"]])))
+      result_images[i].setIcon(QIcon(os.path.join(images_path, result["image"])))
       result_images[i].setIconSize(QSize(250, 200))
       result_images[i].setCursor(QCursor(Qt.PointingHandCursor))
       result_labels[i].setText(result["name"].capitalize())

@@ -1,14 +1,30 @@
+import os
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QPushButton, QFrame, QHBoxLayout, QVBoxLayout,
                              QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView)
 from PyQt5.QtGui import QFont, QCursor, QIcon
-from PyQt5.QtCore import Qt, QFileInfo, QSize
+from PyQt5.QtCore import Qt, QSize
+from user_physique.user_physique_helpers import UserPhysique
+from .nutrition_helpers import Nutrition
 
-path = QFileInfo(__file__).absolutePath()
+path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
+
+icons = {"pencil": os.path.join(path, "pencil.png"),
+         "plus": os.path.join(path, "plus.png"),
+         "left": os.path.join(path, "left.png"),
+         "right": os.path.join(path, "right.png")}
 
 class NotesPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
+    self.interface = Nutrition()
+    if not self.interface.table_exists():
+      self.interface.create_nutrition_table()
+      self.interface.fetch_nutrition_data()
+    self.user_db = UserPhysique()
+    self.units = "kg" if self.user_db.fetch_units(self.user_db.fetch_table_name()) == "metric" else "lb"
+    self.user_weight = self.user_db.fetch_user_weight()
+    self.calorie_goal = self.interface.fetch_calorie_goal()
     self.create_panel()
     self.setStyleSheet("QLabel{color:white;}")
 
@@ -23,7 +39,7 @@ class NotesPanel(QWidget):
     
     calorie_goal_layout = QVBoxLayout()
     calorie_goal_frame = QFrame()
-    calorie_goal_label = QLabel("Calorie Goal: \n 2500")
+    calorie_goal_label = QLabel(" ".join(["Calorie Goal: \n", self.calorie_goal]))
     calorie_goal_label.setFixedHeight(40)
     calorie_goal_label.setFont(QFont("Ariel", 15))
     calorie_goal_label.setAlignment(Qt.AlignCenter)
@@ -42,11 +58,11 @@ class NotesPanel(QWidget):
     weight_frame = QFrame()
 
     current_weight_layout = QHBoxLayout()
-    current_weight_label = QLabel("Current Weight: 89.3 kg")
+    current_weight_label = QLabel(" ".join(["Current Weight:", self.user_weight, self.units]))
     current_weight_label.setFont(QFont("Ariel", 15))
     edit_current_weight_button = QPushButton()
     edit_current_weight_button.setFlat(True)
-    edit_current_weight_button.setIcon(QIcon("".join([path, "/icons/pencil.png"])))
+    edit_current_weight_button.setIcon(QIcon(icons["pencil"]))
     edit_current_weight_button.setIconSize(QSize(16, 16))
     edit_current_weight_button.setCursor(QCursor(Qt.PointingHandCursor))
     current_weight_layout.addWidget(current_weight_label)
@@ -57,7 +73,7 @@ class NotesPanel(QWidget):
     goal_weight_label.setFont(QFont("Ariel", 15))
     edit_goal_weight_button = QPushButton()
     edit_goal_weight_button.setFlat(True)
-    edit_goal_weight_button.setIcon(QIcon("".join([path, "/icons/pencil.png"])))
+    edit_goal_weight_button.setIcon(QIcon(icons["pencil"]))
     edit_goal_weight_button.setIconSize(QSize(16, 16))
     edit_goal_weight_button.setCursor(QCursor(Qt.PointingHandCursor))
     goal_weight_layout.addWidget(goal_weight_label)
@@ -81,10 +97,10 @@ class NotesPanel(QWidget):
     
     meals = ["Breakfast", "Lunch", "Dinner", "Snacks"]
     
-    plus_button = QPushButton(QIcon("".join([path, "/icons/plus.png"])), "Add Food", self)
-    plus_button1 = QPushButton(QIcon("".join([path, "/icons/plus.png"])), "Add Food", self)
-    plus_button2 = QPushButton(QIcon("".join([path, "/icons/plus.png"])), "Add Food", self)
-    plus_button3 = QPushButton(QIcon("".join([path, "/icons/plus.png"])), "Add Food", self)
+    plus_button = QPushButton(QIcon(icons["plus"]), "Add Food", self)
+    plus_button1 = QPushButton(QIcon(icons["plus"]), "Add Food", self)
+    plus_button2 = QPushButton(QIcon(icons["plus"]), "Add Food", self)
+    plus_button3 = QPushButton(QIcon(icons["plus"]), "Add Food", self)
     
     buttons = [plus_button, plus_button1, plus_button2, plus_button3]
     j = i = 0
@@ -104,11 +120,11 @@ class NotesPanel(QWidget):
     
     table_title_layout = QHBoxLayout()
     
-    left_button = QPushButton(QIcon("".join([path, "/icons/left.png"])), "", self)
+    left_button = QPushButton(QIcon(icons["left"]), "", self)
     left_button.setFlat(True)
     left_button.setFixedWidth(20)
     left_button.setCursor(QCursor(Qt.PointingHandCursor))
-    right_button = QPushButton(QIcon("".join([path, "/icons/right.png"])), "",self)
+    right_button = QPushButton(QIcon(icons["right"]), "",self)
     right_button.setFlat(True)
     right_button.setFixedWidth(20)
     right_button.setCursor(QCursor(Qt.PointingHandCursor))

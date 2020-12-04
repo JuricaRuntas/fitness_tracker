@@ -51,6 +51,15 @@ class UserPhysique:
         pass
       return email
 
+  def fetch_user_weight(self):
+    user_weight = None
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      table_name = self.fetch_table_name()
+      cursor.execute("SELECT weight FROM '{table}'".format(table=table_name))
+      user_weight = cursor.fetchone()[0]
+    return user_weight
+  
   def set_weight(self, user_data):
     # 4th column of user table is currently weight
     weight = user_data[3]
@@ -59,15 +68,15 @@ class UserPhysique:
     
   def convert_weight(self, current_units, weight):
     if current_units == "metric":
-      return kg_to_pounds(weight)
+      return kg_to_pounds(float(weight))
     elif current_units == "imperial":
-      return pounds_to_kg(weight)
+      return pounds_to_kg(float(weight))
 
   def update_weight(self, table_name, weight):
     email = self.fetch_user_email()
     with sqlite3.connect(db_path) as conn:
       cursor = conn.cursor()
-      update = "UPDATE '{table}' SET weight=%s" % weight
+      update = "UPDATE '{table}' SET weight=%s" % str(weight)
       cursor.execute(update.format(table=table_name))
     
     with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],

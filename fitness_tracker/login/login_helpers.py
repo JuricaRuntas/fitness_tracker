@@ -54,7 +54,10 @@ class Login():
                        name text NOT NULL,
                        gender text NOT NULL,
                        units text NOT NULL,
-                       weight real NOT NULL,
+                       weight text NOT NULL,
+                       height text NOT NULL,
+                       goal text NOT NULL,
+                       goalparams text NOT NULL, 
                        ID integer NOT NULL,
                        PRIMARY KEY (ID));
                        """
