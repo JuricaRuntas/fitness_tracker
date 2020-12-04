@@ -5,11 +5,10 @@ import string
 import hashlib
 import psycopg2
 from psycopg2 import sql
-from PyQt5.QtCore import QFileInfo
 
-path = os.path.normpath(QFileInfo(__file__).absolutePath())
-db_path = path.split(os.path.sep)[:-2]
-db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "user_info.db"])
+path = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.sep.join([*path.split(os.path.sep)[:-2], "db"])
+user_info_db = os.path.sep.join([db_path, "user_info.db"])
 
 db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432, 
            "database": "postgres", "user": "admin", "password": "admin"}
@@ -34,7 +33,7 @@ class Signup:
 
   def fetch_user_email(self):
     email = None
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(user_info_db) as conn:
       cursor = conn.cursor()
       table_name = self.fetch_table_name()
       cursor.execute("SELECT email FROM '{table}'".format(table=table_name))
@@ -46,7 +45,7 @@ class Signup:
 
   def fetch_table_name(self):
     table_name = None
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(user_info_db) as conn:
       cursor = conn.cursor()
       cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
       try:
@@ -80,7 +79,7 @@ class Signup:
         update_query = self.create_update_query("users", email, user_info)
         cursor.execute(update_query)
       
-      with sqlite3.connect(db_path) as conn:
+      with sqlite3.connect(user_info_db) as conn:
         cursor = conn.cursor()
         update_query = self.create_update_query(table_name, email, user_info, sqlite=True)
         cursor.execute(update_query)
@@ -122,7 +121,7 @@ class Signup:
                    PRIMARY KEY (ID));
                    """ % table_name
                    
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(user_info_db) as conn:
       cursor = conn.cursor()
       cursor.execute(create_table)
       insert_email = "INSERT INTO '%s'(email, password) VALUES ('%s', '%s')" % (table_name, email, password)

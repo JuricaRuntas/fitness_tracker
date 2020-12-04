@@ -3,12 +3,10 @@ import sys
 import psycopg2
 from psycopg2 import sql
 import sqlite3
-from PyQt5.QtCore import QFileInfo
 from common.units_conversion import kg_to_pounds, pounds_to_kg
 
-path = os.path.normpath(QFileInfo(__file__).absolutePath())
-db_path = path.split(os.path.sep)[:-2]
-db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "user_info.db"])
+path = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.sep.join([*path.split(os.path.sep)[:-2], "db", "user_info.db"])
 
 db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
            "database": "postgres", "user": "admin", "password": "admin"}

@@ -4,20 +4,20 @@ import sqlite3
 import psycopg2
 import json
 from psycopg2 import sql
-from PyQt5.QtCore import QFileInfo
 from common.units_conversion import kg_to_pounds, pounds_to_kg
 
-path = os.path.normpath(QFileInfo(__file__).absolutePath())
-db_path = path.split(os.path.sep)[:-3]
-db_path_user_info = os.path.sep.join([os.path.sep.join(db_path), "db", "user_info.db"])
-db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "big_lifts.db"])
+path = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.sep.join([*path.split(os.path.sep)[:-3], "db"])
+
+user_info_db = os.path.sep.join([db_path, "user_info.db"])
+big_lifts_db = os.path.sep.join([db_path, "big_lifts.db"])
 
 db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
            "database": "postgres", "user": "admin", "password": "admin"}
 
 class BigLifts:
   def table_is_empty(self):
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute("SELECT COUNT (*) FROM big_lifts")
       if cursor.fetchone()[0] == 0: return True
@@ -25,7 +25,7 @@ class BigLifts:
 
   def fetch_user_info_table_name(self):
     table_name = None
-    with sqlite3.connect(db_path_user_info) as conn:
+    with sqlite3.connect(user_info_db) as conn:
       cursor = conn.cursor()
       cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
       try:
@@ -36,7 +36,7 @@ class BigLifts:
 
   def fetch_user_email(self):
     email = None
-    with sqlite3.connect(db_path_user_info) as conn:
+    with sqlite3.connect(user_info_db) as conn:
       cursor = conn.cursor()
       table_name = self.fetch_user_info_table_name()
       if table_name == None: return None
@@ -50,7 +50,7 @@ class BigLifts:
   def fetch_units(self):
     table_name = self.fetch_user_info_table_name()
     units = None
-    with sqlite3.connect(db_path_user_info) as conn:
+    with sqlite3.connect(user_info_db) as conn:
       cursor = conn.cursor()
       fetch_current_units = "SELECT units from '{table}'"
       cursor.execute(fetch_current_units.format(table=table_name))
@@ -59,7 +59,7 @@ class BigLifts:
 
   def fetch_units_from_big_lifts(self):
     units = None
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       fetch_current_units = "SELECT units FROM big_lifts"
       cursor.execute(fetch_current_units)
@@ -68,7 +68,7 @@ class BigLifts:
 
   def fetch_one_rep_maxes(self):
     one_rep_maxes = None
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute("""SELECT "1RM" FROM big_lifts""")
       one_rep_maxes = cursor.fetchone()[0]
@@ -76,7 +76,7 @@ class BigLifts:
 
   def fetch_lifts_for_reps(self):
     lifts_for_reps = None
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute("SELECT lifts_for_reps FROM big_lifts")
       lifts_for_reps = cursor.fetchone()[0]
@@ -85,7 +85,7 @@ class BigLifts:
   def fetch_preferred_lifts(self):
     email = self.fetch_user_email()
     preferred_lifts = None
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute("SELECT preferred_lifts FROM big_lifts WHERE email='%s'" % email)
       preferred_lifts = cursor.fetchone()[0]
@@ -93,7 +93,7 @@ class BigLifts:
 
   def fetch_lift_history(self):
     lift_history = None
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute("SELECT lift_history FROM big_lifts")
       lift_history = cursor.fetchone()[0]
@@ -136,7 +136,7 @@ class BigLifts:
                       INSERT INTO big_lifts (email, '1RM', lifts_for_reps, preferred_lifts, lift_history, units) VALUES
                       ('%s', ?, ?, ?, ?, ?)
                       """ % email
-      with sqlite3.connect(db_path) as conn:
+      with sqlite3.connect(big_lifts_db) as conn:
         cursor = conn.cursor()
         cursor.execute(insert_values, (one_rep_maxes, lifts_for_reps, preferred_lifts, lift_history, units,))
 
@@ -164,7 +164,7 @@ class BigLifts:
           values = tuple(value for value in default_dict.values())
           cursor.execute(sql.SQL(insert_query).format(columns=columns), (values,))
     
-        with sqlite3.connect(db_path) as conn:
+        with sqlite3.connect(big_lifts_db) as conn:
           cursor = conn.cursor()
           insert_query = "INSERT INTO big_lifts {columns} VALUES {values}"
           cursor.execute(insert_query.format(columns=tuple(default_dict.keys()), values=tuple(default_dict.values())))
@@ -172,7 +172,7 @@ class BigLifts:
       self.fetch_user_big_lifts_table_data()
   
   def create_big_lifts_table(self):
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       create_table = """
                      CREATE TABLE IF NOT EXISTS
@@ -197,7 +197,7 @@ class BigLifts:
       with conn.cursor() as cursor:
         cursor.execute(update_query)
 
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute(update_query)
   
@@ -219,7 +219,7 @@ class BigLifts:
         cursor.execute(update_query1)
         cursor.execute(update_query2)
 
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute(update_query1)
       cursor.execute(update_query2)
@@ -240,7 +240,7 @@ class BigLifts:
       with conn.cursor() as cursor:
         cursor.execute(update_query)
 
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute(update_query)
   
@@ -260,7 +260,7 @@ class BigLifts:
       with conn.cursor() as cursor:
         cursor.execute(update_query)
 
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute(update_query)
 
@@ -288,7 +288,7 @@ class BigLifts:
       with conn.cursor() as cursor:
         cursor.execute(update)
 
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute(update)
 
@@ -301,7 +301,7 @@ class BigLifts:
       with conn.cursor() as cursor:
         cursor.execute(update)
 
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute(update)
 
@@ -320,7 +320,7 @@ class BigLifts:
       with conn.cursor() as cursor:
         cursor.execute(clear)
 
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute(clear)
 
@@ -339,7 +339,7 @@ class BigLifts:
       with conn.cursor() as cursor:
         cursor.execute(clear)
 
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute(clear)
   
@@ -377,7 +377,7 @@ class BigLifts:
       with conn.cursor() as cursor:
         cursor.execute(update)
 
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute(update)
 
@@ -407,6 +407,6 @@ class BigLifts:
       with conn.cursor() as cursor:
         cursor.execute(update)
 
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(big_lifts_db) as conn:
       cursor = conn.cursor()
       cursor.execute(update)

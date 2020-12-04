@@ -3,11 +3,10 @@ import hashlib
 import psycopg2
 import sqlite3
 from psycopg2 import sql
-from PyQt5.QtCore import QFileInfo
 
-path = os.path.normpath(QFileInfo(__file__).absolutePath())
-db_path = path.split(os.path.sep)[:-2]
-db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "user_info.db"])
+path = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.sep.join([*path.split(os.path.sep)[:-2], "db"])
+user_info_db = os.path.sep.join([db_path, "user_info.db"])
 
 db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
            "database": "postgres", "user": "admin", "password": "admin"}
@@ -43,7 +42,7 @@ class Login():
           cursor.execute(query)
           columns = tuple(value[0] for value in cursor.fetchall() if not value[0] == 'id')
     
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(user_info_db) as conn:
       table_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='{table}';"
       cursor = conn.cursor()
       cursor.execute(table_exists.format(table=table_name))
