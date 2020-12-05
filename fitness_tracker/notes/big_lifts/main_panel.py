@@ -6,27 +6,30 @@ from .preferred_lifts import PreferredLifts
 from .update_1RM_window import Update1RMWindow
 from .update_lifts_for_reps_window import UpdateLiftsForRepsWindow
 from .lift_history import LiftHistory
-from .big_lifts_helpers import BigLifts
+from .big_lifts_db import (create_big_lifts_table, insert_default_values, table_is_empty,
+                           fetch_units_from_big_lifts, fetch_one_rep_maxes, fetch_lifts_for_reps,
+                           update_big_lifts_units, update_lifts_for_reps, update_1RM_lifts,
+                           convert_lift_history_weight, fetch_preferred_lifts, clear_one_rep_maxes, clear_lifts_for_reps)
+from profile import profile_db
 from common.units_conversion import kg_to_pounds, pounds_to_kg
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    self.interface = BigLifts()
-    self.interface.create_big_lifts_table()
-    if self.interface.table_is_empty(): self.interface.insert_default_values()
+    create_big_lifts_table()
+    if table_is_empty(): insert_default_values()
     
-    self.units = "kg" if self.interface.fetch_units() == "metric" else "lb"
-    big_lifts_units = "kg" if self.interface.fetch_units_from_big_lifts() == "metric" else "lb"
+    self.units = "kg" if profile_db.fetch_units() == "metric" else "lb"
+    big_lifts_units = "kg" if fetch_units_from_big_lifts() == "metric" else "lb"
     
-    one_rep_maxes = json.loads(self.interface.fetch_one_rep_maxes())
-    lifts_for_reps = json.loads(self.interface.fetch_lifts_for_reps())
+    one_rep_maxes = json.loads(fetch_one_rep_maxes())
+    lifts_for_reps = json.loads(fetch_lifts_for_reps())
 
     self.one_RM = [[lift, " ".join([weight, self.units])] for lift, weight in one_rep_maxes.items()]
     self.lifts_reps = [[lift, " ".join(["x".join(weight), self.units])] for lift, weight in lifts_for_reps.items()]
     
     if not self.units == big_lifts_units:
-      self.interface.update_big_lifts_units()
+      update_big_lifts_units()
       if self.units == "kg":
         self.one_RM = [[lift[0], " ".join([str(pounds_to_kg(float(lift[1].split(" ")[0]))), self.units])] for lift in self.one_RM]
         self.lifts_reps = [[lift[0], " ".join(["x".join([lift[1].split("x")[0],
@@ -41,9 +44,9 @@ class MainPanel(QWidget):
       new_one_RM_lifts = {lift[0]:lift[1].split(" ")[0] for lift in self.one_RM}
       new_lifts_for_reps = {lift[0]: [lift[1].split("x")[0], lift[1].split("x")[1].split(" ")[0]] for lift in self.lifts_reps}
       
-      self.interface.update_1RM_lifts(new_one_RM_lifts)
-      self.interface.update_lifts_for_reps(new_lifts_for_reps)
-      self.interface.convert_lift_history_weight(self.units)
+      update_1RM_lifts(new_one_RM_lifts)
+      update_lifts_for_reps(new_lifts_for_reps)
+      convert_lift_history_weight(self.units)
 
     self.lift_history_window = LiftHistory()
     self.lift_history_window.setGeometry(100, 200, 300, 300)   
@@ -192,7 +195,7 @@ class MainPanel(QWidget):
   @pyqtSlot(bool)
   def changed_preferred_lifts(self, changed):
     if changed:
-      fetch_lifts = self.interface.fetch_preferred_lifts()
+      fetch_lifts = fetch_preferred_lifts()
       parsed_lifts = list(json.loads(fetch_lifts).values())
       one_RM_labels = [self.horizontal_press_label_ORM, self.floor_pull_label_ORM,
                        self.squat_label_ORM, self.vertical_press_label_ORM]
@@ -213,13 +216,13 @@ class MainPanel(QWidget):
   @pyqtSlot(bool)
   def changed_1RM_lifts(self, changed):
     if changed:
-      fetch_weight = list(json.loads(self.interface.fetch_one_rep_maxes()).values())
+      fetch_weight = list(json.loads(fetch_one_rep_maxes()).values())
       self.set_1RM_labels_text(fetch_weight)
 
   @pyqtSlot(bool)
   def changed_lifts_for_reps(self, changed):
     if changed:
-      fetch_reps_and_weight = list(json.loads(self.interface.fetch_lifts_for_reps()).values())
+      fetch_reps_and_weight = list(json.loads(fetch_lifts_for_reps()).values())
       self.set_lifts_for_reps_labels_text(fetch_reps_and_weight)
   
   def set_lifts_for_reps_labels_text(self, text):
@@ -240,13 +243,13 @@ class MainPanel(QWidget):
       label.setText(": ".join(label_text))
 
   def clear_one_rep_maxes(self):
-    self.interface.clear_one_rep_maxes()
-    fetch_weight = list(json.loads(self.interface.fetch_one_rep_maxes()).values())
+    clear_one_rep_maxes()
+    fetch_weight = list(json.loads(fetch_one_rep_maxes()).values())
     self.set_1RM_labels_text(fetch_weight)
     self.update_1RM_window.set_line_edit_values()
    
   def clear_lifts_for_reps(self):
-    self.interface.clear_lifts_for_reps()
-    fetch_reps_and_weight = list(json.loads(self.interface.fetch_lifts_for_reps()).values())
+    clear_lifts_for_reps()
+    fetch_reps_and_weight = list(json.loads(fetch_lifts_for_reps()).values())
     self.set_lifts_for_reps_labels_text(fetch_reps_and_weight)
     self.lifts_for_reps.set_line_edit_values()

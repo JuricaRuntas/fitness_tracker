@@ -4,8 +4,8 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView)
 from PyQt5.QtGui import QFont, QCursor, QIcon
 from PyQt5.QtCore import Qt, QSize
-from user_physique.user_physique_helpers import UserPhysique
-from .nutrition_helpers import Nutrition
+from profile import profile_db
+from .nutrition_db import table_exists, create_nutrition_table, fetch_nutrition_data, fetch_calorie_goal
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
 
@@ -17,14 +17,12 @@ icons = {"pencil": os.path.join(path, "pencil.png"),
 class NotesPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    self.interface = Nutrition()
-    if not self.interface.table_exists():
-      self.interface.create_nutrition_table()
-      self.interface.fetch_nutrition_data()
-    self.user_db = UserPhysique()
-    self.units = "kg" if self.user_db.fetch_units(self.user_db.fetch_table_name()) == "metric" else "lb"
-    self.user_weight = self.user_db.fetch_user_weight()
-    self.calorie_goal = self.interface.fetch_calorie_goal()
+    if not table_exists():
+      create_nutrition_table()
+      fetch_nutrition_data()
+    self.units = "kg" if profile_db.fetch_units() == "metric" else "lb"
+    self.user_weight = profile_db.fetch_user_weight()
+    self.calorie_goal = fetch_calorie_goal()
     self.create_panel()
     self.setStyleSheet("QLabel{color:white;}")
 

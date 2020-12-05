@@ -14,8 +14,8 @@ class StrengthLevelEstimator:
     return self.lift_standard
   
   def find_strength_group(self):
-    if self.gender == "Male" and self.units == "kg": bodyweight_groups = [bodyweight_group for bodyweight_group in range(40, 125, 5)]
-    elif self.gender == "Female" and self.units == "kg": bodyweight_groups = [bodyweight_group for bodyweight_group in range(50, 145, 5)]
+    if self.gender == "Male" and self.units == "kg": bodyweight_groups = [bodyweight_group for bodyweight_group in range(50, 145, 5)]
+    elif self.gender == "Female" and self.units == "kg": bodyweight_groups = [bodyweight_group for bodyweight_group in range(40, 125, 5)]
     elif self.gender == "Male" and self.units == "lb": bodyweight_groups = [bodyweight_group for bodyweight_group in range(110, 320, 10)]
     elif self.gender == "Female" and self.units == "lb": bodyweight_groups = [bodyweight_group for bodyweight_group in range(90, 270, 10)]
 

@@ -1,6 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel
 from PyQt5.QtGui import QFont
-
 from homepage.side_panel import SidePanel
 from homepage.header import Header
 from .main_panel import MainPanel
@@ -13,7 +12,6 @@ class OneRepMaxCalculator(QWidget):
     self.main_panel = MainPanel(self)
     self.side_panel = SidePanel(self, self.controller)
     self.create_grid()
-
 
   def create_grid(self):
     grid = QGridLayout()

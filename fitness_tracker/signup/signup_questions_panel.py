@@ -3,8 +3,9 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLay
                              QLabel, QPushButton, QGroupBox, QRadioButton, QHBoxLayout, QComboBox)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
-from .signup_helpers import Signup
-from notes.nutrition.nutrition_helpers import Nutrition
+from .signup_helpers import create_user_info_after_signup
+from profile import profile_db
+from notes.nutrition.nutrition_db import create_nutrition_table, insert_calorie_goal
 from notes.nutrition.calorie_goal_calculator import CalorieGoalCalculator
 
 class SignupQuestions(QWidget):
@@ -207,16 +208,14 @@ class SignupQuestions(QWidget):
                    "goal": goal,
                    "goalparams": goal_params}
       if not gender == "" and not units == "" and not self.name_entry.text() == "" and not self.weight_entry.text() == "":
-        interface = Signup()
-        nutrition_int = Nutrition()
         goal_params = json.loads(goal_params)
         calorie_goal_calculator = CalorieGoalCalculator(age, gender, float(height), float(weight), goal_params[0], goal, goal_params[1])
         calorie_goal = calorie_goal_calculator.calculate_calorie_goal()
         
-        email = interface.fetch_user_email()
-        interface.create_user_info_after_signup(user_info, email)
-        nutrition_int.create_nutrition_table()
-        nutrition_int.insert_calorie_goal(calorie_goal)
+        email = profile_db.fetch_user_email()
+        create_user_info_after_signup(user_info, email)
+        nutrition_db.create_nutrition_table()
+        nutrition_db.insert_calorie_goal(calorie_goal)
         self.controller.display_layout("Home")
     except ValueError:
       pass

@@ -5,17 +5,18 @@ from PyQt5.QtWidgets import (QPushButton, QLabel, QComboBox, QLineEdit, QGridLay
                              QTableWidgetItem, QAbstractItemView, QFrame, QFormLayout)
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt, QFileInfo
+from profile import profile_db
 from .estimator import StrengthLevelEstimator
 from .exercise_standards import LiftStandards
 
 path = os.path.normpath(QFileInfo(__file__).absolutePath())
 db_path = path.split(os.path.sep)[:-3]
-db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "user_info.db"])
+db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "profile.db"])
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    self.units = "kg" if fetch_units() == "metric" else "lb"
+    self.units = "kg" if profile_db.fetch_units() == "metric" else "lb"
     self.CreatePanel()
 
   def CreatePanel(self):
@@ -204,24 +205,3 @@ class MainPanel(QWidget):
         self.standards_table.setItem(currentRow, currentColumn, table_item)
         currentColumn += 1
       currentRow += 1
-
-def fetch_user_info_table_name():
-  table_name = None
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
-    try:
-      table_name = cursor.fetchone()[0]
-    except TypeError:
-      pass
-  return table_name
-
-def fetch_units():
-  table_name = fetch_user_info_table_name()
-  units = None
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    fetch_current_units = "SELECT units from '{table}'"
-    cursor.execute(fetch_current_units.format(table=table_name))
-    units = cursor.fetchone()[0]
-  return units

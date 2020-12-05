@@ -2,8 +2,8 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QVBoxLayout, QLabel, QFrame, 
                              QPushButton, QTableWidget, QTableWidgetItem, QHeaderView)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
-from .calculator import OneRepMaxCalculator
-from user_physique.user_physique_helpers import UserPhysique
+from .one_rep_max_calculator import OneRepMaxCalculator
+from profile import profile_db
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -117,9 +117,8 @@ class MainPanel(QWidget):
 
   def calculate(self):
     try:
-      interface = UserPhysique()
-      table_name = interface.fetch_table_name()
-      units = interface.fetch_units(table_name)
+      table_name = profile_db.fetch_table_name()
+      units = profile_db.fetch_units()
       weight = self.weight_entry.text()
       repetitions = self.reps_entry.text()
       units = "kg" if units == "metric" else "lb"

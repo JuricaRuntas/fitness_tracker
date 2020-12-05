@@ -5,7 +5,7 @@ import sys
 import sqlite3
 import os
 from homepage.homepage import Homepage
-from user_physique.user_physique import UserPhysique
+from profile.profile import Profile
 from calculators.one_rep_max.one_rep_max import OneRepMaxCalculator
 from calculators.body_fat.body_fat import BodyFatCalculator
 from calculators.strength_estimator.strength_estimator import StrengthEstimator
@@ -26,7 +26,7 @@ class FitnessTracker(QMainWindow):
     self.create_window()
     self.cw = Homepage(self) if self.user_info_exists() else Login(self)
     self.layouts = {"Login": Login, "Signup": Signup, "Continue": SignupQuestions,
-                    "Home": Homepage, "Profile": UserPhysique, "Logout": Login,
+                    "Home": Homepage, "Profile": Profile, "Logout": Login,
                     "Big Lifts": BigLiftsNotes, "Workouts": WorkoutsNotes, "Nutrition": NutritionNotes,
                     "Weight Loss Notes": WeightLossNotes, "1 Rep Max": OneRepMaxCalculator,
                     "Body Fat": BodyFatCalculator, "Strength Estimator": StrengthEstimator,
@@ -92,7 +92,7 @@ class FitnessTracker(QMainWindow):
     table_exists = True
     path = os.path.normpath(QFileInfo(__file__).absolutePath())
     db_path = path.split(os.path.sep)[:-1]
-    db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "user_info.db"])
+    db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "profile.db"])
     
     with sqlite3.connect(db_path) as conn:
       check_for_tables = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"

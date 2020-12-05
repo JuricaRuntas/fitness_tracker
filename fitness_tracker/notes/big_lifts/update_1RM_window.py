@@ -1,7 +1,9 @@
 import json
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QLineEdit, QHBoxLayout
 from PyQt5.QtCore import pyqtSignal
-from .big_lifts_helpers import BigLifts
+from .big_lifts_db import (fetch_preferred_lifts, fetch_one_rep_maxes, lift_difference,
+                           update_lift_history, update_1RM_lifts)
+from profile import profile_db
 
 class Update1RMWindow(QWidget):
   change_1RM_lifts_signal = pyqtSignal(bool)
@@ -9,9 +11,8 @@ class Update1RMWindow(QWidget):
 
   def __init__(self):
     super().__init__()
-    self.interface = BigLifts()
-    self.units = "kg" if self.interface.fetch_units() == "metric" else "lb"
-    self.preferred_lifts = json.loads(self.interface.fetch_preferred_lifts())
+    self.units = "kg" if profile_db.fetch_units() == "metric" else "lb"
+    self.preferred_lifts = json.loads(fetch_preferred_lifts())
     self.setWindowTitle("Update One Rep Max Lifts")
     self.setLayout(self.create_panel())
     self.set_line_edit_values()
@@ -65,7 +66,7 @@ class Update1RMWindow(QWidget):
 
   def save_1RM_lifts(self):
     try:
-      exercises = list(json.loads(self.interface.fetch_one_rep_maxes()).keys())
+      exercises = list(json.loads(fetch_one_rep_maxes()).keys())
       horizontal_press_max = str(float(self.horizontal_press_edit.text()))
       floor_pull_max = str(float(self.floor_pull_edit.text()))
       squat_max = str(float(self.squat_edit.text()))
@@ -73,10 +74,10 @@ class Update1RMWindow(QWidget):
       new_maxes = {exercises[0]:horizontal_press_max, exercises[1]:floor_pull_max,
                    exercises[2]:squat_max, exercises[3]:vertical_press_max}
       
-      diff = self.interface.lift_difference(new_maxes, one_RM=True)
-      self.interface.update_lift_history(diff) 
+      diff = lift_difference(new_maxes, one_RM=True)
+      update_lift_history(diff) 
       self.history_signal.emit(True)
-      self.interface.update_1RM_lifts(new_maxes)
+      update_1RM_lifts(new_maxes)
       self.change_1RM_lifts_signal.emit(True)
       self.set_line_edit_values()
       self.close() 
@@ -88,7 +89,7 @@ class Update1RMWindow(QWidget):
     self.set_line_edit_values()
 
   def set_line_edit_values(self):
-    one_rep_maxes = list(json.loads(self.interface.fetch_one_rep_maxes()).values())
+    one_rep_maxes = list(json.loads(fetch_one_rep_maxes()).values())
     self.horizontal_press_edit.setText(one_rep_maxes[0])
     self.floor_pull_edit.setText(one_rep_maxes[1])
     self.squat_edit.setText(one_rep_maxes[2])

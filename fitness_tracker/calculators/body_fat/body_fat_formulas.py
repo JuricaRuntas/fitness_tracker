@@ -19,8 +19,8 @@ def male_navy_SI(waist, neck, height):
   return 495/((1.0324-0.19077*math.log10(waist-neck))+0.15456*math.log10(height))-450
 
 # U.S Navy Method - Female
-def female_navy_USC(waist, neck, height, hip): # incorrect result, needs fix
-  return 163.205*math.log10(waist+hip-neck)-97.684*math.log10(height)+36.76
+def female_navy_USC(waist, neck, height, hip):
+  return 163.205*math.log10(waist+hip-neck)-97.684*math.log10(height)-78.387
 
 def female_navy_SI(waist, neck, height, hip):
   return 495/(1.29579-0.35004*math.log10(waist+hip-neck)+0.22100*math.log10(height))-450

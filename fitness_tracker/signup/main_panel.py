@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit, QLabel, QPushButton
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
-from .signup_helpers import Signup
+from .signup_helpers import check_valid_password, check_valid_email, create_user, create_user_table
 
 class MainPanel(QWidget):
   def __init__(self, parent, controller):
@@ -70,8 +70,7 @@ class MainPanel(QWidget):
     email = self.email_entry.text()
     password = self.password_entry.text()
     confirmed_password = self.confirm_password_entry.text()
-    interface = Signup()
-    if password == confirmed_password and interface.check_valid_password(password) and interface.check_valid_email(email):
-      interface.create_user(email, password)
-      interface.create_user_table(email, password)
+    if password == confirmed_password and check_valid_password(password) and check_valid_email(email):
+      create_user(email, password)
+      create_user_table(email, password)
       self.controller.display_layout(self.continue_button.text())

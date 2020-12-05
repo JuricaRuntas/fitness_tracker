@@ -3,13 +3,13 @@ import json
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot
-from .big_lifts_helpers import BigLifts
+from .big_lifts_db import fetch_lift_history, delete_history_entry
+from profile import profile_db
 
 class LiftHistory(QWidget):
   def __init__(self):
     super().__init__()
-    self.interface = BigLifts()
-    self.units = "kg" if self.interface.fetch_units() == "metric" else "lb"
+    self.units = "kg" if profile_db.fetch_units() == "metric" else "lb"
     self.setWindowTitle("Lift History")
     self.layout = QVBoxLayout()
     self.setLayout(self.layout)
@@ -17,7 +17,7 @@ class LiftHistory(QWidget):
 
   @pyqtSlot(bool)
   def create_history(self, create, init_layout=False):
-    lift_history = self.interface.fetch_lift_history()
+    lift_history = fetch_lift_history()
     if create and not lift_history == None:
       if not init_layout: 
         self.delete_history()
@@ -58,4 +58,4 @@ class LiftHistory(QWidget):
     self.labels[i].setParent(None)
     self.delete_buttons[i].setParent(None)
     self.layout.removeItem(self.layouts[i])
-    self.interface.delete_history_entry(entry_index)
+    delete_history_entry(entry_index)

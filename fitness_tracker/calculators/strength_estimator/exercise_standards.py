@@ -1,7 +1,7 @@
 import math
 import sys
 import os
-from PyQt5.QtCore import QFileInfo
+from common.units_conversion import kg_to_pounds, pounds_to_kg
 
 class LiftStandards:
   def __init__(self, exercise, age_range, gender, units):
@@ -39,8 +39,6 @@ class LiftStandards:
     age_group_standards = [standards[0]]
     
     if self.units == "lb":
-      self.add_common_to_path()
-      from common.units_conversion import kg_to_pounds, pounds_to_kg
       old_standards = standards
       standards = []
       for bodyweight_group in old_standards[1:]:
@@ -62,12 +60,6 @@ class LiftStandards:
       weight.insert(0, bodyweight)
       age_group_standards.append(weight)
     return age_group_standards
-
-  def add_common_to_path(self):
-    path = os.path.normpath(QFileInfo(__file__).absolutePath())
-    path = path.split(os.path.sep)[:-1]
-    path = os.path.sep.join(path)
-    sys.path.append(path) 
 
 male_bench_press_kg = [["Bodyweight", "Beginner", "Novice", "Intermediate", "Advanced", "Elite"],
                        [50, 23, 37, 55, 77, 102],

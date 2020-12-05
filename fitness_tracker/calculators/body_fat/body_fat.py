@@ -1,6 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel
 from PyQt5.QtGui import QFont
-
 from homepage.side_panel import SidePanel
 from homepage.header import Header
 from .main_panel import MainPanel

@@ -1,10 +1,9 @@
 from common.units_conversion import pounds_to_kg, imperial_to_metric_height
-from user_physique.user_physique_helpers import UserPhysique
+from profile import profile_db
 
 class CalorieGoalCalculator:
   def __init__(self, age, gender, height, weight, activity_level, goal, weight_per_week):
-    self.db = UserPhysique()
-    self.units = self.db.fetch_units(self.db.fetch_table_name())
+    self.units = profile_db.fetch_units()
     self.age = age
     self.gender = gender
     activity_factors = {"Maintain": 1, "Sedentary": 1.2, "Lightly active": 1.375,

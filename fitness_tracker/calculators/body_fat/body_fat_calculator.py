@@ -34,33 +34,32 @@ class BodyFatCalculator:
   def calculate_body_fat(self):
     if self.units == "imperial":
       if self.gender == "male":
-        bf_navy_usc = male_navy_USC(self.waist, self.neck, self.height)
-        bf_BMI_usc = male_BMI_USC(self.weight, self.height, self.age)
+        bf_navy_USC = male_navy_USC(self.waist, self.neck, self.height)
+        bf_BMI_USC = male_BMI_USC(self.weight, self.height, self.age)
       elif self.gender == "female":
-        bf_navy_usc = female_navy_USC(self.waist, self.neck, self.height, self.hip)
-        bf_BMI_usc = female_navy_SI(self.waist, self.neck, self.height, self.hip)
-      
-      body_fat_mass = fat_mass(bf_navy_usc, self.weight)
+        bf_navy_USC = female_navy_USC(self.waist, self.neck, self.height, self.hip)
+        bf_BMI_USC = female_BMI_USC(self.weight, self.height, self.age)
+      body_fat_mass = fat_mass(bf_navy_USC, self.weight)
       lean_mass = lean_body_mass(self.weight, body_fat_mass)
       
-      self.results["Body Fat Navy"] = round(bf_navy_usc, 1)
-      self.results["Body Fat BMI"] = round(bf_BMI_usc, 1)
+      self.results["Body Fat Navy"] = round(bf_navy_USC, 1)
+      self.results["Body Fat BMI"] = round(bf_BMI_USC, 1)
       self.results["Fat Mass"] = round(body_fat_mass, 1)
       self.results["Lean Body Mass"] = round(lean_mass, 1)
     
     elif self.units == "metric":
       if self.gender == "male":
-        bf_navy_si = male_navy_SI(self.waist, self.neck, self.height)
-        bf_BMI_si = male_BMI_SI(self.weight, self.height, self.age)
+        bf_navy_SI = male_navy_SI(self.waist, self.neck, self.height)
+        bf_BMI_SI = male_BMI_SI(self.weight, self.height, self.age)
       elif self.gender == "female":
-        bf_navy_si = female_navy_SI(self.waist, self.neck, self.height, self.hip)
-        bf_BMI_si = female_BMI_SI(self.weight, self.height, self.age)
+        bf_navy_SI = female_navy_SI(self.waist, self.neck, self.height, self.hip)
+        bf_BMI_SI = female_BMI_SI(self.weight, self.height, self.age)
       
-      body_fat_mass = fat_mass(bf_navy_si, self.weight)
+      body_fat_mass = fat_mass(bf_navy_SI, self.weight)
       lean_mass = lean_body_mass(self.weight, body_fat_mass)
       
-      self.results["Body Fat Navy"] = round(bf_navy_si, 1)
-      self.results["Body Fat BMI"] = round(bf_BMI_si, 1)
+      self.results["Body Fat Navy"] = round(bf_navy_SI, 1)
+      self.results["Body Fat BMI"] = round(bf_BMI_SI, 1)
       self.results["Fat Mass"] = round(body_fat_mass, 1)
       self.results["Lean Body Mass"] = round(lean_mass, 1)
 
@@ -69,7 +68,7 @@ class BodyFatCalculator:
       age_group = self.binary_search_helper(self.ideal_fat_men.keys(), self.age)
       self.results["Ideal Body Fat"] = self.ideal_fat_men[age_group]
     elif self.gender == "female":
-      age_group = self.binary_search_helper(self.ideal_fat_men.keys(), self.age)
+      age_group = self.binary_search_helper(self.ideal_fat_women.keys(), self.age)
       self.results["Ideal Body Fat"] = self.ideal_fat_women[age_group]
     
     body_fat_categorization = list(self.categorization_men.keys()) if self.gender == "male" else list(self.categorization_women.keys())

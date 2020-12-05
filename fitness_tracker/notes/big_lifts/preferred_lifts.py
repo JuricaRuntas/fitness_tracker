@@ -2,7 +2,7 @@ import json
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QComboBox
 from PyQt5.QtGui import  QFont
 from PyQt5.QtCore import pyqtSignal
-from .big_lifts_helpers import BigLifts
+from .big_lifts_db import fetch_preferred_lifts, update_preferred_lifts, update_1RM_and_lifts_for_reps
 
 class PreferredLifts(QWidget):
   change_lifts_signal = pyqtSignal(bool)
@@ -10,8 +10,7 @@ class PreferredLifts(QWidget):
   def __init__(self):
     super().__init__()
     self.setWindowTitle("Edit Preferred Lifts")
-    self.interface = BigLifts()
-    self.preferred_lifts = json.loads(self.interface.fetch_preferred_lifts())
+    self.preferred_lifts = json.loads(fetch_preferred_lifts())
     self.setLayout(self.create_panel())
     self.set_preferred_lifts()
   
@@ -64,7 +63,7 @@ class PreferredLifts(QWidget):
     vertical_press = str(self.vertical_press_dropdown.currentText())
     new_preferred_lifts = {"Horizontal Press": horizontal_press, "Floor Pull":floor_pull,
                            "Squat": squat, "Vertical Press": vertical_press}
-    self.interface.update_preferred_lifts(new_preferred_lifts)
-    self.interface.update_1RM_and_lifts_for_reps()
+    update_preferred_lifts(new_preferred_lifts)
+    update_1RM_and_lifts_for_reps()
     self.change_lifts_signal.emit(True)
     self.close()

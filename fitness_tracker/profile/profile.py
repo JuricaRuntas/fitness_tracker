@@ -4,10 +4,10 @@ from .main_panel import MainPanel
 from homepage.header import Header
 from homepage.side_panel import SidePanel
 
-class UserPhysique(QWidget):
+class Profile(QWidget):
   def __init__(self, controller):
     super().__init__()
-    self.header = Header(self, "User Data and Settings")
+    self.header = Header(self, "Profile")
     self.main_panel = MainPanel(self)
     self.controller = controller
     self.side_panel = SidePanel(self, self.controller)

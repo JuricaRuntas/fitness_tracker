@@ -2,7 +2,7 @@ __pycache__
 .*.swp
 .*.swo
 .ipynb_checkpoints/
-db/user_info.db
+db/profile.db
 fitness_tracker/.idea/
 *.ipynb
 db/big_lifts.db
