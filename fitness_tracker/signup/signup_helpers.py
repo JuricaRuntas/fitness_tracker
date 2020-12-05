@@ -99,12 +99,14 @@ def create_user_table(email, password):
                  email text NOT NULL,
                  password text NOT NULL,
                  name text,
+                 age text,
                  gender text,
                  units text,
                  weight text,
                  height text,
                  goal text,
                  goalparams text,
+                 goalweight text,
                  ID integer NOT NULL,
                  PRIMARY KEY (ID));
                  """ % table_name

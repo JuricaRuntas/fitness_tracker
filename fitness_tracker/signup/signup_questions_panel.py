@@ -164,6 +164,13 @@ class SignupQuestions(QWidget):
   def calorie_params_layout(self):
     params_layout = QHBoxLayout()
     
+    goal_weight_layout = QVBoxLayout()
+    goal_weight_label = QLabel("Goal weight")
+    self.goal_weight_line_edit = QLineEdit()
+
+    goal_weight_layout.addWidget(goal_weight_label)
+    goal_weight_layout.addWidget(self.goal_weight_line_edit)
+    
     activity_level_layout = QVBoxLayout()
     activity_level_label = QLabel("Activity level")
     self.activity_level = QComboBox()
@@ -180,14 +187,15 @@ class SignupQuestions(QWidget):
     weight_per_week_layout.addWidget(weight_per_week_label)
     weight_per_week_layout.addWidget(self.weight_per_week)
 
+    params_layout.addLayout(goal_weight_layout)
     params_layout.addLayout(activity_level_layout)
     params_layout.addLayout(weight_per_week_layout)
-
+    
     return params_layout
 
   def signup(self):
     try:
-      age = int(self.age_line_edit.text())
+      age = str(int(self.age_line_edit.text()))
       gender = "male" if self.male_button.isChecked() else "female"
       units = "metric" if self.metric_button.isChecked() else "imperial"
       height = json.dumps([float(self.height_entry.text()),
@@ -201,21 +209,25 @@ class SignupQuestions(QWidget):
       goal_params = json.dumps([self.activity_level.currentText(),
                                 float(self.weight_per_week.currentText())]) if not goal == "Maintain weight" else json.dumps(["Maintain", 0])
       weight = str(float(self.weight_entry.text()))
+      goal_weight = str(float(self.goal_weight_line_edit.text()))
       user_info = {"name": self.name_entry.text(),
-                   "gender": gender, "units": units,
+                   "age": age,
+                   "gender": gender,
+                   "units": units,
                    "weight": weight,
                    "height": height,
                    "goal": goal,
-                   "goalparams": goal_params}
+                   "goalparams": goal_params,
+                   "goalweight": goal_weight}
       if not gender == "" and not units == "" and not self.name_entry.text() == "" and not self.weight_entry.text() == "":
         goal_params = json.loads(goal_params)
-        calorie_goal_calculator = CalorieGoalCalculator(age, gender, float(height), float(weight), goal_params[0], goal, goal_params[1])
+        calorie_goal_calculator = CalorieGoalCalculator(int(age), gender, float(height), float(weight), goal_params[0], goal, goal_params[1])
         calorie_goal = calorie_goal_calculator.calculate_calorie_goal()
         
-        email = profile_db.fetch_user_email()
+        email = profile_db.fetch_email()
         create_user_info_after_signup(user_info, email)
-        nutrition_db.create_nutrition_table()
-        nutrition_db.insert_calorie_goal(calorie_goal)
+        create_nutrition_table()
+        insert_calorie_goal(calorie_goal)
         self.controller.display_layout("Home")
     except ValueError:
       pass

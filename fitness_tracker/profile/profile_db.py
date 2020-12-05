@@ -38,7 +38,7 @@ def fetch_email():
   table_name = fetch_table_name()
   with sqlite3.connect(db_path) as conn:
     cursor = conn.cursor()
-    cursor.execute("SELECT email from '{table}'".format(table=table_name))
+    cursor.execute("SELECT email FROM '{table}'".format(table=table_name))
     return cursor.fetchone()[0]
 
 def fetch_user_weight():
@@ -48,9 +48,51 @@ def fetch_user_weight():
     cursor.execute("SELECT weight FROM '{table}'".format(table=table_name))
     return cursor.fetchone()[0]
 
+def fetch_age():
+  table_name = fetch_table_name()
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT age FROM '{table}'".format(table=table_name))
+    return cursor.fetchone()[0]
+
+def fetch_gender():
+  table_name = fetch_table_name()
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT gender FROM '{table}'".format(table=table_name))
+    return cursor.fetchone()[0]
+
+def fetch_height():
+  table_name = fetch_table_name()
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT height FROM '{table}'".format(table=table_name))
+    return cursor.fetchone()[0]
+
+def fetch_goal_weight():
+  table_name = fetch_table_name()
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT goalweight FROM '{table}'".format(table=table_name))
+    return cursor.fetchone()[0]
+
+def fetch_goal_params():
+  table_name = fetch_table_name()
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT goalparams FROM '{table}'".format(table=table_name))
+    return cursor.fetchone()[0]
+
+def fetch_goal():
+  table_name = fetch_table_name()
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT goal FROM '{table}'".format(table=table_name))
+    return cursor.fetchone()[0]
+
 def set_weight(user_data):
   # 4th column of user table is currently weight
-  weight = user_data[3]
+  weight = user_data[4]
   if "metric" in user_data: return " ".join([str(weight), "kg"])
   elif "imperial" in user_data: return " ".join([str(weight), "lb"])
   
@@ -65,7 +107,7 @@ def update_weight(weight):
   table_name = fetch_table_name()
   with sqlite3.connect(db_path) as conn:
     cursor = conn.cursor()
-    update = "UPDATE '{table}' SET weight=%s" % str(weight)
+    update = "UPDATE '{table}' SET weight='%s'" % str(weight)
     cursor.execute(update.format(table=table_name))
   
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -73,6 +115,64 @@ def update_weight(weight):
     with conn.cursor() as cursor:
       update = "UPDATE users SET weight=%s WHERE email='%s'" % (weight, email)
       cursor.execute(sql.SQL(update).format(table=sql.Identifier(table_name)))
+
+def update_goal(goal):
+  email = fetch_email()
+  table_name = fetch_table_name()
+  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                        user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      update = "UPDATE users SET goal='%s' WHERE email='%s'" % (goal, email)
+      cursor.execute(update)
+
+  with sqlite3.connect(db_path) as conn: 
+    cursor = conn.cursor()
+    update = "UPDATE '{table}' SET goal='%s'" % goal
+    cursor.execute(update.format(table=table_name))
+
+def update_goal_parameters(goal_params):
+  email = fetch_email()
+  table_name = fetch_table_name()
+  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                        user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      update = "UPDATE users SET goalparams='%s' WHERE email='%s'" % (goal_params, email)
+      cursor.execute(update)
+
+  with sqlite3.connect(db_path) as conn: 
+    cursor = conn.cursor()
+    update = "UPDATE '{table}' SET goalparams='%s'" % goal_params
+    cursor.execute(update.format(table=table_name))
+
+def update_goal_weight(goal_weight):
+  email = fetch_email()
+  table_name = fetch_table_name()
+  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                        user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      update = "UPDATE users SET goalweight='%s' WHERE email='%s'" % (goal_weight, email)
+      cursor.execute(update)
+
+  with sqlite3.connect(db_path) as conn: 
+    cursor = conn.cursor()
+    update = "UPDATE '{table}' SET goalweight='%s'" % goal_weight
+    cursor.execute(update.format(table=table_name))
+
+def update_calorie_goal(calorie_goal):
+  email = fetch_email()
+  table_name = fetch_table_name()
+  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                        user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      update = "UPDATE nutrition SET calorie_goal='%s' WHERE email='%s'" % (calorie_goal, email)
+      cursor.execute(update)
+
+  with sqlite3.connect(db_path) as conn: 
+    cursor = conn.cursor()
+    update = "UPDATE nutrition SET calorie_goal='%s'" % calorie_goal
+    cursor.execute()
+
+
 
 def update_units():
   email = fetch_email()

@@ -46,6 +46,18 @@ def fetch_nutrition_data():
       cursor = conn.cursor()
       cursor.execute(insert_values, (calorie_goal,))
 
+def update_calorie_goal(calorie_goal):
+  email = profile_db.fetch_email()
+  with sqlite3.connect(nutrition_db) as conn:
+    cursor = conn.cursor()
+    update = "UPDATE nutrition SET calorie_goal='%s'" % calorie_goal
+    cursor.execute(update)
+  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                        user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      update = "UPDATE nutrition SET calorie_goal='%s' WHERE email='%s'" % (calorie_goal, email)
+      cursor.execute(update)
+
 def insert_calorie_goal(calorie_goal):
   email = profile_db.fetch_email()
   insert = "INSERT INTO nutrition ({columns}) VALUES %s"

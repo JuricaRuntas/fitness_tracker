@@ -146,11 +146,11 @@ class MainPanel(QWidget):
       update_units()
       # get updated units
       updated_units = fetch_units()
-      current_weight = float(self.user_data[3])
-      converted_weight = convert_weight(self.user_data[2], current_weight)
+      current_weight = float(self.user_data[4])
+      converted_weight = convert_weight(self.user_data[3], current_weight)
       # update self.user_data
-      self.user_data[3] = converted_weight
-      self.user_data[2] = updated_units
+      self.user_data[4] = converted_weight
+      self.user_data[3] = updated_units
       # update weight in user table
       update_weight(converted_weight)
       self.weight.setText(set_weight(self.user_data))

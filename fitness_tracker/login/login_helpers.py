@@ -51,12 +51,14 @@ def fetch_user_info(email, password):
                      email text NOT NULL,
                      password text NOT NULL,
                      name text NOT NULL,
+                     age text NOT NULL,
                      gender text NOT NULL,
                      units text NOT NULL,
                      weight text NOT NULL,
                      height text NOT NULL,
                      goal text NOT NULL,
                      goalparams text NOT NULL, 
+                     goalweight text NOT NULL,
                      ID integer NOT NULL,
                      PRIMARY KEY (ID));
                      """
