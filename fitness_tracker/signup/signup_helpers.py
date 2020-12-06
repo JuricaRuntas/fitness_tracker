@@ -51,20 +51,20 @@ def create_user(user_email, user_password):
         user_password = hashlib.sha256(user_password.encode('utf-8')).hexdigest()
         query = "INSERT INTO users (email, password) VALUES (%s, %s)"
         cursor.execute(query, (user_email, user_password,))
-    except psycopg2.errors.UniqueViolation:
+    except psycopg2.errors.UniqueViolation: # user with given email already exists
       status = False
-      print("User with '%s' email address already exists.") % user_email
   return status
 
-def create_user_info_after_signup(user_info, email):
-  table_name = fetch_table_name()
+def create_user_info_after_signup(user_info, email, test=[False, "table_name"], path=profile_db):
+  if not test[0]: table_name = fetch_table_name()
+  else: table_name = test[1]
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
       update_query = create_update_query("users", email, user_info)
       cursor.execute(update_query)
     
-    with sqlite3.connect(profile_db) as conn:
+    with sqlite3.connect(path) as conn:
       cursor = conn.cursor()
       update_query = create_update_query(table_name, email, user_info, sqlite=True)
       cursor.execute(update_query)
@@ -84,15 +84,16 @@ def create_update_query(table_name, email, columns_values_dict, sqlite=False):
       update_query = " ".join([update_query, "WHERE email='%s'"])
     else: update_query = ", ".join([update_query, joined_pair])
   if sqlite: # make adjustments for sqlite3
-    update_query = update_query.replace("{table}", "'%s'")#.replace("email=%s", "email='%s'")
+    update_query = update_query.replace("{table}", "'%s'")
     return update_query % (table_name, email)
   else: # make sql query for psycopg2
     update_query = update_query.format(table=table_name)
     return update_query % email
 
-def create_user_table(email, password):
+def create_user_table(email, password, path=profile_db):
   status = True
   table_name = "".join([email, "_table"])
+  password = hashlib.sha256(password.encode('UTF-8')).hexdigest()
   # set user table columns here
   create_table = """
                  CREATE TABLE '%s' (
@@ -111,7 +112,7 @@ def create_user_table(email, password):
                  PRIMARY KEY (ID));
                  """ % table_name
                  
-  with sqlite3.connect(profile_db) as conn:
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute(create_table)
     insert_email = "INSERT INTO '%s'(email, password) VALUES ('%s', '%s')" % (table_name, email, password)

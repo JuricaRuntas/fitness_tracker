@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, QVBoxLayout, QWidget, QSpacerItem, QSizeGrip
-from PyQt5.QtCore import QFileInfo, Qt
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QFontDatabase
 import sys
 import sqlite3
@@ -90,16 +90,15 @@ class FitnessTracker(QMainWindow):
 
   def user_info_exists(self):
     table_exists = True
-    path = os.path.normpath(QFileInfo(__file__).absolutePath())
-    db_path = path.split(os.path.sep)[:-1]
-    db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "profile.db"])
-    
+    path = os.path.abspath(os.path.dirname(__file__))
+    db_path = os.path.sep.join([*path.split(os.path.sep)[:-1], "db", "profile.db"])
     with sqlite3.connect(db_path) as conn:
       check_for_tables = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
       cursor = conn.cursor()
       cursor.execute(check_for_tables)
       if cursor.fetchone() == None:
         table_exists = False
+        os.remove(db_path)
     return table_exists
         
 if __name__ == "__main__":

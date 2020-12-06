@@ -172,8 +172,6 @@ def update_calorie_goal(calorie_goal):
     update = "UPDATE nutrition SET calorie_goal='%s'" % calorie_goal
     cursor.execute()
 
-
-
 def update_units():
   email = fetch_email()
   table_name = fetch_table_name()

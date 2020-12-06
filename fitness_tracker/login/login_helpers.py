@@ -4,9 +4,9 @@ import psycopg2
 import sqlite3
 from psycopg2 import sql
 
-path = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.sep.join([*path.split(os.path.sep)[:-2], "db"])
-profile_db = os.path.sep.join([db_path, "profile.db"])
+abs_path = os.path.abspath(os.path.dirname(__file__))
+path = os.path.sep.join([*abs_path.split(os.path.sep)[:-2], "db"])
+profile_db = os.path.sep.join([path, "profile.db"])
 
 db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
            "database": "postgres", "user": "admin", "password": "admin"}
@@ -22,7 +22,7 @@ def check_password(email, password):
       if not hashlib.sha256(password.encode('UTF-8')).hexdigest() == database_password: status = False
   return status
 
-def fetch_user_info(email, password):
+def fetch_user_info(email, password, db_path=profile_db):
   table_name = "".join([email, "_table"])
   columns = None
   user_info = None
@@ -41,7 +41,7 @@ def fetch_user_info(email, password):
         cursor.execute(query)
         columns = tuple(value[0] for value in cursor.fetchall() if not value[0] == 'id')
   
-  with sqlite3.connect(profile_db) as conn:
+  with sqlite3.connect(db_path) as conn:
     table_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='{table}';"
     cursor = conn.cursor()
     cursor.execute(table_exists.format(table=table_name))
