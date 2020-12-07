@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QVBoxLayout, QHBoxLayo
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot
 from .big_lifts_db import fetch_lift_history, delete_history_entry
-from profile import profile_db
+from user_profile import profile_db
 
 class LiftHistory(QWidget):
   def __init__(self):

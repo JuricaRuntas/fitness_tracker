@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLay
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from .signup_helpers import create_user_info_after_signup
-from profile import profile_db
+from user_profile import profile_db
 from notes.nutrition.nutrition_db import create_nutrition_table, insert_calorie_goal
 from notes.nutrition.calorie_goal_calculator import CalorieGoalCalculator
 

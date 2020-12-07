@@ -10,7 +10,7 @@ from .big_lifts_db import (create_big_lifts_table, insert_default_values, table_
                            fetch_units_from_big_lifts, fetch_one_rep_maxes, fetch_lifts_for_reps,
                            update_big_lifts_units, update_lifts_for_reps, update_1RM_lifts,
                            convert_lift_history_weight, fetch_preferred_lifts, clear_one_rep_maxes, clear_lifts_for_reps)
-from profile import profile_db
+from user_profile import profile_db
 from common.units_conversion import kg_to_pounds, pounds_to_kg
 
 class MainPanel(QWidget):

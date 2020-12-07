@@ -5,7 +5,7 @@ import sys
 import sqlite3
 import os
 from homepage.homepage import Homepage
-from profile.profile import Profile
+from user_profile.profile import Profile
 from calculators.one_rep_max.one_rep_max import OneRepMaxCalculator
 from calculators.body_fat.body_fat import BodyFatCalculator
 from calculators.strength_estimator.strength_estimator import StrengthEstimator

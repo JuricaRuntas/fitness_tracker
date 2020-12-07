@@ -2,7 +2,7 @@ import sqlite3
 import psycopg2
 from psycopg2 import sql
 import os
-from profile import profile_db
+from user_profile import profile_db
 
 path = os.path.abspath(os.path.dirname(__file__))
 nutrition_db = os.path.sep.join([*path.split(os.path.sep)[:-3], "db", "nutrition.db"])

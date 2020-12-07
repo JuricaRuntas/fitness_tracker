@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QVBoxLayout, QLabel, QFrame, 
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from .one_rep_max_calculator import OneRepMaxCalculator
-from profile import profile_db
+from user_profile import profile_db
 
 class MainPanel(QWidget):
   def __init__(self, parent):

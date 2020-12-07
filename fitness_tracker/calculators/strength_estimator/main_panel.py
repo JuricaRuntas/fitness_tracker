@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QPushButton, QLabel, QComboBox, QLineEdit, QGridLay
                              QTableWidgetItem, QAbstractItemView, QFrame, QFormLayout)
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt, QFileInfo
-from profile import profile_db
+from user_profile import profile_db
 from .estimator import StrengthLevelEstimator
 from .exercise_standards import LiftStandards
 

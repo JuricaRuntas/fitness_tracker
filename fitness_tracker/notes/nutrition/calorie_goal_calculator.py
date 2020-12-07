@@ -1,5 +1,5 @@
 from common.units_conversion import pounds_to_kg, imperial_to_metric_height
-from profile import profile_db
+from user_profile import profile_db
 
 class CalorieGoalCalculator:
   def __init__(self, age, gender, height, weight, activity_level, goal, weight_per_week):

@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView)
 from PyQt5.QtGui import QFont, QCursor, QIcon
 from PyQt5.QtCore import Qt, QSize, pyqtSlot
-from profile import profile_db
+from user_profile import profile_db
 from .nutrition_db import table_exists, create_nutrition_table, fetch_nutrition_data, fetch_calorie_goal
 from .change_weight_dialog import ChangeWeightDialog
 

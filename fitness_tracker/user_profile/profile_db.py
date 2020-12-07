@@ -11,8 +11,8 @@ db_path = os.path.sep.join([*path.split(os.path.sep)[:-2], "db", "profile.db"])
 db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
            "database": "postgres", "user": "admin", "password": "admin"}
 
-def fetch_table_name():
-  with sqlite3.connect(db_path) as conn:
+def fetch_table_name(path=db_path):
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     get_table_name = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
     cursor.execute(get_table_name)
@@ -26,17 +26,17 @@ def fetch_local_user_data():
     cursor.execute(get_user_data.format(table=table_name))
     return cursor.fetchone()[2:]
 
-def fetch_units():
-  table_name = fetch_table_name()
-  with sqlite3.connect(db_path) as conn:
+def fetch_units(path=db_path):
+  table_name = fetch_table_name(path)
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     fetch_current_units = "SELECT units FROM '{table}'"
     cursor.execute(fetch_current_units.format(table=table_name))
     return cursor.fetchone()[0]
 
-def fetch_email():
-  table_name = fetch_table_name()
-  with sqlite3.connect(db_path) as conn:
+def fetch_email(path=db_path):
+  table_name = fetch_table_name(path)
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute("SELECT email FROM '{table}'".format(table=table_name))
     return cursor.fetchone()[0]

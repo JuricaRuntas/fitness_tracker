@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QFormLayout, QGridLayout,
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from .body_fat_calculator import BodyFatCalculator
-from profile import profile_db
+from user_profile import profile_db
 
 class MainPanel(QWidget):
   def __init__(self, parent):

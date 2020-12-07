@@ -2,7 +2,7 @@ import json
 from PyQt5.QtWidgets import (QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout,
                              QFormLayout, QLineEdit, QComboBox, QRadioButton, QGroupBox)
 from PyQt5.QtCore import pyqtSignal
-from profile import profile_db
+from user_profile import profile_db
 from .nutrition_db import update_calorie_goal
 from .calorie_goal_calculator import CalorieGoalCalculator
 

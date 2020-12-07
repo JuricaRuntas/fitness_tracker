@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QLineEdit
 from PyQt5.QtCore import pyqtSignal
 from .big_lifts_db import (fetch_preferred_lifts, fetch_lifts_for_reps, lift_difference,
                            update_lift_history, update_lifts_for_reps)
-from profile import profile_db
+from user_profile import profile_db
 
 class UpdateLiftsForRepsWindow(QWidget):
   change_lifts_for_reps_signal = pyqtSignal(bool)
