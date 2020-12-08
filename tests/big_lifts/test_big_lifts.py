@@ -12,11 +12,12 @@ from big_lifts_test_helpers import *
 
 class TestBigLifts(unittest.TestCase):
   def setUp(self):  
-    create_user_test_table()
+    create_user_test_table("test_user_profile.db")
     create_big_lifts_table("test.db")
-    insert_default_values("test.db")
+    insert_default_values("test.db", "test_user_profile.db")
   
   def tearDown(self):
+    delete_user_test_table()
     delete_test_from_big_lifts(test_user["email"])
     os.remove("test.db")
     os.remove("test_user_profile.db")
@@ -51,7 +52,7 @@ class TestBigLifts(unittest.TestCase):
                               "units": fetched_units}
 
     self.assertDictEqual(fetched_default_values, default_values)
-
+  
   def test_fetch_user_big_lifts_data(self):
     os.remove("test.db")
     create_big_lifts_table("test.db")
@@ -71,7 +72,7 @@ class TestBigLifts(unittest.TestCase):
   def test_update_1RM_lifts(self):
     new_values = {"Bench Press": "100", "Deadlift": "200",
                   "Back Squat": "300", "Overhead Press": "400"}
-    update_1RM_lifts(new_values, path=["test_user_profile.db", "test.db"])
+    update_1RM_lifts(new_values, path="test.db", user_path="test_user_profile.db")
     one_rep_maxes = fetch_1RM_lifts("test.db", test_user["email"])
     
     server_1RM = json.loads(one_rep_maxes[0])
@@ -83,7 +84,7 @@ class TestBigLifts(unittest.TestCase):
   def test_update_lifts_for_reps(self):
     new_values = {"Bench Press": ["10", "100"], "Deadlift": ["3", "250"],
                   "Back Squat": ["5", "200"], "Overhead Press": ["1", "100"]}
-    update_lifts_for_reps(new_values, path=["test_user_profile.db", "test.db"])
+    update_lifts_for_reps(new_values, path="test.db", user_path="test_user_profile.db")
     lifts_for_reps = fetch_lifts_for_reps("test.db", test_user["email"])
     
     server_lifts_for_reps = json.loads(lifts_for_reps[0])
@@ -100,7 +101,7 @@ class TestBigLifts(unittest.TestCase):
 
     correct_diff_1RM = {"Deadlift": "300", "Back Squat": "180"}
 
-    update_1RM_lifts(one_RM_lifts1, path=["test_user_profile.db", "test.db"])
+    update_1RM_lifts(one_RM_lifts1, path="test.db", user_path="test_user_profile.db")
     diff_1RM = lift_difference(one_RM_lifts2, one_RM = True, path="test.db")
     self.assertDictEqual(correct_diff_1RM, diff_1RM)
 
@@ -118,7 +119,7 @@ class TestBigLifts(unittest.TestCase):
                                    "Deadlift": ["15", "200"],
                                    "Back Squat": ["3", "310"]}
 
-    update_lifts_for_reps(lifts_for_reps1, path=["test_user_profile.db", "test.db"])
+    update_lifts_for_reps(lifts_for_reps1, path="test.db", user_path="test_user_profile.db")
     diff_lifts_for_reps = lift_difference(lifts_for_reps2, lifts_reps=True, path="test.db") 
     self.assertDictEqual(correct_diff_lifts_for_reps, diff_lifts_for_reps)
    
@@ -128,7 +129,7 @@ class TestBigLifts(unittest.TestCase):
                         "Deadlift": "100",
                         "Back Squat": "500",
                         "Push Press": ["100", "30"]}
-    update_lift_history(new_lift_history, ["test_user_profile.db", "test.db"])
+    update_lift_history(new_lift_history, path="test.db", user_path="test_user_profile.db")
     local_lift_history = json.loads(fetch_local_lift_history("test.db"))
     correct_lift_history = [["Bench Press", ["10", "300"], 3],
                             ["Deadlift", "100", 2],
@@ -142,10 +143,10 @@ class TestBigLifts(unittest.TestCase):
                     "Deadlift": "100",
                     "Back Squat": "500",
                     "Push Press": ["100", "30"]}
-    update_lift_history(lift_history, ["test_user_profile.db", "test.db"])
+    update_lift_history(lift_history, path="test.db", user_path="test_user_profile.db")
     new_lift_history = {"Incline Bench Press": "300",
                         "Deadlift": ["3", "180"]}
-    update_lift_history(new_lift_history, ["test_user_profile.db", "test.db"])
+    update_lift_history(new_lift_history, path="test.db", user_path="test_user_profile.db")
     local_lift_history = json.loads(fetch_local_lift_history("test.db"))
     correct_lift_history = [["Incline Bench Press", "300", 5],
                             ["Deadlift", ["3", "180"], 4],
@@ -160,8 +161,8 @@ class TestBigLifts(unittest.TestCase):
                     "Deadlift": "100",
                     "Back Squat": "500",
                     "Push Press": ["100", "30"]}
-    update_lift_history(lift_history, ["test_user_profile.db", "test.db"])
-    convert_lift_history_weight("lb", ["test_user_profile.db", "test.db"])
+    update_lift_history(lift_history, path="test.db", user_path="test_user_profile.db")
+    convert_lift_history_weight("lb", path="test.db", user_path="test_user_profile.db")
     correct_converted_lift_history = [["Bench Press", ["10", "661.38"], 3],
                                       ["Deadlift", "220.46", 2],
                                       ["Back Squat", "1102.3", 1],
@@ -174,8 +175,8 @@ class TestBigLifts(unittest.TestCase):
                     "Deadlift": "145",
                     "Back Squat": "300",
                     "Push Press": ["100", "100"]}
-    update_lift_history(lift_history, ["test_user_profile.db", "test.db"])
-    convert_lift_history_weight("kg", ["test_user_profile.db", "test.db"])
+    update_lift_history(lift_history, path="test.db", user_path="test_user_profile.db")
+    convert_lift_history_weight("kg", path="test.db", user_path="test_user_profile.db")
     correct_converted_lift_history = [["Bench Press", ["10", "102.06"], 3],
                                       ["Deadlift", "65.77", 2],
                                       ["Back Squat", "136.08", 1],
@@ -188,8 +189,8 @@ class TestBigLifts(unittest.TestCase):
                     "Deadlift": "145",
                     "Back Squat": "300",
                     "Push Press": ["100", "100"]}
-    update_lift_history(lift_history, ["test_user_profile.db", "test.db"])
-    delete_history_entry(2, path=["test_user_profile.db", "test.db"])
+    update_lift_history(lift_history, path="test.db", user_path="test_user_profile.db")
+    delete_history_entry(2, path="test.db", user_path="test_user_profile.db")
     local_lift_history = json.loads(fetch_local_lift_history("test.db"))
     correct_lift_history = [["Bench Press", ["10", "225"], 3],
                             ["Back Squat", "300", 1],
@@ -200,15 +201,15 @@ class TestBigLifts(unittest.TestCase):
     new_preferred_lifts = {"Horizontal Press": "Incline Bench Press", "Floor Pull": "Deadlift",
                                       "Squat": "Front Squat", "Vertical Press": "Overhead Press"}
 
-    update_preferred_lifts(new_preferred_lifts, path=["test_user_profile.db", "test.db"])
+    update_preferred_lifts(new_preferred_lifts, path="test.db", user_path="test_user_profile.db")
     local_preferred_lifts = json.loads(fetch_local_preferred_lifts("test.db"))
     self.assertDictEqual(new_preferred_lifts, local_preferred_lifts)
   
   def test_update_1RM_and_lifts_for_reps(self):
     new_preferred_lifts = {"Horizontal Press": "Incline Bench Press", "Floor Pull": "Deadlift",
                                       "Squat": "Front Squat", "Vertical Press": "Overhead Press"}
-    update_preferred_lifts(new_preferred_lifts, path=["test_user_profile.db", "test.db"])
-    update_1RM_and_lifts_for_reps(["test_user_profile.db", "test.db"])
+    update_preferred_lifts(new_preferred_lifts, path="test.db", user_path="test_user_profile.db")
+    update_1RM_and_lifts_for_reps(path="test.db", user_path="test_user_profile.db")
     local_1RM = json.loads(fetch_local_one_rep_maxes("test.db"))
     local_lifts_for_reps = json.loads(fetch_local_lifts_for_reps("test.db"))
     correct_1RM = {"Incline Bench Press": "0",
