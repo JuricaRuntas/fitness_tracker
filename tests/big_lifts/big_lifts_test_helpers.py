@@ -95,3 +95,31 @@ def fetch_lifts_for_reps(db_path, email):
     cursor.execute(query)
     lifts_for_reps.append(cursor.fetchone()[0])
   return lifts_for_reps
+
+def fetch_local_lift_history(path):
+  with sqlite3.connect(path) as conn:
+    cursor = conn.cursor()
+    query = "SELECT lift_history FROM big_lifts"
+    cursor.execute(query)
+    return cursor.fetchone()[0]
+
+def fetch_local_preferred_lifts(path):
+  with sqlite3.connect(path) as conn:
+    cursor = conn.cursor()
+    fetch_preferred_lifts = "SELECT preferred_lifts FROM big_lifts"
+    cursor.execute(fetch_preferred_lifts)
+    return cursor.fetchone()[0]
+
+def fetch_local_one_rep_maxes(path):
+  with sqlite3.connect(path) as conn:
+    cursor = conn.cursor()
+    fetch = """SELECT "1RM" FROM big_lifts"""
+    cursor.execute(fetch)
+    return cursor.fetchone()[0]
+
+def fetch_local_lifts_for_reps(path):
+  with sqlite3.connect(path) as conn:
+    cursor = conn.cursor()
+    fetch = """SELECT lifts_for_reps FROM big_lifts"""
+    cursor.execute(fetch)
+    return cursor.fetchone()[0]
