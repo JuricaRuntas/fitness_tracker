@@ -25,65 +25,62 @@ class SidePanel(QWidget):
     super().__init__(parent)
     self.controller = controller
     self.create_panel()
+    self.setMaximumWidth(201)
     self.setStyleSheet("""
                        QPushButton{
-                         text-align: left;
+                         text-align: center;
                          background-color: #440D0F;
-                         color:white;}
+                         border-radius: 3px;
+                         min-height: 25px;
+                         min-width: 180px;
+                         color: #c7c7c7;}
                        QLabel{
                          color:white;
                        }
                        """) 
   
   def create_panel(self):
+    line_divider_general = self.create_line_divider()
+    line_divider_calc = self.create_line_divider()
+    line_divider_notes = self.create_line_divider()
+    line_divider_stats = self.create_line_divider()
+
     general_layout = QVBoxLayout()
-    overview_label = QLabel("Overview", self)
-    overview_label.setFont(QFont("Ariel", 15))
-    overview_label.setFixedSize(100, 20)
-    home_button = QPushButton(QIcon(icons["Home"]), "Home", self)
+    home_button = QPushButton("Home", self)
     home_button.clicked.connect(lambda: self.controller.display_layout(home_button.text()))
-    user_button = QPushButton(QIcon(icons["Profile"]), "Profile", self)
+    user_button = QPushButton("Profile", self)
     user_button.clicked.connect(lambda: self.controller.display_layout(user_button.text()))
-    logout_button = QPushButton(QIcon(icons["Logout"]), "Logout", self)
+    logout_button = QPushButton("Logout", self)
     logout_button.clicked.connect(lambda: self.controller.display_layout(logout_button.text()))
 
     notes_layout = QVBoxLayout()
-    notes_label = QLabel("Notes", self)
-    notes_label.setFont(QFont("Ariel", 15))
-    notes_label.setFixedSize(100, 20)
-    lifts_button = QPushButton(QIcon(icons["Big Lifts"]), "Big Lifts", self)
+    lifts_button = QPushButton("Big Lifts", self)
     lifts_button.clicked.connect(lambda: self.controller.display_layout(lifts_button.text()))
-    workouts_button = QPushButton(QIcon(icons["Workouts"]), "Workouts", self)
+    workouts_button = QPushButton("Workouts", self)
     workouts_button.clicked.connect(lambda: self.controller.display_layout(workouts_button.text()))
-    nutrition_button = QPushButton(QIcon(icons["Nutrition"]), "Nutrition", self)
+    nutrition_button = QPushButton("Nutrition", self)
     nutrition_button.clicked.connect(lambda: self.controller.display_layout(nutrition_button.text()))
-    weight_notes_button = QPushButton(QIcon(icons["Weight Loss Notes"]), "Weight Loss Notes", self)
+    weight_notes_button = QPushButton("Weight Loss Notes", self)
     weight_notes_button.clicked.connect(lambda: self.controller.display_layout(weight_notes_button.text()))
     
     calculators_layout = QVBoxLayout()
-    calculators_label = QLabel("Calculators", self)
-    calculators_label.setFont(QFont("Ariel", 15))
-    calculators_label.setFixedSize(120, 20)
-    max_button = QPushButton(QIcon(icons["1 Rep Max"]), "1 Rep Max", self)
+    max_button = QPushButton("1 Rep Max", self)
     max_button.clicked.connect(lambda: self.controller.display_layout(max_button.text()))
-    fat_button = QPushButton(QIcon(icons["Body Fat"]), "Body Fat", self)
+    fat_button = QPushButton("Body Fat", self)
     fat_button.clicked.connect(lambda: self.controller.display_layout(fat_button.text()))
-    strength_es_button = QPushButton(QIcon(icons["Strength Estimator"]), "Strength Estimator", self)
+    strength_es_button = QPushButton("Strength Estimator", self)
     strength_es_button.clicked.connect(lambda: self.controller.display_layout(strength_es_button.text()))
     
     stats_layout = QVBoxLayout()
-    stats_label = QLabel("Statistics", self)
-    stats_label.setFont(QFont("Ariel", 15))
-    stats_label.setFixedSize(100, 20  )
-    strength_button = QPushButton(QIcon(icons["Strength"]), "Strength", self)
+    strength_button = QPushButton("Strength", self)
     strength_button.clicked.connect(lambda: self.controller.display_layout(strength_button.text()))
-    weight_loss_button = QPushButton(QIcon(icons["Weight Loss"]), "Weight Loss", self)
+    weight_loss_button = QPushButton("Weight Loss", self)
     weight_loss_button.clicked.connect(lambda: self.controller.display_layout(weight_loss_button.text()))
     
-    layouts = {general_layout: [overview_label, home_button, user_button, logout_button], 
-               notes_layout: [notes_label, lifts_button, workouts_button, nutrition_button, weight_notes_button], 
-               calculators_layout: [calculators_label, max_button, fat_button, strength_es_button],
-               stats_layout: [stats_label, strength_button, weight_loss_button]}
+    layouts = {general_layout: [line_divider_general, home_button, user_button, logout_button],
+               notes_layout: [line_divider_notes, lifts_button, workouts_button, nutrition_button, weight_notes_button],
+               calculators_layout: [line_divider_calc, max_button, fat_button, strength_es_button],
+               stats_layout: [line_divider_stats, strength_button, weight_loss_button]}
     
     grid = QGridLayout()
     self.setLayout(grid)
@@ -95,6 +92,14 @@ class SidePanel(QWidget):
           widget.setIconSize(icon_size)
           widget.setCursor(QCursor(Qt.PointingHandCursor))
       grid.addLayout(key, i, 0)
+
+  def create_line_divider(self):
+    line_divider = QWidget()
+    line_divider.setStyleSheet("""
+    background-color: #603A36;
+    """)
+    line_divider.setMaximumSize(183, 3)
+    return line_divider
 
   def paintEvent(self, event):
     painter = QPainter()

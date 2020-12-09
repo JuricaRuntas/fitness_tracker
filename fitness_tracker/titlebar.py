@@ -10,6 +10,7 @@ class TitleBar(QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.title = QLabel("Fitness Tracker")
         self.version = QLabel("v1.0")
+        self.setMaximumHeight(24)
 
         self.gridlayout = QHBoxLayout()
         self.gridlayout.setContentsMargins(0, 0, 0, 0)
