@@ -4,12 +4,13 @@ import sqlite3
 import psycopg2
 import json
 from psycopg2 import sql
-from user_profile.profile_db import fetch_table_name, fetch_units, fetch_email
+from user_profile.profile_db import fetch_units, fetch_email
 from common.units_conversion import kg_to_pounds, pounds_to_kg
 
 path = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.sep.join([*path.split(os.path.sep)[:-3], "db"])
 
+profile_db = os.path.sep.join([db_path, "profile.db"])
 big_lifts_db = os.path.sep.join([db_path, "big_lifts.db"])
 
 db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
@@ -41,22 +42,23 @@ def fetch_lifts_for_reps(path=big_lifts_db):
     cursor.execute("SELECT lifts_for_reps FROM big_lifts")
     return cursor.fetchone()[0]
 
-def fetch_preferred_lifts():
+def fetch_preferred_lifts(path=big_lifts_db):
   email = fetch_email()
-  with sqlite3.connect(big_lifts_db) as conn:
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute("SELECT preferred_lifts FROM big_lifts WHERE email='%s'" % email)
     return cursor.fetchone()[0]
 
-def fetch_lift_history():
-  with sqlite3.connect(big_lifts_db) as conn:
+def fetch_lift_history(path=big_lifts_db):
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute("SELECT lift_history FROM big_lifts")
     return cursor.fetchone()[0]
 
-def fetch_user_big_lifts_table_data(path=big_lifts_db, user_path=False):
-  if not user_path: email = fetch_email()
-  else: email = fetch_email(user_path)
+def fetch_user_big_lifts_table_data(path=big_lifts_db, user_path=profile_db):
+  #if not user_path: email = fetch_email()
+  #else: email = fetch_email(user_path)
+  email = fetch_email(user_path)
   select_1RM = """SELECT "1RM" FROM big_lifts WHERE email=%s"""
   select_lifts_for_reps = "SELECT lifts_for_reps FROM big_lifts WHERE email=%s"
   select_preferred_lifts = "SELECT preferred_lifts FROM big_lifts WHERE email=%s"
@@ -96,11 +98,10 @@ def fetch_user_big_lifts_table_data(path=big_lifts_db, user_path=False):
       cursor = conn.cursor()
       cursor.execute(insert_values, (one_rep_maxes, lifts_for_reps, preferred_lifts, lift_history, units,))
 
-def insert_default_values(path=big_lifts_db, user_path=False):
+def insert_default_values(path=big_lifts_db, user_path=profile_db):
   default_exercises = ["Bench Press", "Deadlift", "Back Squat", "Overhead Press"]
-  email = fetch_email()
-  units = fetch_units()
-  table_name = fetch_table_name()
+  email = fetch_email(user_path)
+  units = fetch_units(user_path)
   one_RM_dict = json.dumps({exercise:"0" for exercise in default_exercises})
   lifts_for_reps = json.dumps({exercise:["0", "0"] for exercise in default_exercises})
   preferred_lifts = json.dumps({"Horizontal Press": default_exercises[0],
@@ -144,25 +145,25 @@ def create_big_lifts_table(path=big_lifts_db):
                    """
     cursor.execute(create_table)
 
-def update_preferred_lifts(new_preferred_lifts):
+def update_preferred_lifts(new_preferred_lifts, path=big_lifts_db, user_path=profile_db):
   new_preferred_lifts = json.dumps(new_preferred_lifts)
-  email = fetch_email()
+  email = fetch_email(user_path)
   update_query = "UPDATE big_lifts SET preferred_lifts='%s' WHERE email='%s'" % (new_preferred_lifts, email)
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
       cursor.execute(update_query)
 
-  with sqlite3.connect(big_lifts_db) as conn:
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute(update_query)
 
 # updates exercises
-def update_1RM_and_lifts_for_reps():
-  email = fetch_email()
-  preferred_lifts = list(json.loads(fetch_preferred_lifts()).values())
-  one_rep_maxes = json.loads(fetch_one_rep_maxes())
-  lifts_for_reps = json.loads(fetch_lifts_for_reps())
+def update_1RM_and_lifts_for_reps(path=big_lifts_db, user_path=profile_db):
+  email = fetch_email(user_path)
+  preferred_lifts = list(json.loads(fetch_preferred_lifts(path)).values())
+  one_rep_maxes = json.loads(fetch_one_rep_maxes(path))
+  lifts_for_reps = json.loads(fetch_lifts_for_reps(path))
 
   new_one_rep_maxes = json.dumps({preferred_lifts[i]:value for i, value in enumerate(one_rep_maxes.values())})
   new_lifts_for_reps = json.dumps({preferred_lifts[i]:value for i, value in enumerate(lifts_for_reps.values())})
@@ -175,20 +176,16 @@ def update_1RM_and_lifts_for_reps():
       cursor.execute(update_query1)
       cursor.execute(update_query2)
 
-  with sqlite3.connect(big_lifts_db) as conn:
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute(update_query1)
     cursor.execute(update_query2)
 
 # updates weight
-def update_1RM_lifts(new_values, path=[False, big_lifts_db]):
+def update_1RM_lifts(new_values, path=big_lifts_db, user_path=profile_db):
   new_values = list(new_values.values())
-  if not path[0]:
-    email = fetch_email()
-    one_rep_max_lifts = json.loads(fetch_one_rep_maxes())
-  else:
-    email = fetch_email(path[0])
-    one_rep_max_lifts = json.loads(fetch_one_rep_maxes(path[1]))
+  email = fetch_email(user_path)
+  one_rep_max_lifts = json.loads(fetch_one_rep_maxes(path))
   for i, lift in enumerate(one_rep_max_lifts.keys()):
     one_rep_max_lifts[lift] = new_values[i]
 
@@ -200,20 +197,15 @@ def update_1RM_lifts(new_values, path=[False, big_lifts_db]):
     with conn.cursor() as cursor:
       cursor.execute(update_query)
 
-  with sqlite3.connect(path[1]) as conn:
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute(update_query)
 
 # updates reps and weight
-def update_lifts_for_reps(new_lifts_for_reps, path=[False, big_lifts_db]):
-  if not path[0]:
-    email = fetch_email()
-    lifts_for_reps = json.loads(fetch_lifts_for_reps())
-  else:
-    email = fetch_email(path[0])
-    lifts_for_reps = json.loads(fetch_lifts_for_reps(path[1]))
-  
-    new_lifts_for_reps = list(new_lifts_for_reps.values())
+def update_lifts_for_reps(new_lifts_for_reps, path=big_lifts_db, user_path=profile_db):
+  email = fetch_email(user_path)
+  lifts_for_reps = json.loads(fetch_lifts_for_reps(path))
+  new_lifts_for_reps = list(new_lifts_for_reps.values())
   
   for i, lift in enumerate(lifts_for_reps.keys()):
     lifts_for_reps[lift] = new_lifts_for_reps[i]
@@ -226,18 +218,19 @@ def update_lifts_for_reps(new_lifts_for_reps, path=[False, big_lifts_db]):
     with conn.cursor() as cursor:
       cursor.execute(update_query)
 
-  with sqlite3.connect(path[1]) as conn:
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute(update_query)
 
-def update_lift_history(lift_history):
-  email = fetch_email()
-  current_lift_history = fetch_lift_history()
+def update_lift_history(lift_history, path=big_lifts_db, user_path=profile_db):
+  email = fetch_email(path)
+  current_lift_history = fetch_lift_history(path)
   lift_history = [[exercise, value] for exercise, value in lift_history.items()]
   new_lift_history = None
   if current_lift_history == None:
     indices = list(reversed(range(len(lift_history))))
-    for i, lift in enumerate(lift_history): lift.append(indices[i])
+    for i, lift in enumerate(lift_history):
+      lift.append(indices[i])
     new_lift_history = json.dumps(lift_history)
   else:
     last_index = json.loads(current_lift_history)[0][-1]+1
@@ -254,17 +247,13 @@ def update_lift_history(lift_history):
     with conn.cursor() as cursor:
       cursor.execute(update)
 
-  with sqlite3.connect(big_lifts_db) as conn:
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute(update)
 
-def update_big_lifts_units(path=big_lifts_db, user_path=False):
-  if not user_path:
-    email = fetch_email()
-    units = fetch_units()
-  else:
-    email = fetch_email(user_path)
-    units = fetch_units(user_path)
+def update_big_lifts_units(path=big_lifts_db, user_path=profile_db):
+  email = fetch_email(user_path)
+  units = fetch_units(user_path)
   update = "UPDATE big_lifts SET units='%s' WHERE email='%s'" % (units, email)
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
@@ -320,23 +309,23 @@ def sort_exercises(exercise):
   elif exercise in ["Overhead Press", "Push Press"]: return 1 
 
 # returns sorted dictionary containing updated lifts
-def lift_difference(new_lifts, one_RM=False, lifts_reps=False):
+def lift_difference(new_lifts, one_RM=False, lifts_reps=False, path=big_lifts_db):
   difference = None
   if one_RM:
-    db_lifts = set(": ".join([exercise, weight]) for exercise, weight in json.loads(fetch_one_rep_maxes()).items())
+    db_lifts = set(": ".join([exercise, weight]) for exercise, weight in json.loads(fetch_one_rep_maxes(path)).items())
     new_lifts = set(": ".join([exercise, weight]) for exercise, weight in new_lifts.items() if not weight == '0.0')
     diff = list(new_lifts.difference(db_lifts)) # local lifts that are not in db
     difference = {exercise.split(": ")[0]:exercise.split(": ")[1] for exercise in diff}
   elif lifts_reps:
-    db_lifts = set(":".join([exercise, "x".join(values)]) for exercise, values in json.loads(fetch_lifts_for_reps()).items())
+    db_lifts = set(":".join([exercise, "x".join(values)]) for exercise, values in json.loads(fetch_lifts_for_reps(path)).items())
     new_lifts = set(":".join([exercise, "x".join(values)]) for exercise, values in new_lifts.items() if not values[1] == '0.0')
     diff = list(new_lifts.difference(db_lifts))
     difference = {exercise.split(":")[0]:exercise.split(":")[1].split("x") for exercise in diff}
   return {key: value for key, value in sorted(difference.items(), key=lambda exercise: sort_exercises(exercise[0]))}
 
-def delete_history_entry(entry_index):
-  email = fetch_email()
-  lift_history = json.loads(fetch_lift_history())
+def delete_history_entry(entry_index, path=big_lifts_db, user_path=profile_db):
+  email = fetch_email(user_path)
+  lift_history = json.loads(fetch_lift_history(path))
   lift_history = [lift for lift in lift_history if not lift[-1] == entry_index]
   
   update_query1 = "UPDATE big_lifts SET lift_history='%s' WHERE email='%s'" % (json.dumps(lift_history), email)
@@ -347,14 +336,14 @@ def delete_history_entry(entry_index):
     with conn.cursor() as cursor:
       cursor.execute(update)
 
-  with sqlite3.connect(big_lifts_db) as conn:
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute(update)
 
-def convert_lift_history_weight(convert_to_units):
-  email = fetch_email()
+def convert_lift_history_weight(convert_to_units, path=big_lifts_db, user_path=profile_db):
+  email = fetch_email(user_path)
   try:
-    lift_history = json.loads(fetch_lift_history())
+    lift_history = json.loads(fetch_lift_history(path))
   except TypeError: # lift history is empty
     return
   if convert_to_units == "kg":
@@ -377,6 +366,6 @@ def convert_lift_history_weight(convert_to_units):
     with conn.cursor() as cursor:
       cursor.execute(update)
 
-  with sqlite3.connect(big_lifts_db) as conn:
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute(update)

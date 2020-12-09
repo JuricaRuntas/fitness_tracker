@@ -11,10 +11,10 @@ test_user = {"email": "test@gmail.com",
              "weight": "100", "height": "190", "goal": "Weight gain",
              "goalparams": json.dumps(["Moderately active", 0.25]), "goalweight": "120"}
 
-def create_user_test_table():
-  create_user_table(test_user["email"], "testpassword123", "test_user_profile.db")
+def create_user_test_table(path):
+  create_user_table(test_user["email"], "testpassword123", path)
   create_user_info_after_signup(test_user, test_user["email"],
-                                test=[True, "".join([test_user["email"], "_table"])], path="test_user_profile.db")
+                                test=[True, "".join([test_user["email"], "_table"])], path=path)
 
 def delete_user_test_table():
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -95,3 +95,31 @@ def fetch_lifts_for_reps(db_path, email):
     cursor.execute(query)
     lifts_for_reps.append(cursor.fetchone()[0])
   return lifts_for_reps
+
+def fetch_local_lift_history(path):
+  with sqlite3.connect(path) as conn:
+    cursor = conn.cursor()
+    query = "SELECT lift_history FROM big_lifts"
+    cursor.execute(query)
+    return cursor.fetchone()[0]
+
+def fetch_local_preferred_lifts(path):
+  with sqlite3.connect(path) as conn:
+    cursor = conn.cursor()
+    fetch_preferred_lifts = "SELECT preferred_lifts FROM big_lifts"
+    cursor.execute(fetch_preferred_lifts)
+    return cursor.fetchone()[0]
+
+def fetch_local_one_rep_maxes(path):
+  with sqlite3.connect(path) as conn:
+    cursor = conn.cursor()
+    fetch = """SELECT "1RM" FROM big_lifts"""
+    cursor.execute(fetch)
+    return cursor.fetchone()[0]
+
+def fetch_local_lifts_for_reps(path):
+  with sqlite3.connect(path) as conn:
+    cursor = conn.cursor()
+    fetch = """SELECT lifts_for_reps FROM big_lifts"""
+    cursor.execute(fetch)
+    return cursor.fetchone()[0]
