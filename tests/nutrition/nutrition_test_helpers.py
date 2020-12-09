@@ -1,0 +1,47 @@
+import sqlite3
+import json
+import hashlib
+import psycopg2
+from psycopg2 import sql
+from fitness_tracker.notes.nutrition.nutrition_db import db_info
+from fitness_tracker.signup.signup_helpers import create_user_table, create_user_info_after_signup
+
+test_user = {"email": "test@gmail.com",
+             "password": hashlib.sha256("testpassword123".encode('UTF-8')).hexdigest(),
+             "name": "Test", "age": "18", "gender": "male", "units": "metric",
+             "weight": "100", "height": "190", "goal": "Weight gain",
+             "goalparams": json.dumps(["Moderately active", 0.25]), "goalweight": "120"}
+
+def create_user_test_table(path):
+  create_user_table(test_user["email"], "testpassword123", path)
+  create_user_info_after_signup(test_user, test_user["email"],
+                                test=[True, "".join([test_user["email"], "_table"])], path=path)
+
+def delete_user_test_table():
+  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                        user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      delete = "DELETE FROM users WHERE email='%s'"
+      cursor.execute(delete)
+
+def delete_test_from_nutrition(email):
+  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                        user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      delete = "DELETE FROM nutrition WHERE email='%s'" % email
+      cursor.execute(delete)
+
+def fetch_nutrition_columns():
+  with sqlite3.connect("test.db") as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM nutrition")
+    return tuple(description[0] for description in cursor.description if not description[0] == 'ID')
+
+def insert_nutrition_data(email, calorie_goal):
+  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                        user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      insert = "INSERT INTO nutrition ({columns}) VALUES %s"
+      columns = sql.SQL(", ").join(sql.Identifier(column) for column in ("email", "calorie_goal"))
+      values = (email, calorie_goal)
+      cursor.execute(sql.SQL(insert).format(columns=columns), (values,))

@@ -2,7 +2,7 @@ import sqlite3
 import psycopg2
 from psycopg2 import sql
 import os
-from user_profile import profile_db
+from user_profile.profile_db import fetch_email
 
 path = os.path.abspath(os.path.dirname(__file__))
 nutrition_db = os.path.sep.join([*path.split(os.path.sep)[:-3], "db", "nutrition.db"])
@@ -32,7 +32,7 @@ def fetch_calorie_goal():
     return cursor.fetchone()[0]
 
 def fetch_nutrition_data():
-  email = profile_db.fetch_email()
+  email = fetch_email()
   select_calorie_goal = "SELECT calorie_goal FROM nutrition WHERE email=%s"
   calorie_goal = None
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -47,7 +47,7 @@ def fetch_nutrition_data():
       cursor.execute(insert_values, (calorie_goal,))
 
 def update_calorie_goal(calorie_goal):
-  email = profile_db.fetch_email()
+  email = fetch_email()
   with sqlite3.connect(nutrition_db) as conn:
     cursor = conn.cursor()
     update = "UPDATE nutrition SET calorie_goal='%s'" % calorie_goal
@@ -59,7 +59,7 @@ def update_calorie_goal(calorie_goal):
       cursor.execute(update)
 
 def insert_calorie_goal(calorie_goal):
-  email = profile_db.fetch_email()
+  email = fetch_email()
   insert = "INSERT INTO nutrition ({columns}) VALUES %s"
   columns = sql.SQL(", ").join(sql.Identifier(column) for column in ["email", "calorie_goal"])
   values = (email, calorie_goal)
@@ -76,8 +76,8 @@ def insert_calorie_goal(calorie_goal):
   except psycopg2.errors.UniqueViolation:
     fetch_nutrition_data()
 
-def create_nutrition_table():
-  with sqlite3.connect(nutrition_db) as conn:
+def create_nutrition_table(path=nutrition_db):
+  with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     create_table = """
                    CREATE TABLE IF NOT EXISTS
