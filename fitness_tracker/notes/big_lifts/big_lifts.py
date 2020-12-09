@@ -16,7 +16,7 @@ class BigLiftsNotes(QWidget):
 
   def panel_grid(self):
     panel_grid = QGridLayout()
-    panel_grid.addWidget(self.header, 0, 0, 1, 4)
+    #panel_grid.addWidget(self.header, 0, 0, 1, 4)
     panel_grid.addWidget(self.side_panel, 1, 0, 8, 1)
     panel_grid.addWidget(self.main_panel, 1, 1, 8, 3)
     self.setLayout(panel_grid)
