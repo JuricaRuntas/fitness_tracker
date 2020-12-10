@@ -1,7 +1,7 @@
 import os
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout, QPushButton, QVBoxLayout
-from PyQt5.QtCore import Qt, QSize, QPoint
-from PyQt5.QtGui import QFont, QIcon, QCursor, QPainter, QColor, QBrush
+from PyQt5.QtCore import Qt, QSize, QPoint, QDir
+from PyQt5.QtGui import QFont, QIcon, QCursor, QPainter, QColor, QBrush, QFontDatabase
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
 
@@ -26,18 +26,27 @@ class SidePanel(QWidget):
     self.controller = controller
     self.create_panel()
     self.setMaximumWidth(201)
+    QFontDatabase.addApplicationFont("font/Ubuntu-Regular.ttf")
     self.setStyleSheet("""
                        QPushButton{
                          text-align: center;
                          background-color: #440D0F;
                          border-radius: 3px;
-                         min-height: 25px;
+                         min-height: 23px;
                          min-width: 180px;
-                         color: #c7c7c7;}
-                       QLabel{
-                         color:white;
+                         color: #c7c7c7;
+                         font: 16px;
+                         font-weight:500;
+                         font-family:Ubuntu;
+                         padding-bottom: 3px;
+                         }
+                       QPushButton:hover:!pressed{
+                         background-color: #5D1A1D
                        }
-                       """) 
+                       QPushButton:pressed{
+                         background-color: #551812
+                       }
+                       """)
   
   def create_panel(self):
     line_divider_general = self.create_line_divider()
@@ -64,17 +73,17 @@ class SidePanel(QWidget):
     weight_notes_button.clicked.connect(lambda: self.controller.display_layout(weight_notes_button.text()))
     
     calculators_layout = QVBoxLayout()
-    max_button = QPushButton("1 Rep Max", self)
+    max_button = QPushButton("1 Rep Max Calculator", self)
     max_button.clicked.connect(lambda: self.controller.display_layout(max_button.text()))
-    fat_button = QPushButton("Body Fat", self)
+    fat_button = QPushButton("Body Fat Calculator", self)
     fat_button.clicked.connect(lambda: self.controller.display_layout(fat_button.text()))
     strength_es_button = QPushButton("Strength Estimator", self)
     strength_es_button.clicked.connect(lambda: self.controller.display_layout(strength_es_button.text()))
     
     stats_layout = QVBoxLayout()
-    strength_button = QPushButton("Strength", self)
+    strength_button = QPushButton("Strength Statistics", self)
     strength_button.clicked.connect(lambda: self.controller.display_layout(strength_button.text()))
-    weight_loss_button = QPushButton("Weight Loss", self)
+    weight_loss_button = QPushButton("Weight Loss Stats", self)
     weight_loss_button.clicked.connect(lambda: self.controller.display_layout(weight_loss_button.text()))
     
     layouts = {general_layout: [line_divider_general, home_button, user_button, logout_button],

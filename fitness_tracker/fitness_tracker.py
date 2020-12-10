@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, QVBoxLayout, QWidget, QSpacerItem, QSizeGrip, QSizePolicy
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QObject
 from PyQt5.QtGui import QColor, QFontDatabase
 import sys
 import sqlite3
@@ -35,7 +35,7 @@ class FitnessTracker(QMainWindow):
     self.colorize_foreground()
     self.setup_borders()
     self.title_bar = TitleBar(self)
-    QFontDatabase.addApplicationFont("font/Ubuntu-Regular.ttf")
+    self.setMouseTracking(True)
     main_widget = self.setup_main_layout()
     self.setCentralWidget(main_widget)
 
@@ -58,6 +58,7 @@ class FitnessTracker(QMainWindow):
 
   def setup_borders(self):
     self.setWindowFlags(Qt.FramelessWindowHint)
+    self.setMouseTracking(True)
     self.show()
 
   def setup_main_layout(self):
@@ -65,9 +66,9 @@ class FitnessTracker(QMainWindow):
     main_layout.setContentsMargins(0, 0, 0, 0)
     main_layout.addWidget(self.title_bar)
     main_layout.addWidget(self.cw)
-    sizegrip = QSizeGrip(self)
-    sizegrip.setMaximumWidth(16)
-    main_layout.addWidget(sizegrip)
+    #sizegrip = QSizeGrip(self)
+    #sizegrip.setMaximumWidth(16)
+    #main_layout.addWidget(sizegrip)
     main_widget = QWidget()
     main_widget.setLayout(main_layout)
     return main_widget
@@ -98,6 +99,27 @@ class FitnessTracker(QMainWindow):
         table_exists = False
         os.remove(db_path)
     return table_exists
+
+  def mousePressEvent(self, event):
+    if event.button() == Qt.LeftButton:
+      #self.rdragx = event.x()
+      #self.rdragy = event.y()
+      #self.currentx = self.width()
+      #self.currenty = self.height()
+      self.leftClick = True
+
+  def mouseMoveEvent(self, event):
+    print (event.x())
+    if self.isMaximized() == False:
+      if event.x() <= 5 and event.x() >= 0 or event.x() >= self.width() - 5 and event.x() <= self.width():
+        QApplication.setOverrideCursor(Qt.SizeHorCursor)
+      #if event.x() <= 5 and event.x() >= 0 and self.leftClick:
+
+      else:
+        QApplication.restoreOverrideCursor()
+
+  def mouseReleaseEvent(self, event):
+    self.leftClick = False
         
 if __name__ == "__main__":
   app = QApplication(sys.argv)
