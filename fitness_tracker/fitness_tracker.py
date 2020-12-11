@@ -101,25 +101,65 @@ class FitnessTracker(QMainWindow):
     return table_exists
 
   def mousePressEvent(self, event):
+    self.leftSideResize = False
+    self.rightSideResize = False
+    self.topSideResize = False
+    self.botSideResize = False
+    self.topRightResize = False
+    self.topLeftResize = False
+    self.botRightResize = False
+    self.botLeftResize = False
     if event.button() == Qt.LeftButton:
-      #self.rdragx = event.x()
-      #self.rdragy = event.y()
-      #self.currentx = self.width()
-      #self.currenty = self.height()
+      if event.y() >= self.height() - 5:
+        if event.x() < self.width() - 5 or event.x() > 5:
+          self.botSideResize = True
+          QApplication.setOverrideCursor(Qt.SizeVerCursor)
+      if event.x() >= self.width() - 5 and event.x() <= self.width():
+        if event.y() >= self.height() - 7:
+          self.botRightResize = True
+          QApplication.setOverrideCursor(Qt.SizeFDiagCursor)
+        else:
+          self.rightSideResize = True
+          QApplication.setOverrideCursor(Qt.SizeHorCursor)
+      if event.x() <= 5 and event.x() >= 0:
+        if event.y() >= self.height() - 7:
+          self.botLeftResize = True
+          QApplication.setOverrideCursor(Qt.SizeBDiagCursor)
+        else:
+          self.leftSideResize = True
+          QApplication.setOverrideCursor(Qt.SizeHorCursor)
       self.leftClick = True
 
   def mouseMoveEvent(self, event):
-    print (event.x())
-    if self.isMaximized() == False:
-      if event.x() <= 5 and event.x() >= 0 or event.x() >= self.width() - 5 and event.x() <= self.width():
-        QApplication.setOverrideCursor(Qt.SizeHorCursor)
-      #if event.x() <= 5 and event.x() >= 0 and self.leftClick:
-
+    if event.x() <= 5 and event.x() >= 0 or event.x() >= self.width() - 5 and event.x() <= self.width():
+      QApplication.setOverrideCursor(Qt.SizeHorCursor)
+    if not self.isMaximized():
+      if self.leftSideResize and self.leftClick:
+        self.resize(self.width() - event.x(), self.height())
+        if self.minimumWidth() < self.width():
+          self.move(self.x() + event.x(), self.y())
+        print(event.x())
+      if self.rightSideResize and self.leftClick:
+        self.resize(event.x(), self.height())
+      if self.botLeftResize and self.leftClick:
+        self.resize(self.width() - event.x(), event.y())
+        if self.minimumWidth() < self.width():
+          self.move(self.x() + event.x(), self.y())
+      if self.botSideResize and self.leftClick:
+        self.resize(self.width(), event.y())
       else:
         QApplication.restoreOverrideCursor()
 
   def mouseReleaseEvent(self, event):
     self.leftClick = False
+    self.rightSideResize = False
+    self.leftSideResize = False
+    self.topSideResize = False
+    self.botSideResize = False
+    self.topRightResize = False
+    self.topLeftResize = False
+    self.botRightResize = False
+    self.botLeftResize = False
         
 if __name__ == "__main__":
   app = QApplication(sys.argv)
