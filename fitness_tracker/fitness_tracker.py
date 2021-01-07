@@ -28,8 +28,8 @@ class FitnessTracker(QMainWindow):
     self.layouts = {"Login": Login, "Signup": Signup, "Continue": SignupQuestions,
                     "Home": Homepage, "Profile": Profile, "Logout": Login,
                     "Big Lifts": BigLiftsNotes, "Workouts": WorkoutsNotes, "Nutrition": NutritionNotes,
-                    "Weight Loss Notes": WeightLossNotes, "1 Rep Max": OneRepMaxCalculator,
-                    "Body Fat": BodyFatCalculator, "Strength Estimator": StrengthEstimator,
+                    "Weight Loss Notes": WeightLossNotes, "1 Rep Max Calculator": OneRepMaxCalculator,
+                    "Body Fat Calculator": BodyFatCalculator, "Strength Estimator": StrengthEstimator,
                     "Strength": StrengthStats, "Weight Loss": WeightLossStats}
     self.colorize_background()
     self.colorize_foreground()
@@ -90,14 +90,16 @@ class FitnessTracker(QMainWindow):
   def user_info_exists(self):
     table_exists = True
     path = os.path.abspath(os.path.dirname(__file__))
-    db_path = os.path.sep.join([*path.split(os.path.sep)[:-1], "db", "profile.db"])
-    with sqlite3.connect(db_path) as conn:
+    db_path = os.path.sep.join([*path.split(os.path.sep)[:-1], "db"])
+    user_info_path = os.path.sep.join([db_path, "profile.db"])
+    if not os.path.isdir(db_path): os.makedirs(db_path)
+    with sqlite3.connect(user_info_path) as conn:
       check_for_tables = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
       cursor = conn.cursor()
       cursor.execute(check_for_tables)
       if cursor.fetchone() == None:
         table_exists = False
-        os.remove(db_path)
+        os.remove(user_info_path)
     return table_exists
 
   def mousePressEvent(self, event):

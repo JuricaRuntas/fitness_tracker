@@ -1,12 +1,26 @@
+import os
 from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QFrame, QCalendarWidget, QPushButton
 from PyQt5.QtGui import QFont, QIcon, QCursor
-from PyQt5.QtCore import Qt, QFileInfo, QLocale, QSize
-from .exercises.chest_exercises import ChestExercises
-from .exercises.back_exercises import BackExercises
+from PyQt5.QtCore import Qt, QLocale, QSize, pyqtSignal
+from .exercises.exercises import Exercises
 
-path = QFileInfo(__file__).absolutePath()
+path = os.path.join(os.path.abspath(os.path.dirname(__file__)))
+muscle_groups_path = os.path.join(path, "muscle_groups")
+
+muscle_groups = {"Chest": os.path.join(muscle_groups_path, "chest.svg"),
+                 "Back": os.path.join(muscle_groups_path, "back.svg"),
+                 "Core": os.path.join(muscle_groups_path, "core.svg"),
+                 "Biceps": os.path.join(muscle_groups_path, "biceps.svg"),
+                 "Triceps": os.path.join(muscle_groups_path, "triceps.svg"),
+                 "Quadriceps": os.path.join(muscle_groups_path, "quads.svg"),
+                 "Calves": os.path.join(muscle_groups_path, "calves.svg"),
+                 "Shoulders": os.path.join(muscle_groups_path, "shoulders.svg"),
+                 "Gluteus": os.path.join(muscle_groups_path, "gluteus.svg"),
+                 "Hamstrings": os.path.join(muscle_groups_path, "hamstrings.svg")}
 
 class MainPanel(QWidget):
+  show_muscle_group_signal = pyqtSignal(str)
+
   def __init__(self, parent):
     super().__init__()
     self.create_panel()
@@ -153,12 +167,12 @@ class MainPanel(QWidget):
 
     chest_muscle_group = QVBoxLayout()
     chest_image = QPushButton(self)
-    chest_image.setIcon(QIcon("".join([path, "/muscle_groups/chest_muscles.jpg"])))
+    chest_image.setIcon(QIcon(muscle_groups["Chest"]))
     chest_image.setIconSize(QSize(100, 60))
     chest_image.resize(100, 60)
     chest_image.setStyleSheet("border: none")
     chest_image.setCursor(Qt.PointingHandCursor)
-    chest_image.clicked.connect(lambda: self.replace_grid(self.grid, "Chest"))
+    chest_image.clicked.connect(lambda: self.show_muscle_group_signal.emit("Chest"))
 
     chest_label = QLabel("Chest", self)
     chest_label.setAlignment(Qt.AlignCenter)
@@ -167,12 +181,12 @@ class MainPanel(QWidget):
     
     back_muscle_group = QVBoxLayout()
     back_image = QPushButton(self)
-    back_image.setIcon(QIcon("".join([path, "/muscle_groups/back_muscles.jpg"])))
+    back_image.setIcon(QIcon(muscle_groups["Back"]))
     back_image.setIconSize(QSize(100, 60))
     back_image.resize(100, 60)
     back_image.setStyleSheet("border: none")
     back_image.setCursor(Qt.PointingHandCursor)
-    back_image.clicked.connect(lambda: self.replace_grid(self.grid, "Back"))
+    back_image.clicked.connect(lambda: self.show_muscle_group_signal.emit("Back"))
     
     back_label = QLabel("Back", self)
     back_label.setAlignment(Qt.AlignCenter)
@@ -181,11 +195,12 @@ class MainPanel(QWidget):
     
     triceps_muscle_group = QVBoxLayout()
     triceps_image = QPushButton(self)
-    triceps_image.setIcon(QIcon("".join([path, "/muscle_groups/triceps_muscles.jpg"])))
+    triceps_image.setIcon(QIcon(muscle_groups["Triceps"]))
     triceps_image.setIconSize(QSize(100, 60))
     triceps_image.resize(100, 60)
     triceps_image.setStyleSheet("border: none")
     triceps_image.setCursor(Qt.PointingHandCursor)
+    triceps_image.clicked.connect(lambda: self.show_muscle_group_signal.emit("Triceps"))
 
     triceps_label = QLabel("Triceps", self)
     triceps_label.setAlignment(Qt.AlignCenter)
@@ -194,11 +209,12 @@ class MainPanel(QWidget):
 
     biceps_muscle_group = QVBoxLayout()
     biceps_image = QPushButton(self)
-    biceps_image.setIcon(QIcon("".join([path, "/muscle_groups/biceps_muscles.jpg"])))
+    biceps_image.setIcon(QIcon(muscle_groups["Biceps"]))
     biceps_image.setIconSize(QSize(100, 60))
     biceps_image.resize(100, 60)
     biceps_image.setStyleSheet("border: none")
     biceps_image.setCursor(Qt.PointingHandCursor)
+    biceps_image.clicked.connect(lambda: self.show_muscle_group_signal.emit("Biceps"))
     
     biceps_label = QLabel("Biceps", self)
     biceps_label.setAlignment(Qt.AlignCenter)
@@ -207,11 +223,12 @@ class MainPanel(QWidget):
     
     shoulders_muscle_group = QVBoxLayout()
     shoulders_image = QPushButton(self)
-    shoulders_image.setIcon(QIcon("".join([path, "/muscle_groups/shoulder_muscles.jpg"])))
+    shoulders_image.setIcon(QIcon(muscle_groups["Shoulders"]))
     shoulders_image.setIconSize(QSize(100, 60))
     shoulders_image.resize(100, 60)
     shoulders_image.setStyleSheet("border: none")
     shoulders_image.setCursor(Qt.PointingHandCursor)
+    shoulders_image.clicked.connect(lambda: self.show_muscle_group_signal.emit("Shoulders"))
     
     shoulders_label = QLabel("Shoulders", self)
     shoulders_label.setAlignment(Qt.AlignCenter)
@@ -228,85 +245,82 @@ class MainPanel(QWidget):
     
     core_muscle_group = QVBoxLayout()
     core_image = QPushButton(self)
-    core_image.setIcon(QIcon("".join([path, "/muscle_groups/core_muscles.jpg"])))
+    core_image.setIcon(QIcon(muscle_groups["Core"]))
     core_image.setIconSize(QSize(100, 60))
     core_image.resize(100, 60)
     core_image.setStyleSheet("border: none")
     core_image.setCursor(Qt.PointingHandCursor)
+    core_image.clicked.connect(lambda: self.show_muscle_group_signal.emit("Core"))
     
     core_label = QLabel("Core", self)
     core_label.setAlignment(Qt.AlignCenter)
     core_muscle_group.addWidget(core_image)
     core_muscle_group.addWidget(core_label)
     
-    forearms_muscle_group = QVBoxLayout()
-    forearms_image = QPushButton(self)
-    forearms_image.setIcon(QIcon("".join([path, "/muscle_groups/forearms_muscles.jpg"])))
-    forearms_image.setIconSize(QSize(100, 60))
-    forearms_image.resize(100, 60)
-    forearms_image.setStyleSheet("border: none")
-    forearms_image.setCursor(Qt.PointingHandCursor)
+    gluteus_muscle_group = QVBoxLayout()
+    gluteus_image = QPushButton(self)
+    gluteus_image.setIcon(QIcon(muscle_groups["Gluteus"]))
+    gluteus_image.setIconSize(QSize(100, 60))
+    gluteus_image.resize(100, 60)
+    gluteus_image.setStyleSheet("border: none")
+    gluteus_image.setCursor(Qt.PointingHandCursor)
+    gluteus_image.clicked.connect(lambda: self.show_muscle_group_signal.emit("Legs"))
     
-    forearms_label = QLabel("Forearms", self)
-    forearms_label.setAlignment(Qt.AlignCenter)
-    forearms_muscle_group.addWidget(forearms_image)
-    forearms_muscle_group.addWidget(forearms_label)
+    gluteus_label = QLabel("Gluteus", self)
+    gluteus_label.setAlignment(Qt.AlignCenter)
+    gluteus_muscle_group.addWidget(gluteus_image)
+    gluteus_muscle_group.addWidget(gluteus_label)
 
-    upper_legs_muscle_group = QVBoxLayout()
-    upper_legs_image = QPushButton(self)
-    upper_legs_image.setIcon(QIcon("".join([path, "/muscle_groups/upper_legs_muscles.jpg"])))
-    upper_legs_image.setIconSize(QSize(100, 60))
-    upper_legs_image.resize(100, 60)
-    upper_legs_image.setStyleSheet("border: none")
-    upper_legs_image.setCursor(Qt.PointingHandCursor)
+    quadriceps_muscle_group = QVBoxLayout()
+    quadriceps_image = QPushButton(self)
+    quadriceps_image.setIcon(QIcon(muscle_groups["Quadriceps"]))
+    quadriceps_image.setIconSize(QSize(100, 60))
+    quadriceps_image.resize(100, 60)
+    quadriceps_image.setStyleSheet("border: none")
+    quadriceps_image.setCursor(Qt.PointingHandCursor)
+    quadriceps_image.clicked.connect(lambda: self.show_muscle_group_signal.emit("Legs"))
     
-    upper_legs_label = QLabel("Upper Legs", self)
-    upper_legs_label.setAlignment(Qt.AlignCenter)
-    upper_legs_muscle_group.addWidget(upper_legs_image)
-    upper_legs_muscle_group.addWidget(upper_legs_label)
+    quadriceps_label = QLabel("Quadriceps", self)
+    quadriceps_label.setAlignment(Qt.AlignCenter)
+    quadriceps_muscle_group.addWidget(quadriceps_image)
+    quadriceps_muscle_group.addWidget(quadriceps_label)
 
     calves_muscle_group = QVBoxLayout()
     calves_image = QPushButton(self)
-    calves_image.setIcon(QIcon("".join([path, "/muscle_groups/calf_muscles.jpg"])))
+    calves_image.setIcon(QIcon(muscle_groups["Calves"]))
     calves_image.setIconSize(QSize(100, 60))
     calves_image.resize(100, 60)
     calves_image.setStyleSheet("border: none")
     calves_image.setCursor(Qt.PointingHandCursor)
+    calves_image.clicked.connect(lambda: self.show_muscle_group_signal.emit("Calves"))
     
     calves_label = QLabel("Calves", self)
     calves_label.setAlignment(Qt.AlignCenter)
     calves_muscle_group.addWidget(calves_image)
     calves_muscle_group.addWidget(calves_label)
     
-    cardio_group = QVBoxLayout()
-    cardio_image = QPushButton(self)
-    cardio_image.setIcon(QIcon("".join([path, "/muscle_groups/cardio.png"])))
-    cardio_image.setIconSize(QSize(100, 60))
-    cardio_image.resize(100, 60)
-    cardio_image.setStyleSheet("border: none")
-    cardio_image.setCursor(Qt.PointingHandCursor)
+    hamstrings_group = QVBoxLayout()
+    hamstrings_image = QPushButton(self)
+    hamstrings_image.setIcon(QIcon(muscle_groups["Hamstrings"]))
+    hamstrings_image.setIconSize(QSize(100, 60))
+    hamstrings_image.resize(100, 60)
+    hamstrings_image.setStyleSheet("border: none")
+    hamstrings_image.setCursor(Qt.PointingHandCursor)
+    hamstrings_image.clicked.connect(lambda: self.show_muscle_group_signal.emit("Legs"))
     
-    cardio_label = QLabel("Cardio", self)
-    cardio_label.setAlignment(Qt.AlignCenter)
-    cardio_group.addWidget(cardio_image)
-    cardio_group.addWidget(cardio_label)
+    hamstrings_label = QLabel("Hamstrings", self)
+    hamstrings_label.setAlignment(Qt.AlignCenter)
+    hamstrings_group.addWidget(hamstrings_image)
+    hamstrings_group.addWidget(hamstrings_label)
     
     second_row.addLayout(core_muscle_group)
-    second_row.addLayout(forearms_muscle_group)
-    second_row.addLayout(upper_legs_muscle_group)
+    second_row.addLayout(gluteus_muscle_group)
+    second_row.addLayout(quadriceps_muscle_group)
     second_row.addLayout(calves_muscle_group)
-    second_row.addLayout(cardio_group)
+    second_row.addLayout(hamstrings_group)
 
     exercises_layout.addWidget(label)
     exercises_layout.addLayout(first_row)
     exercises_layout.addLayout(second_row)
     frame.setLayout(exercises_layout)
     return frame
-
-  def replace_grid(self, grid, muscle_group):
-    for i in reversed(range(grid.count())):
-      grid.itemAt(i).widget().deleteLater()
-    if muscle_group == "Chest":
-      grid.addWidget(ChestExercises(self), 0, 0)
-    elif muscle_group == "Back":
-      grid.addWidget(BackExercises(self), 0, 0)

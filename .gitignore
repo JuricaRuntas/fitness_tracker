@@ -2,12 +2,11 @@ __pycache__
 .*.swp
 .*.swo
 .ipynb_checkpoints/
-db/profile.db
 fitness_tracker/.idea/
 *.ipynb
-db/big_lifts.db
 build/
 dist/
 fitness_tracker.egg-info/
 food_images/
-db/nutrition.db
+exercise_images/
+db/
