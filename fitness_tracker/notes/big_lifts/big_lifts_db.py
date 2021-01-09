@@ -56,8 +56,6 @@ def fetch_lift_history(path=big_lifts_db):
     return cursor.fetchone()[0]
 
 def fetch_user_big_lifts_table_data(path=big_lifts_db, user_path=profile_db):
-  #if not user_path: email = fetch_email()
-  #else: email = fetch_email(user_path)
   email = fetch_email(user_path)
   select_1RM = """SELECT "1RM" FROM big_lifts WHERE email=%s"""
   select_lifts_for_reps = "SELECT lifts_for_reps FROM big_lifts WHERE email=%s"

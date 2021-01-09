@@ -1,11 +1,18 @@
 import os
-from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QFrame, QCalendarWidget, QPushButton
+import json
+from functools import partial
+from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QFrame, QCalendarWidget, QPushButton, QMessageBox
 from PyQt5.QtGui import QFont, QIcon, QCursor
-from PyQt5.QtCore import Qt, QLocale, QSize, pyqtSignal
+from PyQt5.QtCore import Qt, QLocale, QSize, pyqtSignal, pyqtSlot
 from .exercises.exercises import Exercises
+from .create_workout_window import CreateWorkoutWindow1, CreateWorkoutWindow2, EditWorkout
+from .workouts_db import (create_workouts_table, insert_default_workouts_data,
+                          table_is_empty, fetch_current_workout_plan, fetch_workouts,
+                          delete_workout, update_current_workout)
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 muscle_groups_path = os.path.join(path, "muscle_groups")
+icons_path = os.path.join(path, "icons")
 
 muscle_groups = {"Chest": os.path.join(muscle_groups_path, "chest.svg"),
                  "Back": os.path.join(muscle_groups_path, "back.svg"),
@@ -23,8 +30,16 @@ class MainPanel(QWidget):
 
   def __init__(self, parent):
     super().__init__()
+    create_workouts_table()
+    if table_is_empty(): insert_default_workouts_data()
+    self.current_workout_plan = fetch_current_workout_plan()
+    if self.current_workout_plan == "":
+      self.current_workout_plan = "None"
+    self.fetched_workouts = json.loads(fetch_workouts())
+    # {WorkoutName: {("CreateWorkoutWindow2", CreateWorkoutWindow2): {Day: EditWorkout object}}}
+    self.workouts = self.generate_workouts_objects()
     self.create_panel()
-    
+      
   def create_panel(self):
     self.grid = QGridLayout()
     self.grid.addWidget(self.create_stats(), 0, 0, 1, 2)
@@ -32,8 +47,104 @@ class MainPanel(QWidget):
     self.grid.addWidget(self.create_exercises(), 2, 0, 1, 2)
     self.setLayout(self.grid)
     
+  def generate_workouts_objects(self):
+    workouts = {}
+    if len(self.fetched_workouts) > 0:
+      for workout in self.fetched_workouts:
+        workout_name = workout
+        workout_days = list(self.fetched_workouts[workout].keys())
+        create_workout_window_2 = CreateWorkoutWindow2(workout_name, workout_days, empty_workout=False)
+        create_workout_window_2.show_existing_workout_edit.connect(lambda s: self.show_existing_workout_edit(s))
+        days = {}
+        for workout_day in self.fetched_workouts[workout].keys():
+           workout_day_info = self.fetched_workouts[workout][workout_day]
+           edit_workout_object = EditWorkout(workout_day, workout_day_info)
+           edit_workout_object.update_workout_day_signal.connect(lambda s: create_workout_window_2.add_workouts(s))
+           days[workout_day] = edit_workout_object
+        workouts[workout] = {("CreateWorkoutWindow2", create_workout_window_2): days}
+    
+    i = 0
+    while len(workouts) < 3:
+      workouts[str(i)] = "empty_workout"
+      i += 1
+    return workouts
+  
+  @pyqtSlot(object)
+  def show_create_window_2(self, signal):
+    self.create_workout_window1.close()
+    workout_name = signal[0]
+    workout_days = signal[1]
+    current_workout = signal[2]
+    self.create_workout_window2 = CreateWorkoutWindow2(workout_name, workout_days, set_as_current_workout=current_workout, empty_workout=True)
+    self.create_workout_window2.show_edit_workout.connect(lambda s: self.show_edit_workout_window(s))
+    self.create_workout_window2.refresh_layout_signal.connect(lambda s: self.refresh_layout(s)) 
+    
+    self.edit_windows = {}
+    for day in signal[1]:
+      self.edit_windows[day] = EditWorkout(day)
+      self.edit_windows[day].update_workout_day_signal.connect(lambda s: self.create_workout_window2.add_workouts(s))
+    
+    self.create_workout_window2.show()
+  
+  @pyqtSlot(str)
+  def show_edit_workout_window(self, workout_day):
+    self.edit_windows[workout_day].show()  
+  
+  def show_empty_workout_edit(self):
+    self.create_workout_window1 = CreateWorkoutWindow1()
+    self.create_workout_window1.continue_signal.connect(lambda s: self.show_create_window_2(s))
+    self.create_workout_window1.show()
+
+  def show_existing_workout(self, workout):
+    create_workout_window_2 = list(self.workouts[workout].keys())[0][1]
+    create_workout_window_2.show()
+  
+  @pyqtSlot(object)
+  def show_existing_workout_edit(self, workout):
+    workout_name = workout[0]
+    workout_day = workout[1]
+    for key in self.workouts[workout_name]:
+      for day in self.workouts[workout_name][key]:
+        if day == workout_day:
+          self.workouts[workout_name][key][day].show()
+
+  @pyqtSlot(bool)
+  def refresh_layout(self, signal):
+    if signal:
+      self.fetched_workouts = json.loads(fetch_workouts())
+      self.workouts = self.generate_workouts_objects()
+      self.current_workout_plan = fetch_current_workout_plan()
+      
+      if self.current_workout_plan == "" or self.fetched_workouts == {}:
+        self.current_workout_plan = ""
+      elif not self.current_workout_plan in self.fetched_workouts:
+        next_workout = list(self.workouts.keys())[0]
+        self.current_workout_plan = next_workout
+      update_current_workout(self.current_workout_plan, True)
+      self.current_workout_label2.setText(self.current_workout_plan)
+       
+      old_workouts_reference = self.grid.itemAt(1).widget()
+      new_calendar_workouts_frame = self.create_calendar_workouts()
+      self.grid.replaceWidget(old_workouts_reference, new_calendar_workouts_frame)
+      old_workouts_reference.setParent(None)
+  
+  def show_delete_workout_dialog(self, workout):
+    message_box = QMessageBox()
+    message_box.setIcon(QMessageBox.Question)
+    message_box.setText("Are you sure you want to delete this workout?")
+    message_box.setWindowTitle("Confirm delete")
+    message_box.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+    message_box.buttonClicked.connect(lambda answer: self.delete_existing_workout(answer.text(), workout))
+    message_box.exec_()
+  
+  def delete_existing_workout(self, answer, workout):
+    if "OK" in answer:
+      delete_workout(workout)
+      self.refresh_layout(True)
+
   def create_stats(self):
     frame = QFrame()
+    frame.setProperty("name", "Stats frame 1")
     frame.setFrameStyle(QFrame.StyledPanel)
 
     current_workout_frame = QFrame()
@@ -42,11 +153,11 @@ class MainPanel(QWidget):
 
     current_workout_label = QLabel("Current workout plan", self)
     current_workout_label.setAlignment(Qt.AlignCenter)
-    current_workout_label2 = QLabel("Push Pull Legs", self)
-    current_workout_label2.setAlignment(Qt.AlignCenter)
+    self.current_workout_label2 = QLabel(self.current_workout_plan, self)
+    self.current_workout_label2.setAlignment(Qt.AlignCenter)
 
     current_workout_layout.addWidget(current_workout_label)
-    current_workout_layout.addWidget(current_workout_label2)
+    current_workout_layout.addWidget(self.current_workout_label2)
 
     current_workout_frame.setLayout(current_workout_layout)
 
@@ -87,6 +198,7 @@ class MainPanel(QWidget):
 
   def create_calendar_workouts(self):
     frame = QFrame()
+    frame.setProperty("name", "Calendar frame 2")
     frame.setFrameStyle(QFrame.StyledPanel)
     layout = QHBoxLayout()
     
@@ -94,69 +206,60 @@ class MainPanel(QWidget):
     calendar.setLocale(QLocale(QLocale.English))
     calendar.setFirstDayOfWeek(Qt.DayOfWeek.Monday)
 
+    layout.addWidget(calendar)
+    layout.addWidget(self.create_my_workouts())
+    frame.setLayout(layout)
+    return frame   
+  
+  def create_my_workouts(self):
     my_workouts_frame = QFrame()
     my_workouts_frame.setFrameStyle(QFrame.StyledPanel)
     my_workouts_layout = QVBoxLayout()
     my_workouts_label = QLabel("My Workouts", self)
-
-    workout1_frame = QFrame()
-    workout1_frame.setFrameStyle(QFrame.StyledPanel)
-    workout1_layout = QHBoxLayout()
-    workout1_name_label = QLabel("Upper Lower", self)
-    workout1_days_label = QLabel("4 days", self)
-    workout1_delete = QPushButton(QIcon("".join([path, "/icons/x.png"])), "", self)
-    workout1_delete.setStyleSheet("border: none")
-    workout1_delete.setCursor(QCursor(Qt.PointingHandCursor))
-
-    workout1_layout.addWidget(workout1_name_label)
-    workout1_layout.addWidget(workout1_days_label)
-    workout1_layout.addWidget(workout1_delete)
-    workout1_frame.setLayout(workout1_layout)
-     
-    workout2_frame = QFrame()
-    workout2_frame.setFrameStyle(QFrame.StyledPanel)
-    workout2_layout = QHBoxLayout()
-    workout2_name_label = QLabel("Push Pull Legs", self)
-    workout2_days_label = QLabel("6 days", self)
-    workout2_delete = QPushButton(QIcon("".join([path, "/icons/x.png"])), "", self)
-    workout2_delete.setStyleSheet("border: none")
-    workout2_delete.setCursor(QCursor(Qt.PointingHandCursor))
-
-    workout2_layout.addWidget(workout2_name_label)
-    workout2_layout.addWidget(workout2_days_label)
-    workout2_layout.addWidget(workout2_delete)
-    workout2_frame.setLayout(workout2_layout)
-
-    workout3_frame = QFrame()
-    workout3_frame.setFrameStyle(QFrame.StyledPanel)
-    workout3_layout = QHBoxLayout()
-    workout3_name_label = QLabel("My Workout1", self)
-    workout3_days_label = QLabel("3 days", self)
-    workout3_delete = QPushButton(QIcon("".join([path, "/icons/x.png"])), "", self)
-    workout3_delete.setStyleSheet("border: none")
-    workout3_delete.setCursor(QCursor(Qt.PointingHandCursor))
-
-    workout3_layout.addWidget(workout3_name_label)
-    workout3_layout.addWidget(workout3_days_label)
-    workout3_layout.addWidget(workout3_delete)
-    workout3_frame.setLayout(workout3_layout)
-
-    add_workout_button = QPushButton("Add Workout", self)
-    add_workout_button.setCursor(QCursor(Qt.PointingHandCursor)) 
     my_workouts_layout.addWidget(my_workouts_label)
-    my_workouts_layout.addWidget(workout1_frame)
-    my_workouts_layout.addWidget(workout2_frame)
-    my_workouts_layout.addWidget(workout3_frame)
-    my_workouts_layout.addWidget(add_workout_button)
-    my_workouts_frame.setLayout(my_workouts_layout)
 
-    layout.addWidget(calendar)
-    layout.addWidget(my_workouts_frame)
-    frame.setLayout(layout)
-    return frame
+    workout_buttons_layouts = [None] * 3
+    workout_buttons = [None] * 3
+    workout_buttons_frames = [None] * 3
+    delete_buttons = [None] * 3
+    
+    i = 0 
+    for workout in self.workouts:
+      workout_buttons_frames[i] = QFrame()   
+      workout_buttons_frames[i].setFrameStyle(QFrame.StyledPanel)
+      workout_buttons_layouts[i] = QHBoxLayout()
+      
+      delete_buttons[i] = QPushButton(QIcon(os.path.join(icons_path, "x.png")), "", self)
+      delete_buttons[i].setStyleSheet("border: none")
+      delete_buttons[i].setCursor(QCursor(Qt.PointingHandCursor))
+      
+      if self.workouts[workout] == "empty_workout":
+        workout_buttons[i] = QPushButton("<empty workout> 0 days", self)
+        workout_buttons[i].clicked.connect(lambda: self.show_empty_workout_edit())
+      else:
+        key_for_days = list(self.workouts[workout].keys())[0]
+        days = len(self.workouts[workout][key_for_days])
+        if days == 1: string_days = "day"
+        else: string_days = "days"
+        workout_buttons[i] = QPushButton(" ".join([workout, str(days), string_days]))
+        workout_buttons[i].clicked.connect(partial(self.show_existing_workout, workout))
+        delete_buttons[i].clicked.connect(partial(self.show_delete_workout_dialog, workout))
+
+      workout_buttons[i].setFlat(True)
+      workout_buttons[i].setStyleSheet("color: white")
+      workout_buttons[i].setCursor(QCursor(Qt.PointingHandCursor))
+      
+      workout_buttons_layouts[i].addWidget(workout_buttons[i])
+      workout_buttons_layouts[i].addWidget(delete_buttons[i])
+      workout_buttons_frames[i].setLayout(workout_buttons_layouts[i])
+      my_workouts_layout.addWidget(workout_buttons_frames[i]) 
+    
+    my_workouts_frame.setLayout(my_workouts_layout)
+    return my_workouts_frame
 
   def create_exercises(self):
     frame = QFrame()
+    frame.setProperty("name", "Exercises frame 3")
     frame.setFrameStyle(QFrame.StyledPanel)
     exercises_layout = QVBoxLayout()
 
