@@ -10,3 +10,4 @@ fitness_tracker.egg-info/
 food_images/
 exercise_images/
 db/
+!bob.ipynb
