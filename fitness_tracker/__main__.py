@@ -30,7 +30,7 @@ class FitnessTracker(QMainWindow):
                     "Big Lifts": BigLiftsNotes, "Workouts": WorkoutsNotes, "Nutrition": NutritionNotes,
                     "Weight Loss Notes": WeightLossNotes, "1 Rep Max Calculator": OneRepMaxCalculator,
                     "Body Fat Calculator": BodyFatCalculator, "Strength Estimator": StrengthEstimator,
-                    "Strength": StrengthStats, "Weight Loss": WeightLossStats}
+                    "Strength Statistics": StrengthStats, "Weight Loss Stats": WeightLossStats}
     self.colorize_background()
     self.colorize_foreground()
     self.setup_borders()

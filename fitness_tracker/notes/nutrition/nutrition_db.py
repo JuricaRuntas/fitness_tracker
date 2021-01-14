@@ -2,10 +2,12 @@ import sqlite3
 import psycopg2
 from psycopg2 import sql
 import os
-from user_profile.profile_db import fetch_email
+from fitness_tracker.user_profile.profile_db import fetch_email
 
 path = os.path.abspath(os.path.dirname(__file__))
-nutrition_db = os.path.sep.join([*path.split(os.path.sep)[:-3], "db", "nutrition.db"])
+db_path = os.path.sep.join([*path.split(os.path.sep)[:-3], "db"])
+nutrition_db = os.path.sep.join([db_path, "nutrition.db"])
+profile_db = os.path.sep.join([db_path, "profile.db"])
 
 db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432, 
            "database": "postgres", "user": "admin", "password": "admin"}
@@ -46,8 +48,8 @@ def fetch_nutrition_data():
       cursor = conn.cursor()
       cursor.execute(insert_values, (calorie_goal,))
 
-def update_calorie_goal(calorie_goal):
-  email = fetch_email()
+def update_calorie_goal(calorie_goal, user_path=profile_db):
+  email = fetch_email(user_path)
   with sqlite3.connect(nutrition_db) as conn:
     cursor = conn.cursor()
     update = "UPDATE nutrition SET calorie_goal='%s'" % calorie_goal

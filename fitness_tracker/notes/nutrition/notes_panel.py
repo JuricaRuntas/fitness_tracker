@@ -4,16 +4,18 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView)
 from PyQt5.QtGui import QFont, QCursor, QIcon
 from PyQt5.QtCore import Qt, QSize, pyqtSlot
-from user_profile import profile_db
+from fitness_tracker.user_profile.profile_db import fetch_units, fetch_user_weight, fetch_goal_weight
 from .nutrition_db import table_exists, create_nutrition_table, fetch_nutrition_data, fetch_calorie_goal
 from .change_weight_dialog import ChangeWeightDialog
 
-path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
+path = os.path.abspath(os.path.dirname(__file__))
+profile_db = os.path.sep.join([*path.split(os.path.sep)[:-3], "db", "profile.db"])
+icons_path = os.path.join(path, "icons")
 
-icons = {"pencil": os.path.join(path, "pencil.png"),
-         "plus": os.path.join(path, "plus.png"),
-         "left": os.path.join(path, "left.png"),
-         "right": os.path.join(path, "right.png")}
+icons = {"pencil": os.path.join(icons_path, "pencil.png"),
+         "plus": os.path.join(icons_path, "plus.png"),
+         "left": os.path.join(icons_path, "left.png"),
+         "right": os.path.join(icons_path, "right.png")}
 
 class NotesPanel(QWidget):
   def __init__(self, parent):
@@ -21,9 +23,9 @@ class NotesPanel(QWidget):
     if not table_exists():
       create_nutrition_table()
       fetch_nutrition_data()
-    self.units = "kg" if profile_db.fetch_units() == "metric" else "lb"
-    self.user_weight = profile_db.fetch_user_weight()
-    self.user_goal_weight = profile_db.fetch_goal_weight()
+    self.units = "kg" if fetch_units(profile_db) == "metric" else "lb"
+    self.user_weight = fetch_user_weight(profile_db)
+    self.user_goal_weight = fetch_goal_weight(profile_db)
     self.calorie_goal = fetch_calorie_goal()
     self.change_weight_dialog = ChangeWeightDialog()
     self.change_weight_dialog.change_current_weight_signal.connect(lambda weight: self.change_current_weight(weight))

@@ -1,10 +1,10 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot
-from notes.workouts.exercises.exercises import Exercises
-from notes.workouts.exercises.exercise_info import Exercise
+from .exercises.exercises import Exercises
+from .exercises.exercise_info import Exercise
 from .header import Header
-from homepage.side_panel import SidePanel
+from fitness_tracker.homepage.side_panel import SidePanel
 from .main_panel import MainPanel
 
 class WorkoutsNotes(QWidget):

@@ -1,4 +1,5 @@
 import json
+import os
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QVBoxLayout, QWidget, QLabel, QComboBox, QFrame, QHBoxLayout
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt, pyqtSlot
@@ -10,8 +11,11 @@ from .big_lifts_db import (create_big_lifts_table, insert_default_values, table_
                            fetch_units_from_big_lifts, fetch_one_rep_maxes, fetch_lifts_for_reps,
                            update_big_lifts_units, update_lifts_for_reps, update_1RM_lifts,
                            convert_lift_history_weight, fetch_preferred_lifts, clear_one_rep_maxes, clear_lifts_for_reps)
-from user_profile import profile_db
-from common.units_conversion import kg_to_pounds, pounds_to_kg
+from fitness_tracker.user_profile.profile_db import fetch_units
+from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
+
+path = os.path.abspath(os.path.dirname(__file__))
+profile_db = os.path.sep.join([*path.split(os.path.sep)[:-3], "db", "profile.db"])
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -19,7 +23,7 @@ class MainPanel(QWidget):
     create_big_lifts_table()
     if table_is_empty(): insert_default_values()
     
-    self.units = "kg" if profile_db.fetch_units() == "metric" else "lb"
+    self.units = "kg" if fetch_units(profile_db) == "metric" else "lb"
     big_lifts_units = "kg" if fetch_units_from_big_lifts() == "metric" else "lb"
     
     one_rep_maxes = json.loads(fetch_one_rep_maxes())

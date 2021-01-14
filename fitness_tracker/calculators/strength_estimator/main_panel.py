@@ -1,22 +1,21 @@
-import sqlite3
 import os
 from PyQt5.QtWidgets import (QPushButton, QLabel, QComboBox, QLineEdit, QGridLayout, QWidget,
                              QVBoxLayout, QHBoxLayout, QRadioButton, QScrollArea, QTableWidget,
                              QTableWidgetItem, QAbstractItemView, QFrame, QFormLayout)
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import Qt, QFileInfo
-from user_profile import profile_db
+from PyQt5.QtCore import Qt
+from fitness_tracker.user_profile.profile_db import fetch_units
 from .estimator import StrengthLevelEstimator
 from .exercise_standards import LiftStandards
 
-path = os.path.normpath(QFileInfo(__file__).absolutePath())
-db_path = path.split(os.path.sep)[:-3]
-db_path = os.path.sep.join([os.path.sep.join(db_path), "db", "profile.db"])
+path = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.sep.join([*path.split(os.path.sep)[:-3], "db"])
+profile_db = os.path.sep.join([db_path, "profile.db"])
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    self.units = "kg" if profile_db.fetch_units() == "metric" else "lb"
+    self.units = "kg" if fetch_units(profile_db) == "metric" else "lb"
     self.CreatePanel()
 
   def CreatePanel(self):

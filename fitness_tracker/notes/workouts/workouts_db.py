@@ -3,7 +3,7 @@ from psycopg2 import sql
 import sqlite3
 import json
 import os
-from user_profile.profile_db import fetch_email
+from fitness_tracker.user_profile.profile_db import fetch_email
 
 path = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.sep.join([*path.split(os.path.sep)[:-3], "db"])

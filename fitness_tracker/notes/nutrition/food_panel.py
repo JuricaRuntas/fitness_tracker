@@ -1,9 +1,10 @@
+import os
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout, QVBoxLayout, QTableWidget, QAbstractItemView, QTableWidgetItem, QHeaderView
 from PyQt5.QtGui import QFont, QPixmap
-from PyQt5.QtCore import QFileInfo
 from .spoonacular import FoodDatabase
 
-path = QFileInfo(__file__).absolutePath()
+path = os.path.abspath(os.path.dirname(__file__))
+food_images_path = os.path.join(path, "food_images")
 
 class FoodPanel(QWidget):
   def __init__(self, parent, food_id):
@@ -28,7 +29,7 @@ class FoodPanel(QWidget):
     food_title.setFont(QFont("Ariel", 25))
     
     food_image = QLabel()
-    food_pixmap = QPixmap("".join([path, "/food_images/", self.food_info["image"]]))
+    food_pixmap = QPixmap(os.path.join(food_images_path, self.food_info["image"]))
     food_image.setPixmap(food_pixmap)
     
     section_layout.addWidget(food_title)
@@ -44,7 +45,7 @@ class FoodPanel(QWidget):
 
     graph = QLabel()
     graph.setStyleSheet("background-color: white;")
-    graph_pixmap = QPixmap("".join([path, "/chart_placeholder.png"]))
+    graph_pixmap = QPixmap(os.path.join(path, "/chart_placeholder.png"))
     graph.setPixmap(graph_pixmap)
 
     nutrition_table = QTableWidget(15, 1)

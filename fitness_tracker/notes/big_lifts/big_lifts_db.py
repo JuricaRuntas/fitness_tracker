@@ -4,8 +4,8 @@ import sqlite3
 import psycopg2
 import json
 from psycopg2 import sql
-from user_profile.profile_db import fetch_units, fetch_email
-from common.units_conversion import kg_to_pounds, pounds_to_kg
+from fitness_tracker.user_profile.profile_db import fetch_units, fetch_email
+from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
 
 path = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.sep.join([*path.split(os.path.sep)[:-3], "db"])
@@ -42,8 +42,8 @@ def fetch_lifts_for_reps(path=big_lifts_db):
     cursor.execute("SELECT lifts_for_reps FROM big_lifts")
     return cursor.fetchone()[0]
 
-def fetch_preferred_lifts(path=big_lifts_db):
-  email = fetch_email()
+def fetch_preferred_lifts(path=big_lifts_db, user_path=profile_db):
+  email = fetch_email(user_path)
   with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute("SELECT preferred_lifts FROM big_lifts WHERE email='%s'" % email)
@@ -159,7 +159,7 @@ def update_preferred_lifts(new_preferred_lifts, path=big_lifts_db, user_path=pro
 # updates exercises
 def update_1RM_and_lifts_for_reps(path=big_lifts_db, user_path=profile_db):
   email = fetch_email(user_path)
-  preferred_lifts = list(json.loads(fetch_preferred_lifts(path)).values())
+  preferred_lifts = list(json.loads(fetch_preferred_lifts(path, user_path)).values())
   one_rep_maxes = json.loads(fetch_one_rep_maxes(path))
   lifts_for_reps = json.loads(fetch_lifts_for_reps(path))
 

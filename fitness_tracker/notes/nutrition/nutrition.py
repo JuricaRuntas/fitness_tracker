@@ -5,7 +5,7 @@ from .notes_panel import NotesPanel
 from .food_database_panel import FoodDatabasePanel
 from .search_results_panel import SearchResultsPanel
 from .food_panel import FoodPanel
-from homepage.side_panel import SidePanel
+from fitness_tracker.homepage.side_panel import SidePanel
 from .header import Header
 
 class NutritionNotes(QWidget):

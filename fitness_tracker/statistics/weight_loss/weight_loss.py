@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QLabel
 from PyQt5.QtGui import QFont
 
-from homepage.side_panel import SidePanel
+from fitness_tracker.homepage.side_panel import SidePanel
 
 class WeightLossStats(QWidget):
   def __init__(self, controller):

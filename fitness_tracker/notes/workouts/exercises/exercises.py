@@ -3,7 +3,7 @@ from functools import partial
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout, QPushButton, QLineEdit, QHBoxLayout, QVBoxLayout, QFrame
 from PyQt5.QtGui import QIcon, QCursor
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
-from notes.workouts.workouts_api import WorkoutsAPI
+from ..workouts_api import WorkoutsAPI
 from .exercise_info import Exercise
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)))

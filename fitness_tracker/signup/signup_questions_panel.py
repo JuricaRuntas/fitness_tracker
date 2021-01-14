@@ -1,12 +1,18 @@
 import json
+import os
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit,
                              QLabel, QPushButton, QGroupBox, QRadioButton, QHBoxLayout, QComboBox)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from .signup_helpers import create_user_info_after_signup
-from user_profile import profile_db
-from notes.nutrition.nutrition_db import create_nutrition_table, insert_calorie_goal
-from notes.nutrition.calorie_goal_calculator import CalorieGoalCalculator
+from fitness_tracker.user_profile.profile_db import fetch_email
+from fitness_tracker.notes.nutrition.nutrition_db import create_nutrition_table, insert_calorie_goal
+from fitness_tracker.notes.nutrition.calorie_goal_calculator import CalorieGoalCalculator
+
+path = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.sep.join([*path.split(os.path.sep)[:-2], "db"])
+profile_db = os.path.sep.join([db_path, "profile.db"])
+nutrition_db = os.path.sep.join([db_path, "nutrition.db"])
 
 class SignupQuestions(QWidget):
   def __init__(self, controller):
@@ -224,9 +230,9 @@ class SignupQuestions(QWidget):
         calorie_goal_calculator = CalorieGoalCalculator(int(age), gender, float(height), float(weight), goal_params[0], goal, goal_params[1])
         calorie_goal = calorie_goal_calculator.calculate_calorie_goal()
         
-        email = profile_db.fetch_email()
+        email = fetch_email(profile_db)
         create_user_info_after_signup(user_info, email)
-        create_nutrition_table()
+        create_nutrition_table(nutrition_db)
         insert_calorie_goal(calorie_goal)
         self.controller.display_layout("Home")
     except ValueError:

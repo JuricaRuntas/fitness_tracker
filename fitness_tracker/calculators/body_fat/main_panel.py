@@ -1,3 +1,4 @@
+import os
 from PyQt5.QtWidgets import (QWidget, QFrame, QFormLayout, QGridLayout,
                             QVBoxLayout, QLabel, QGroupBox, QRadioButton,
                             QHBoxLayout, QLineEdit, QPushButton, QTableWidget,
@@ -5,12 +6,15 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QFormLayout, QGridLayout,
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from .body_fat_calculator import BodyFatCalculator
-from user_profile import profile_db
+from fitness_tracker.user_profile.profile_db import fetch_units, fetch_table_name
+
+path = os.path.abspath(os.path.dirname(__file__))
+profile_db = os.path.sep.join([*path.split(os.path.sep)[:-3], "db", "profile.db"])
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    self.table_name = profile_db.fetch_table_name()
+    self.table_name = fetch_table_name(profile_db)
     self.create_panel()
 
   def create_panel(self):
@@ -43,8 +47,8 @@ class MainPanel(QWidget):
     calculator_frame.setFrameStyle(QFrame.StyledPanel)
     calculator_frame.setFixedWidth(300)
      
-    table_name = profile_db.fetch_table_name()
-    form_layout = self.create_form_metric() if profile_db.fetch_units() == "metric" else self.create_form_imperial()
+    table_name = fetch_table_name(profile_db)
+    form_layout = self.create_form_metric() if fetch_units(profile_db) == "metric" else self.create_form_imperial()
     calculator_frame.setLayout(form_layout)
 
     wrapper_layout = QVBoxLayout()
@@ -174,7 +178,7 @@ class MainPanel(QWidget):
     return self.calculator_layout
 
   def hide_or_show_hip(self):
-    units = profile_db.fetch_units()
+    units = fetch_units(profile_db)
     
     if self.female_button.isChecked():
       self.calculator_layout.removeWidget(self.calculate_button)
@@ -259,7 +263,7 @@ class MainPanel(QWidget):
 
   def calculate(self):
     gender = "male" if self.male_button.isChecked() else "female"
-    units = "kg" if profile_db.fetch_units() == "metric" else "lbs"
+    units = "kg" if fetch_units(profile_db) == "metric" else "lbs"
     m = self.get_measurements()
     try:
       calc = BodyFatCalculator(m["Gender"], m["Age"], m["Weight"], m["Height"], m["Neck"], m["Waist"], m["Units"], m["Hip"])
@@ -271,7 +275,7 @@ class MainPanel(QWidget):
   def get_measurements(self):
     measurements = {}
     measurements["Gender"] = "male" if self.male_button.isChecked() else "female"
-    units = profile_db.fetch_units()
+    units = fetch_units(profile_db)
     try:
       measurements["Age"] = int(self.age_entry.text())
       measurements["Weight"] = int(self.weight_entry.text())

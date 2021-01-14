@@ -21,7 +21,7 @@ class TestBigLifts(unittest.TestCase):
     delete_test_from_big_lifts(test_user["email"])
     os.remove("test.db")
     os.remove("test_user_profile.db")
-  
+    
   def test_create_big_lifts_table(self):
     big_lifts_columns = ("email", "1RM", "lifts_for_reps",
                          "preferred_lifts", "lift_history",
@@ -204,7 +204,7 @@ class TestBigLifts(unittest.TestCase):
     update_preferred_lifts(new_preferred_lifts, path="test.db", user_path="test_user_profile.db")
     local_preferred_lifts = json.loads(fetch_local_preferred_lifts("test.db"))
     self.assertDictEqual(new_preferred_lifts, local_preferred_lifts)
-  
+   
   def test_update_1RM_and_lifts_for_reps(self):
     new_preferred_lifts = {"Horizontal Press": "Incline Bench Press", "Floor Pull": "Deadlift",
                                       "Squat": "Front Squat", "Vertical Press": "Overhead Press"}

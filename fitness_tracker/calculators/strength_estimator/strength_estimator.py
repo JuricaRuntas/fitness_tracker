@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout
 from PyQt5.QtGui import QFont
 from .main_panel import MainPanel
-from homepage.header import Header
-from homepage.side_panel import SidePanel
+from fitness_tracker.homepage.header import Header
+from fitness_tracker.homepage.side_panel import SidePanel
 
 class StrengthEstimator(QWidget):
   def __init__(self, controller):
