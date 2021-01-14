@@ -3,13 +3,11 @@ import hashlib
 import psycopg2
 import sqlite3
 from psycopg2 import sql
+from fitness_tracker.config import db_info
 
 abs_path = os.path.abspath(os.path.dirname(__file__))
 path = os.path.sep.join([*abs_path.split(os.path.sep)[:-2], "db"])
 profile_db = os.path.sep.join([path, "profile.db"])
-
-db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
-           "database": "postgres", "user": "admin", "password": "admin"}
 
 def check_password(email, password):
   status = True

@@ -4,12 +4,10 @@ import psycopg2
 from psycopg2 import sql
 import sqlite3
 from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
+from fitness_tracker.config import db_info
 
 path = os.path.abspath(os.path.dirname(__file__))
 profile_db = os.path.sep.join([*path.split(os.path.sep)[:-2], "db", "profile.db"])
-
-db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
-           "database": "postgres", "user": "admin", "password": "admin"}
 
 def fetch_table_name(user_path=profile_db):
   with sqlite3.connect(user_path) as conn:

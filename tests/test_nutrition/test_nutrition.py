@@ -5,12 +5,12 @@ from nutrition_test_helpers import *
 
 class TestNutrition(unittest.TestCase):
   def setUp(self):
-    create_user_test_table("test_user_profile.db")
+    create_test_user("test_user_profile.db")
     create_nutrition_table("test.db")
     insert_nutrition_data(test_user["email"], "3250")
 
   def tearDown(self):
-    delete_user_test_table()
+    delete_test_user()
     delete_test_from_nutrition(test_user["email"])
     os.remove("test.db")
     os.remove("test_user_profile.db")

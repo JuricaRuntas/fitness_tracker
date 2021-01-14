@@ -1,8 +1,7 @@
 import requests
 import os
 import shutil
-
-API_KEY = "a81edb3273024befa02bf3e368f60246"
+from fitness_tracker.config import SPOONACULAR_API_KEY as API_KEY
 
 class Spoonacular:
   def __init__(self, api_key):

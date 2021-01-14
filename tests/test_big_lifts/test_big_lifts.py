@@ -12,12 +12,12 @@ from big_lifts_test_helpers import *
 
 class TestBigLifts(unittest.TestCase):
   def setUp(self):  
-    create_user_test_table("test_user_profile.db")
+    create_test_user("test_user_profile.db")
     create_big_lifts_table("test.db")
     insert_default_values("test.db", "test_user_profile.db")
   
   def tearDown(self):
-    delete_user_test_table()
+    delete_test_user()
     delete_test_from_big_lifts(test_user["email"])
     os.remove("test.db")
     os.remove("test_user_profile.db")

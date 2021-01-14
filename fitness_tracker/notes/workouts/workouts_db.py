@@ -4,15 +4,13 @@ import sqlite3
 import json
 import os
 from fitness_tracker.user_profile.profile_db import fetch_email
+from fitness_tracker.config import db_info
 
 path = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.sep.join([*path.split(os.path.sep)[:-3], "db"])
 
 workouts_db = os.path.sep.join([db_path, "workouts.db"])
 profile_db = os.path.sep.join([db_path, "profile.db"])
-
-db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
-           "database": "postgres", "user": "admin", "password": "admin"}
 
 def table_is_empty(path=workouts_db):
   with sqlite3.connect(path) as conn:

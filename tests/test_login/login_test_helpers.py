@@ -3,7 +3,8 @@ import psycopg2
 import hashlib
 import sqlite3
 from psycopg2 import sql
-from fitness_tracker.login.login_helpers import db_info
+from fitness_tracker.config import db_info
+from fitness_tracker.signup.signup_helpers import create_user_table, create_user_info_after_signup, create_user
 
 test_user = {"email": "test@gmail.com",
              "password": hashlib.sha256("testpassword123".encode('UTF-8')).hexdigest(),
@@ -11,15 +12,10 @@ test_user = {"email": "test@gmail.com",
              "weight": "100", "height": "190", "goal": "Weight gain",
              "goalparams": json.dumps(["Moderately active", 0.25]), "goalweight": "120"}
 
-def insert_test_user():
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"],
-                        database=db_info["database"], user=db_info["user"],
-                        password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      insert_query = "INSERT INTO users ({columns}) VALUES %s"
-      columns = sql.SQL(", ").join(sql.Identifier(column) for column in tuple(test_user.keys()))
-      values = tuple(value for value in test_user.values())
-      cursor.execute(sql.SQL(insert_query).format(columns=columns), (values,))
+def create_test_user(path):
+  create_user(test_user["email"], "testpassword123")
+  create_user_table(test_user["email"], "testpassword123", path)
+  create_user_info_after_signup(test_user, test_user["email"], path)
 
 def delete_test_user():
   with psycopg2.connect(host=db_info["host"], port=db_info["port"],

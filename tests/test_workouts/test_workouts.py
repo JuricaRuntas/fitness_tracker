@@ -8,12 +8,12 @@ from workouts_test_helpers import *
 
 class TestWorkouts(unittest.TestCase):
   def setUp(self):
-    create_user_test_table("test_user_profile.db")
+    create_test_user("test_user_profile.db")
     create_workouts_table("test.db")
     insert_default_workouts_data("test.db", "test_user_profile.db")
 
   def tearDown(self):
-    delete_user_test_table()
+    delete_test_user()
     delete_test_from_workouts_table(test_user["email"])
     os.remove("test.db")
     os.remove("test_user_profile.db")

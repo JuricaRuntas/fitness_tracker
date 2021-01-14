@@ -1,7 +1,6 @@
 import unittest
 from fitness_tracker.notes.nutrition.spoonacular import Spoonacular
-
-API_KEY = "a81edb3273024befa02bf3e368f60246"
+from fitness_tracker.config import SPOONACULAR_API_KEY as API_KEY
 
 class TestSpoonacular(unittest.TestCase):
   @classmethod

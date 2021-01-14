@@ -6,15 +6,13 @@ import json
 from psycopg2 import sql
 from fitness_tracker.user_profile.profile_db import fetch_units, fetch_email
 from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
+from fitness_tracker.config import db_info
 
 path = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.sep.join([*path.split(os.path.sep)[:-3], "db"])
 
 profile_db = os.path.sep.join([db_path, "profile.db"])
 big_lifts_db = os.path.sep.join([db_path, "big_lifts.db"])
-
-db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
-           "database": "postgres", "user": "admin", "password": "admin"}
 
 def table_is_empty(path=big_lifts_db):
   with sqlite3.connect(path) as conn:

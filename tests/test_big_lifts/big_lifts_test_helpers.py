@@ -2,8 +2,8 @@ import sqlite3
 import json
 import hashlib
 import psycopg2
-from fitness_tracker.notes.big_lifts.big_lifts_db import db_info
-from fitness_tracker.signup.signup_helpers import create_user_table, create_user_info_after_signup
+from fitness_tracker.config import db_info
+from fitness_tracker.signup.signup_helpers import create_user_table, create_user_info_after_signup, create_user
 
 test_user = {"email": "test@gmail.com",
              "password": hashlib.sha256("testpassword123".encode('UTF-8')).hexdigest(),
@@ -11,12 +11,12 @@ test_user = {"email": "test@gmail.com",
              "weight": "100", "height": "190", "goal": "Weight gain",
              "goalparams": json.dumps(["Moderately active", 0.25]), "goalweight": "120"}
 
-def create_user_test_table(path):
+def create_test_user(path):
+  create_user(test_user["email"], "testpassword123")
   create_user_table(test_user["email"], "testpassword123", path)
-  create_user_info_after_signup(test_user, test_user["email"],
-                                test=[True, "".join([test_user["email"], "_table"])], path=path)
+  create_user_info_after_signup(test_user, test_user["email"], path)
 
-def delete_user_test_table():
+def delete_test_user():
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
