@@ -13,7 +13,10 @@ def fetch_table_name(user_path=db_paths["profile.db"]):
     cursor = conn.cursor()
     get_table_name = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
     cursor.execute(get_table_name)
-    return cursor.fetchone()[0]
+    try:
+      return cursor.fetchone()[0]
+    except TypeError:
+      return None
 
 def fetch_local_user_data():
   table_name = fetch_table_name()
@@ -25,10 +28,14 @@ def fetch_local_user_data():
 
 def fetch_username(user_path=db_paths["profile.db"]):
   table_name = fetch_table_name(user_path)
-  with sqlite3.connect(user_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT name FROM '{table}'".format(table=table_name))
-    return cursor.fetchone()[0]
+  if not table_name == None:
+    with sqlite3.connect(user_path) as conn:
+      cursor = conn.cursor()
+      fetch_username = "SELECT name FROM '{table}'"
+      cursor.execute(fetch_username.format(table=table_name))
+      return cursor.fetchone()[0]
+  else:
+    return None
 
 def fetch_units(user_path=db_paths["profile.db"]):
   table_name = fetch_table_name(user_path)

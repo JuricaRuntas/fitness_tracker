@@ -11,7 +11,10 @@ class TitleBar(QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.title = QLabel("Fitness Tracker")
         self.username = fetch_username()
-        self.version = QLabel("-" + self.username)
+        if self.username == None:
+          self.version = QLabel()
+        else:
+          self.version = QLabel("-" + self.username)
         self.setFixedHeight(25)
 
         self.gridlayout = QHBoxLayout()
