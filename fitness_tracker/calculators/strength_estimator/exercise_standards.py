@@ -1,6 +1,4 @@
 import math
-import sys
-import os
 from common.units_conversion import kg_to_pounds, pounds_to_kg
 
 class LiftStandards:

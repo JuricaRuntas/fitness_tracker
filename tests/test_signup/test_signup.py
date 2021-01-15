@@ -13,12 +13,10 @@ class TestSignup(unittest.TestCase):
     os.remove("test.db")
 
   def test_create_user(self):
-    #create_user(test_user["email"], "testpassword123")
     name_and_password = fetch_name_and_password()
     self.assertEqual(tuple([test_user["email"], test_user["password"]]), name_and_password)
 
   def test_create_user_table(self):
-    #create_user_table(test_user["email"], "testpassword123", "test.db")
     table_columns = fetch_test_table_columns()
     table_data = fetch_test_table_data()[0:2]
 
@@ -26,7 +24,6 @@ class TestSignup(unittest.TestCase):
     self.assertEqual(table_data, tuple([test_user["email"], test_user["password"]]))
     
   def test_create_user_info_after_signup(self):
-    #create_user_table(test_user["email"], "testpassword123", "test1.db")
     os.remove("test.db")
     create_user_table(test_user["email"], "testpassword123", "test.db")
     user_info = {key: value for key, value in test_user.items() if not key  == "email" and not key == "password"}
@@ -36,6 +33,3 @@ class TestSignup(unittest.TestCase):
 
 if __name__ == "__main__":
   unittest.main()
-  #delete_test_user()
-  #os.remove("test.db")
-  #os.remove("test1.db")

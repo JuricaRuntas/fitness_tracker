@@ -2,24 +2,19 @@ import psycopg2
 from psycopg2 import sql
 import sqlite3
 import json
-import os
 from fitness_tracker.user_profile.profile_db import fetch_email
-from fitness_tracker.config import db_info
+from fitness_tracker.config import db_info, get_db_paths
 
-path = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.sep.join([*path.split(os.path.sep)[:-3], "db"])
+db_paths = get_db_paths(["profile.db", "workouts.db"])
 
-workouts_db = os.path.sep.join([db_path, "workouts.db"])
-profile_db = os.path.sep.join([db_path, "profile.db"])
-
-def table_is_empty(path=workouts_db):
+def table_is_empty(path=db_paths["workouts.db"]):
   with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT (*) FROM workouts")
     if cursor.fetchone()[0] == 0: return True
   return False
 
-def create_workouts_table(path=workouts_db):
+def create_workouts_table(path=db_paths["workouts.db"]):
   with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     create_table = """
@@ -33,7 +28,7 @@ def create_workouts_table(path=workouts_db):
                    """
     cursor.execute(create_table)
 
-def fetch_workouts_table_data(path=workouts_db, profile_path=profile_db):
+def fetch_workouts_table_data(path=db_paths["workouts.db"], profile_path=db_paths["profile.db"]):
   email = fetch_email(profile_path)
   select_workouts = "SELECT workouts FROM workouts WHERE email=%s"
   select_current_workout_plan = "SELECT current_workout_plan FROM workouts WHERE email=%s"
@@ -58,19 +53,19 @@ def fetch_workouts_table_data(path=workouts_db, profile_path=profile_db):
       cursor = conn.cursor()
       cursor.execute(insert_values, (workouts, current_workout_plan,))
 
-def fetch_workouts(path=workouts_db):
+def fetch_workouts(path=db_paths["workouts.db"]):
   with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute("SELECT workouts FROM workouts")
     return cursor.fetchone()[0]
 
-def fetch_current_workout_plan(path=workouts_db):
+def fetch_current_workout_plan(path=db_paths["workouts.db"]):
   with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
     cursor.execute("SELECT current_workout_plan FROM workouts")
     return cursor.fetchone()[0]
 
-def insert_default_workouts_data(path=workouts_db, profile_path=profile_db):
+def insert_default_workouts_data(path=db_paths["workouts.db"], profile_path=db_paths["profile.db"]):
   email = fetch_email(profile_path)
   workouts = {}
   current_workout_plan = ""
@@ -91,7 +86,7 @@ def insert_default_workouts_data(path=workouts_db, profile_path=profile_db):
   except psycopg2.errors.UniqueViolation:
     fetch_workouts_table_data(path=path, profile_path=profile_path)
 
-def update_workouts(workout_name, new_workout, path=workouts_db, profile_path=profile_db):
+def update_workouts(workout_name, new_workout, path=db_paths["workouts.db"], profile_path=db_paths["profile.db"]):
   email = fetch_email(profile_path)
   current_workouts = json.loads(fetch_workouts(path))
   current_workouts[workout_name] = new_workout
@@ -107,7 +102,7 @@ def update_workouts(workout_name, new_workout, path=workouts_db, profile_path=pr
     cursor = conn.cursor()
     cursor.execute(update_query)
 
-def update_current_workout(workout_name, set_as_current_workout, path=workouts_db, profile_path=profile_db):
+def update_current_workout(workout_name, set_as_current_workout, path=db_paths["workouts.db"], profile_path=db_paths["profile.db"]):
   if set_as_current_workout == True:
     email = fetch_email(profile_path)
     update_query = "UPDATE workouts SET current_workout_plan='%s' WHERE email='%s'" % (workout_name, email)
@@ -121,7 +116,7 @@ def update_current_workout(workout_name, set_as_current_workout, path=workouts_d
       cursor = conn.cursor()
       cursor.execute(update_query)
 
-def delete_workout(workout_name, path=workouts_db, profile_path=profile_db):
+def delete_workout(workout_name, path=db_paths["workouts.db"], profile_path=db_paths["profile.db"]):
   email = fetch_email(profile_path)
   workouts = json.loads(fetch_workouts(path))
   del workouts[workout_name]

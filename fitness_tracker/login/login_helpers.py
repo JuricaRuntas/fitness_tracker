@@ -1,13 +1,10 @@
-import os
 import hashlib
 import psycopg2
 import sqlite3
 from psycopg2 import sql
-from fitness_tracker.config import db_info
+from fitness_tracker.config import db_info, get_db_paths
 
-abs_path = os.path.abspath(os.path.dirname(__file__))
-path = os.path.sep.join([*abs_path.split(os.path.sep)[:-2], "db"])
-profile_db = os.path.sep.join([path, "profile.db"])
+db_paths = get_db_paths("profile.db")
 
 def check_password(email, password):
   status = True
@@ -20,7 +17,7 @@ def check_password(email, password):
       if not hashlib.sha256(password.encode('UTF-8')).hexdigest() == database_password: status = False
   return status
 
-def fetch_user_info(email, password, db_path=profile_db):
+def fetch_user_info(email, password, user_path=db_paths["profile.db"]):
   table_name = "".join([email, "_table"])
   columns = None
   user_info = None
@@ -39,7 +36,7 @@ def fetch_user_info(email, password, db_path=profile_db):
         cursor.execute(query)
         columns = tuple(value[0] for value in cursor.fetchall() if not value[0] == 'id')
   
-  with sqlite3.connect(db_path) as conn:
+  with sqlite3.connect(user_path) as conn:
     table_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='{table}';"
     cursor = conn.cursor()
     cursor.execute(table_exists.format(table=table_name))

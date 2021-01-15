@@ -1,5 +1,4 @@
 import json
-import os
 from PyQt5.QtWidgets import (QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout,
                              QFormLayout, QLineEdit, QComboBox, QRadioButton, QGroupBox)
 from PyQt5.QtCore import pyqtSignal
@@ -9,9 +8,9 @@ from fitness_tracker.user_profile.profile_db import (fetch_user_weight, fetch_go
                                                      update_goal_weight)
 from .nutrition_db import update_calorie_goal
 from .calorie_goal_calculator import CalorieGoalCalculator
+from fitness_tracker.config import get_db_paths
 
-path = os.path.abspath(os.path.dirname(__file__))
-profile_db = os.path.sep.join([*path.split(os.path.sep)[:-3], "db", "profile.db"])
+db_paths = get_db_paths("profile.db")
 
 class ChangeWeightDialog(QWidget):
   change_current_weight_signal = pyqtSignal(str)
@@ -20,15 +19,15 @@ class ChangeWeightDialog(QWidget):
 
   def __init__(self):
     super().__init__()
-    self.user_weight = fetch_user_weight(profile_db)
-    self.goal_weight = fetch_goal_weight(profile_db)
-    goal_parameters = json.loads(fetch_goal_params(profile_db))
-    self.goal = fetch_goal(profile_db)
+    self.user_weight = fetch_user_weight(db_paths["profile.db"])
+    self.goal_weight = fetch_goal_weight(db_paths["profile.db"])
+    goal_parameters = json.loads(fetch_goal_params(db_paths["profile.db"]))
+    self.goal = fetch_goal(db_paths["profile.db"])
     self.activity_level = goal_parameters[0]
     self.weight_per_week = goal_parameters[1]
-    self.age = fetch_age(profile_db)
-    self.gender = fetch_gender(profile_db)
-    self.height = fetch_height(profile_db)
+    self.age = fetch_age(db_paths["profile.db"])
+    self.gender = fetch_gender(db_paths["profile.db"])
+    self.height = fetch_height(db_paths["profile.db"])
     self.setWindowTitle("Edit weight")
     self.create_layout()
     
@@ -104,12 +103,12 @@ class ChangeWeightDialog(QWidget):
 
     try:
       if not current_weight == self.user_weight:
-        update_weight(str(float(current_weight)), profile_db)
+        update_weight(str(float(current_weight)), db_paths["profile.db"])
         self.user_weight = current_weight
         self.change_current_weight_signal.emit(current_weight)
         self.current_weight_line_edit.setText(current_weight)
       if not goal == self.goal:
-        update_goal(goal, profile_db)
+        update_goal(goal, db_paths["profile.db"])
         self.goal = goal
         if goal == "Weight loss":
           self.weight_loss_button.setChecked(True)
@@ -118,11 +117,11 @@ class ChangeWeightDialog(QWidget):
         elif goal == "Weight gain":
           self.weight_gain_button.setChecked(True)
       if not goal_params[0] == self.activity_level or not goal_params[1] == self.weight_per_week:
-        update_goal_parameters(json.dumps(goal_params), profile_db)
+        update_goal_parameters(json.dumps(goal_params), db_paths["profile.db"])
         self.activity_level = goal_params[0]
         self.weight_per_week = goal_params[1]
       if not goal_weight == self.goal_weight:
-        update_goal_weight(goal_weight, profile_db)
+        update_goal_weight(goal_weight, db_paths["profile.db"])
         self.goal_weight = goal_weight
         self.change_goal_weight_signal.emit(goal_weight)
         self.goal_weight_line_edit.setText(goal_weight)

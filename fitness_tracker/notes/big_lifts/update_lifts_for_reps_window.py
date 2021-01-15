@@ -5,9 +5,9 @@ from PyQt5.QtCore import pyqtSignal
 from .big_lifts_db import (fetch_preferred_lifts, fetch_lifts_for_reps, lift_difference,
                            update_lift_history, update_lifts_for_reps)
 from fitness_tracker.user_profile.profile_db import fetch_units
+from fitness_tracker.config import get_db_paths
 
-path = os.path.abspath(os.path.dirname(__file__))
-profile_db = os.path.sep.join([*path.split(os.path.sep)[:-3], "db", "profile.db"])
+db_paths = get_db_paths("profile.db")
 
 class UpdateLiftsForRepsWindow(QWidget):
   change_lifts_for_reps_signal = pyqtSignal(bool)
@@ -15,7 +15,7 @@ class UpdateLiftsForRepsWindow(QWidget):
 
   def __init__(self):
     super().__init__()
-    self.units = "kg" if fetch_units(profile_db) == "metric" else "lb"
+    self.units = "kg" if fetch_units(db_paths["profile.db"]) == "metric" else "lb"
     self.preferred_lifts = json.loads(fetch_preferred_lifts())
     self.setWindowTitle("Update Lifts For Reps")
     self.setLayout(self.create_panel())

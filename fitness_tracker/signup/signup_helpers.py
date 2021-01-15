@@ -1,16 +1,13 @@
-import os
 import re
 import sqlite3
 import string
 import hashlib
 import psycopg2
 from psycopg2 import sql
-from fitness_tracker.config import db_info
+from fitness_tracker.config import db_info, get_db_paths
 from fitness_tracker.user_profile.profile_db import fetch_table_name
 
-path = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.sep.join([*path.split(os.path.sep)[:-2], "db"])
-profile_db = os.path.sep.join([db_path, "profile.db"])
+db_paths = get_db_paths("profile.db")
 
 def check_valid_email(email):
   # basic validation, checks for example@gmail.com and similar format
@@ -29,18 +26,6 @@ def check_valid_password(password):
     print("Password contains invalid characters.")
   return valid
 
-#def fetch_table_name():
-#  table_name = None
-#  with sqlite3.connect(profile_db) as conn:
-#    cursor = conn.cursor()
-#    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
-#    try:
-#      # returns table name if exists otherwise returns None
-#      table_name = cursor.fetchone()[0]
-#    except TypeError: # catch TypeError caused by subscripting 'NoneType' object
-#      pass
-#  return table_name
-
 def create_user(user_email, user_password):
   status = True
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -54,7 +39,7 @@ def create_user(user_email, user_password):
       status = False
   return status
 
-def create_user_info_after_signup(user_info, email, user_path=profile_db):
+def create_user_info_after_signup(user_info, email, user_path=db_paths["profile.db"]):
   table_name = fetch_table_name(user_path)
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
@@ -88,7 +73,7 @@ def create_update_query(table_name, email, columns_values_dict, sqlite=False):
     update_query = update_query.format(table=table_name)
     return update_query % email
 
-def create_user_table(email, password, user_path=profile_db):
+def create_user_table(email, password, user_path=db_paths["profile.db"]):
   status = True
   table_name = "".join([email, "_table"])
   password = hashlib.sha256(password.encode('UTF-8')).hexdigest()
