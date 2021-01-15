@@ -61,7 +61,6 @@ class MainPanel(QWidget):
       background-color: #440D0F;
     }
     QComboBox:down-arrow{
-      mask-image:url(https://lun-eu.icons8.com/api/assets/57632ffa-84af-463e-8b9a-1590fbf16fa5/Triangle.png);
       width: 24.54px;
       height: 10px;
       background: #d3d3d3;
@@ -71,6 +70,12 @@ class MainPanel(QWidget):
       background-color: #440D0F;
       border: 0px;
       border-radius: 0px;
+    }
+    QComboBox:hover:!pressed{
+      background-color: #5D1A1D;
+    }
+    QComboBox:pressed{
+      background-color: #551812;
     }
     """)
     create_big_lifts_table()
@@ -150,7 +155,10 @@ class MainPanel(QWidget):
     time_graph.addWidget(time_graph_graph)
     time_graph.addWidget(timeline_combobox)
     framed_graph = QFrame(self)
-    framed_graph.setFrameStyle(QFrame.StyledPanel)
+    framed_graph.setObjectName("graphObj")
+    framed_graph.setFrameStyle(QFrame.Box)
+    framed_graph.setLineWidth(3)
+    framed_graph.setStyleSheet("""#graphObj {color: #322d2d;}""")
     framed_graph.setLayout(time_graph)
 
     return framed_graph
@@ -195,7 +203,10 @@ class MainPanel(QWidget):
 
     orm_panel.setSpacing(5)
     framed_layout = QFrame()
-    framed_layout.setFrameStyle(QFrame.StyledPanel)
+    framed_layout.setObjectName("graphObj")
+    framed_layout.setFrameStyle(QFrame.Box)
+    framed_layout.setLineWidth(3)
+    framed_layout.setStyleSheet("""#graphObj {color: #322d2d;}""")
     framed_layout.setLayout(orm_panel)
 
     return framed_layout
@@ -233,7 +244,10 @@ class MainPanel(QWidget):
     reps_panel.addLayout(reps_buttons)
 
     framed_layout = QFrame()
-    framed_layout.setFrameStyle(QFrame.StyledPanel)
+    framed_layout.setObjectName("graphObj")
+    framed_layout.setFrameStyle(QFrame.Box)
+    framed_layout.setLineWidth(3)
+    framed_layout.setStyleSheet("""#graphObj {color: #322d2d;}""")
     framed_layout.setLayout(reps_panel)
 
     return framed_layout
