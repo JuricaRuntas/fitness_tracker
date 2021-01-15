@@ -24,11 +24,10 @@ def fetch_local_user_data():
     return cursor.fetchone()[2:]
 
 def fetch_username(user_path=db_paths["profile.db"]):
-  table_name = fetch_table_name()
+  table_name = fetch_table_name(user_path)
   with sqlite3.connect(user_path) as conn:
     cursor = conn.cursor()
-    fetch_current_units = "SELECT name FROM '{table}'"
-    cursor.execute(fetch_current_units.format(table=table_name))
+    cursor.execute("SELECT name FROM '{table}'".format(table=table_name))
     return cursor.fetchone()[0]
 
 def fetch_units(user_path=db_paths["profile.db"]):

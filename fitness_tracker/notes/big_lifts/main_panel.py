@@ -33,8 +33,6 @@ class MainPanel(QWidget):
       min-height: 28px;
       white-space:nowrap;
       text-align: left;
-      overflow: hidden;
-      display: block;
       padding-left: 5%;
       font-family: Ubuntu;
     }
@@ -53,8 +51,6 @@ class MainPanel(QWidget):
       font-weight: bold;
       white-space:nowrap;
       text-align: left;
-      overflow: hidden;
-      display: block;
       padding-left: 5%;
       font-family: Ubuntu;
       min-height: 28px;
@@ -63,8 +59,7 @@ class MainPanel(QWidget):
     QComboBox:down-arrow{
       width: 24.54px;
       height: 10px;
-      background: #d3d3d3;
-      transform: rotate(-180deg);   
+      background: #d3d3d3; 
     }
     QComboBox:drop-down{
       background-color: #440D0F;

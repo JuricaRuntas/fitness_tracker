@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QSpacerItem, QSizePolicy, QSizeGrip
 from PyQt5.QtGui import QFont, QIcon, QPainter, QBrush, QColor
 from PyQt5.QtCore import QPoint, Qt, QSize
-from user_profile import profile_db
+from user_profile.profile_db import fetch_username
 
 class TitleBar(QWidget):
     def __init__(self, parent):
@@ -10,7 +10,7 @@ class TitleBar(QWidget):
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.title = QLabel("Fitness Tracker")
-        self.username = profile_db.fetch_username()
+        self.username = fetch_username()
         self.version = QLabel("-" + self.username)
         self.setFixedHeight(25)
 
