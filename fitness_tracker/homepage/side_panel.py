@@ -55,6 +55,7 @@ class SidePanel(QWidget):
     line_divider_stats = self.create_line_divider()
 
     general_layout = QVBoxLayout()
+    general_layout.setContentsMargins(0, 0, 0, 0)
     home_button = QPushButton("Home", self)
     home_button.clicked.connect(lambda: self.controller.display_layout(home_button.text()))
     user_button = QPushButton("Profile", self)
@@ -63,6 +64,7 @@ class SidePanel(QWidget):
     logout_button.clicked.connect(lambda: self.controller.display_layout(logout_button.text()))
 
     notes_layout = QVBoxLayout()
+    notes_layout.setContentsMargins(0, 0, 0, 0)
     lifts_button = QPushButton("Big Lifts", self)
     lifts_button.clicked.connect(lambda: self.controller.display_layout(lifts_button.text()))
     workouts_button = QPushButton("Workouts", self)
@@ -73,6 +75,7 @@ class SidePanel(QWidget):
     weight_notes_button.clicked.connect(lambda: self.controller.display_layout(weight_notes_button.text()))
     
     calculators_layout = QVBoxLayout()
+    calculators_layout.setContentsMargins(0, 0, 0, 0)
     max_button = QPushButton("1 Rep Max Calculator", self)
     max_button.clicked.connect(lambda: self.controller.display_layout(max_button.text()))
     fat_button = QPushButton("Body Fat Calculator", self)
@@ -81,6 +84,7 @@ class SidePanel(QWidget):
     strength_es_button.clicked.connect(lambda: self.controller.display_layout(strength_es_button.text()))
     
     stats_layout = QVBoxLayout()
+    stats_layout.setContentsMargins(0, 0, 0, 0)
     strength_button = QPushButton("Strength Statistics", self)
     strength_button.clicked.connect(lambda: self.controller.display_layout(strength_button.text()))
     weight_loss_button = QPushButton("Weight Loss Stats", self)
@@ -114,4 +118,5 @@ class SidePanel(QWidget):
     painter = QPainter()
     painter.begin(self)
     painter.setRenderHint(QPainter.Antialiasing)
-    painter.fillRect(event.rect(), QBrush(QColor(20, 18, 17, 255)))
+    painter.fillRect(event.rect(), QBrush(QColor(17, 16, 15, 255)))
+

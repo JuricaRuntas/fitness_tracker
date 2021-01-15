@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QSpacerItem, QSizePolicy, QSizeGrip
 from PyQt5.QtGui import QFont, QIcon, QPainter, QBrush, QColor
 from PyQt5.QtCore import QPoint, Qt, QSize
+from user_profile import profile_db
 
 class TitleBar(QWidget):
     def __init__(self, parent):
@@ -9,8 +10,9 @@ class TitleBar(QWidget):
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.title = QLabel("Fitness Tracker")
-        self.version = QLabel("v1.0")
-        self.setMaximumHeight(24)
+        self.username = profile_db.fetch_username()
+        self.version = QLabel("-" + self.username)
+        self.setFixedHeight(25)
 
         self.gridlayout = QHBoxLayout()
         self.gridlayout.setContentsMargins(0, 0, 0, 0)
@@ -18,8 +20,8 @@ class TitleBar(QWidget):
         slight_indent = QSpacerItem(4, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
         version_space = QSpacerItem(20, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        title_font_size = 11
-        title_font = QFont('Ariel', title_font_size)
+        title_font_size = 14
+        title_font = QFont('Arial', title_font_size)
         self.title.setFont(title_font)
 
         self.version.setFont(title_font)

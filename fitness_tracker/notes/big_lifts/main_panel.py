@@ -1,6 +1,6 @@
 import json
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QVBoxLayout, QWidget, QLabel, QComboBox, QFrame, QHBoxLayout
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QColor
 from PyQt5.QtCore import Qt, pyqtSlot
 from .preferred_lifts import PreferredLifts
 from .update_1RM_window import Update1RMWindow
@@ -19,6 +19,60 @@ db_paths = get_db_paths("profile.db")
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
+    self.setStyleSheet("""
+    QWidget{
+      color:#c7c7c7;
+      font-weight: bold;
+    }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      overflow: hidden;
+      display: block;
+      padding-left: 5%;
+      font-family: Ubuntu;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }
+    QComboBox{
+      border-radius: 4px;
+      font-size: 18px;
+      font-weight: bold;
+      white-space:nowrap;
+      text-align: left;
+      overflow: hidden;
+      display: block;
+      padding-left: 5%;
+      font-family: Ubuntu;
+      min-height: 28px;
+      background-color: #440D0F;
+    }
+    QComboBox:down-arrow{
+      mask-image:url(https://lun-eu.icons8.com/api/assets/57632ffa-84af-463e-8b9a-1590fbf16fa5/Triangle.png);
+      width: 24.54px;
+      height: 10px;
+      background: #d3d3d3;
+      transform: rotate(-180deg);   
+    }
+    QComboBox:drop-down{
+      background-color: #440D0F;
+      border: 0px;
+      border-radius: 0px;
+    }
+    """)
     create_big_lifts_table()
     if table_is_empty(): insert_default_values()
     
@@ -78,8 +132,10 @@ class MainPanel(QWidget):
 
   def description(self):
     panel_description = QVBoxLayout()
+    desc_font = QFont("Ubuntu", 12)
     description_label = QLabel("Keep notes and track progress of your preferred big lifts here.", self)
-    description_label.setFixedHeight(30)
+    description_label.setFont(desc_font)
+    description_label.setFixedHeight(20)
     panel_description.addWidget(description_label)
     return panel_description
 
