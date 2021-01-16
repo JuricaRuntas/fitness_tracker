@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from .notes_panel import NotesPanel
 from .food_database_panel import FoodDatabasePanel
 from .search_results_panel import SearchResultsPanel
@@ -9,12 +9,14 @@ from fitness_tracker.homepage.side_panel import SidePanel
 from .header import Header
 
 class NutritionNotes(QWidget):
-  def __init__(self, controller):
+  display_layout_signal = pyqtSignal(str)
+
+  def __init__(self):
     super().__init__()
-    self.controller = controller
     self.notes_panel = NotesPanel(self)
     self.header = Header(self)
-    self.side_panel = SidePanel(self, self.controller)
+    self.side_panel = SidePanel(self)
+    self.side_panel.emit_layout_name.connect(lambda layout_name: self.emit_display_layout_signal(layout_name))
     self.create_grid()
     self.header.change_layout_signal.connect(lambda name: self.change_layout(name))
        
@@ -24,6 +26,10 @@ class NutritionNotes(QWidget):
     self.grid.addWidget(self.header, 0, 1, 1, 2)
     self.grid.addWidget(self.notes_panel, 1, 1, 8, 3)
     self.setLayout(self.grid)
+  
+  @pyqtSlot(str)
+  def emit_display_layout_signal(self, layout_name):
+    self.display_layout_signal.emit(layout_name)
   
   @pyqtSlot(str)
   def change_layout(self, name):

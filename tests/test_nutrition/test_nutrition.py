@@ -10,7 +10,7 @@ class TestNutrition(unittest.TestCase):
     insert_nutrition_data(test_user["email"], "3250")
 
   def tearDown(self):
-    delete_test_user()
+    delete_test_user(test_user["email"])
     delete_test_from_nutrition(test_user["email"])
     os.remove("test.db")
     os.remove("test_user_profile.db")

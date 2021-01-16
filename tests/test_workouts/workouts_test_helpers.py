@@ -16,11 +16,11 @@ def create_test_user(path):
   create_user_table(test_user["email"], "testpassword123", path)
   create_user_info_after_signup(test_user, test_user["email"], path)
 
-def delete_test_user():
+def delete_test_user(email):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
-      delete = "DELETE FROM users WHERE email='%s'"
+      delete = "DELETE FROM users WHERE email='%s'" % email
       cursor.execute(delete)
 
 def delete_test_from_workouts_table(email):

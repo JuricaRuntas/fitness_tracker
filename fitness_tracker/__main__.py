@@ -1,9 +1,9 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, QVBoxLayout, QWidget, QSpacerItem, QSizeGrip, QSizePolicy
-from PyQt5.QtCore import Qt, QObject
-from PyQt5.QtGui import QColor, QFontDatabase
 import sys
 import sqlite3
 import os
+from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, QVBoxLayout, QWidget, QSpacerItem, QSizeGrip, QSizePolicy
+from PyQt5.QtCore import Qt, QObject, pyqtSlot
+from PyQt5.QtGui import QColor, QFontDatabase
 from homepage.homepage import Homepage
 from user_profile.profile import Profile
 from calculators.one_rep_max.one_rep_max import OneRepMaxCalculator
@@ -24,7 +24,8 @@ class FitnessTracker(QMainWindow):
   def __init__(self):
     super().__init__()
     self.create_window()
-    self.cw = Homepage(self) if self.user_info_exists() else Login(self)
+    self.cw = Homepage() if self.user_info_exists() else Login()
+    self.cw.display_layout_signal.connect(lambda layout: self.display_layout(layout))
     self.layouts = {"Login": Login, "Signup": Signup, "Continue": SignupQuestions,
                     "Home": Homepage, "Profile": Profile, "Logout": Login,
                     "Big Lifts": BigLiftsNotes, "Workouts": WorkoutsNotes, "Nutrition": NutritionNotes,
@@ -81,13 +82,13 @@ class FitnessTracker(QMainWindow):
     window.moveCenter(center_point)
     self.move(window.topLeft())
   
-  def display_layout(self, layout):
-    for key, value in self.layouts.items():
-      if layout == key:
-        self.cw = value(self)
-        self.layout = QWidget()
-        self.layout = self.setup_main_layout()
-        self.setCentralWidget(self.layout)
+  @pyqtSlot(str)
+  def display_layout(self, layout_name):
+      self.cw = self.layouts[layout_name]()
+      self.cw.display_layout_signal.connect(lambda layout_name: self.display_layout(layout_name))
+      self.layout = QWidget()
+      self.layout = self.setup_main_layout()
+      self.setCentralWidget(self.layout)
 
   def user_info_exists(self):
     table_exists = True

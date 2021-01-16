@@ -27,8 +27,8 @@ def fetch_calorie_goal():
     cursor.execute("SELECT calorie_goal FROM nutrition")
     return cursor.fetchone()[0]
 
-def fetch_nutrition_data():
-  email = fetch_email()
+def fetch_nutrition_data(user_path=db_paths["profile.db"]):
+  email = fetch_email(user_path)
   select_calorie_goal = "SELECT calorie_goal FROM nutrition WHERE email=%s"
   calorie_goal = None
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],

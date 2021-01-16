@@ -1,12 +1,13 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit, QLabel, QPushButton
 from PyQt5.QtGui import QFont, QCursor
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from .signup_helpers import check_valid_password, check_valid_email, create_user, create_user_table
 
 class MainPanel(QWidget):
-  def __init__(self, parent, controller):
+  emit_layout_name = pyqtSignal(str)
+
+  def __init__(self, parent):
     super().__init__(parent)
-    self.controller = controller
     self.create_panel()
 
   def create_panel(self):
@@ -56,7 +57,7 @@ class MainPanel(QWidget):
 
     login_label = QLabel("Already have an account?")
     self.login_button = QPushButton("Login", self)
-    self.login_button.clicked.connect(lambda: self.controller.display_layout(self.login_button.text()))
+    self.login_button.clicked.connect(lambda: self.emit_display_layout_name.emit(self.login_button.text()))
     self.login_button.setCursor(QCursor(Qt.PointingHandCursor))
     
     form_layout.addRow(email_label, self.email_entry)
@@ -73,4 +74,4 @@ class MainPanel(QWidget):
     if password == confirmed_password and check_valid_password(password) and check_valid_email(email):
       if create_user(email, password):
         create_user_table(email, password)
-        self.controller.display_layout(self.continue_button.text())
+        self.emit_layout_name.emit("Continue")
