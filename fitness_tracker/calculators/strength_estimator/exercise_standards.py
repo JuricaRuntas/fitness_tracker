@@ -1,5 +1,5 @@
 import math
-from common.units_conversion import kg_to_pounds, pounds_to_kg
+from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
 
 class LiftStandards:
   def __init__(self, exercise, age_range, gender, units):

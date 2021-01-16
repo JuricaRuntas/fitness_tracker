@@ -1,7 +1,18 @@
+import os
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QSpacerItem, QSizePolicy, QSizeGrip
 from PyQt5.QtGui import QFont, QIcon, QPainter, QBrush, QColor
 from PyQt5.QtCore import QPoint, Qt, QSize
-from user_profile.profile_db import fetch_username
+from fitness_tracker.user_profile.profile_db import fetch_username
+from fitness_tracker.config import get_db_paths
+
+path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
+db_paths = get_db_paths("profile.db")
+
+icons = {"close": os.path.join(path, "close.bmp"),
+         "min": os.path.join(path, "min.bmp"),
+         "max": os.path.join(path, "max.bmp"),
+         "small": os.path.join(path, "small.bmp"),
+         "settings": os.path.join(path, "settings.png")}
 
 class TitleBar(QWidget):
     def __init__(self, parent):
@@ -10,7 +21,7 @@ class TitleBar(QWidget):
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.title = QLabel("Fitness Tracker")
-        self.username = fetch_username()
+        self.username = fetch_username(db_paths["profile.db"])
         if self.username == None:
           self.version = QLabel()
         else:
@@ -33,7 +44,7 @@ class TitleBar(QWidget):
         icon_max_size_x = 32
         icon_max_size_y = 24
 
-        self.close_icon = QIcon('icons/close.bmp')
+        self.close_icon = QIcon(icons["close"])
         self.close_button = QPushButton()
         self.close_button.clicked.connect(self.close_click)
         self.close_button.setIcon(self.close_icon)
@@ -43,7 +54,7 @@ class TitleBar(QWidget):
             "QPushButton:hover{ background-color: rgba(237, 17, 17, 75); }"
             "QPushButton:pressed{ background-color: rgba(255, 0, 0, 100); }")
 
-        self.minimise_icon = QIcon('icons/min.bmp')
+        self.minimise_icon = QIcon(icons["min"])
         self.minimise_button = QPushButton()
         self.minimise_button.clicked.connect(self.min_click)
         self.minimise_button.setIcon(self.minimise_icon)
@@ -53,8 +64,8 @@ class TitleBar(QWidget):
             "QPushButton:hover{ background-color: rgba(255, 255, 255, 70); }"
             "QPushButton:pressed{ background-color: rgba(255, 255, 255, 40); }")
 
-        self.maximize_icon = QIcon('icons/max.bmp')
-        self.unmax_icon = QIcon('icons/small.bmp')
+        self.maximize_icon = QIcon(icons["max"])
+        self.unmax_icon = QIcon(icons["small"])
         self.maximize_button = QPushButton()
         self.maximize_button.setIcon(self.maximize_icon)
         self.maximize_button.clicked.connect(self.max_click)
@@ -64,7 +75,7 @@ class TitleBar(QWidget):
             "QPushButton:hover{ background-color: rgba(255, 255, 255, 70); }"
             "QPushButton:pressed{ background-color: rgba(255, 255, 255, 40); }")
 
-        self.settings_icon = QIcon('icons/settings.png')
+        self.settings_icon = QIcon(icons["settings"])
         self.settings_button = QPushButton()
         self.settings_button.setIcon(self.settings_icon)
         self.settings_button.setMaximumSize(icon_max_size_x, icon_max_size_y)
