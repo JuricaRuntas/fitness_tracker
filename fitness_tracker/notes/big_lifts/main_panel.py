@@ -60,10 +60,12 @@ class MainPanel(QWidget):
       width: 24.54px;
       height: 10px;
       background: #d3d3d3; 
+      opacity:0
     }
     QComboBox:drop-down{
       background-color: #440D0F;
       border: 0px;
+      opacity:0;
       border-radius: 0px;
     }
     QComboBox:hover:!pressed{

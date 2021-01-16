@@ -22,9 +22,10 @@ class NutritionNotes(QWidget):
        
   def create_grid(self):
     self.grid = QGridLayout()
-    self.grid.addWidget(self.side_panel, 0, 0, 8, 1)
-    self.grid.addWidget(self.header, 0, 1, 1, 2)
-    self.grid.addWidget(self.notes_panel, 1, 1, 8, 3)
+    self.grid.setContentsMargins(0, 0, 0, 0)
+    self.grid.addWidget(self.side_panel, 0, 0, 1, 1)
+    #self.grid.addWidget(self.header, 0, 1, 1, 2)
+    self.grid.addWidget(self.notes_panel, 0, 1, 1, 1)
     self.setLayout(self.grid)
   
   @pyqtSlot(str)

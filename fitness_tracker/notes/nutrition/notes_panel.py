@@ -24,6 +24,14 @@ class NotesPanel(QWidget):
     if not table_exists():
       create_nutrition_table()
       fetch_nutrition_data()
+    self.setStyleSheet(   
+    """QWidget{
+      color:#c7c7c7;
+      font-weight: bold;
+      font-family: "Ubuntu";
+      font-size: 16px;
+      }
+      """)
     self.units = "kg" if fetch_units(db_paths["profile.db"]) == "metric" else "lb"
     self.user_weight = fetch_user_weight(db_paths["profile.db"])
     self.user_goal_weight = fetch_goal_weight(db_paths["profile.db"])
@@ -52,34 +60,84 @@ class NotesPanel(QWidget):
 
   def create_panel(self):
     grid = QGridLayout()
-    grid.addLayout(self.create_stats(), 0, 0, 1, 2)
-    grid.addLayout(self.create_notes(), 1, 0)
+    grid.setContentsMargins(2, 0, 8, 8)
+    grid.addWidget(self.create_description(), 0, 0, 1, 3)
+    grid.addLayout(self.create_stats(), 6, 0, 6, 1)
+    grid.addWidget(self.create_nutrition_summary(), 6, 1, 6, 1)
+    grid.addWidget(self.create_weight_panel(), 7, 2, 5, 1)
+    grid.addLayout(self.create_notes(), 16, 0, 10, 3)
     self.setLayout(grid)
+
+  def create_description(self):
+    self.description = QLabel("Improve your diet and eating habits by tracking what you eat and searching through our database for healthy \nfoods.")
+    return self.description
+
+  def create_nutrition_summary(self):
+    nsummary_layout = QVBoxLayout()
+    daily_monthlyavg_buttons = QHBoxLayout()
+    daily_button = QPushButton("Daily")
+    monthly_button = QPushButton("Monthly")
+    daily_monthlyavg_buttons.addWidget(daily_button)
+    daily_monthlyavg_buttons.addWidget(monthly_button)
+
+    nsummary_layout.addLayout(daily_monthlyavg_buttons)
+    
+    temp_label = QLabel("Proteins: 30g \nCarbs: 300g \nCalories: 2000kcal")
+    nsummary_layout.addWidget(temp_label) # Temp
+
+    nsummary_layout_framed = QFrame()
+    nsummary_layout_framed.setLayout(nsummary_layout)
+    nsummary_layout_framed.setFrameStyle(QFrame.Box)
+    nsummary_layout_framed.setLineWidth(3)
+    nsummary_layout_framed.setObjectName("frame")
+    nsummary_layout_framed.setStyleSheet("""#frame {color: #322d2d;}""")
+    return nsummary_layout_framed
 
   def create_stats(self):
     stats_layout = QHBoxLayout()
     
     calorie_goal_layout = QVBoxLayout()
     calorie_goal_frame = QFrame()
-    self.calorie_goal_label = QLabel(" ".join(["Calorie Goal: \n", self.calorie_goal]))
-    self.calorie_goal_label.setFixedHeight(40)
+    self.dci_label = QLabel("Daily Calorie Intake")
+    self.dci_label.setAlignment(Qt.AlignCenter)
+    self.calorie_goal_label = QLabel(" ".join(["Daily Goal: ", self.calorie_goal, "kcal"]))
+    #self.calorie_goal_label.setFixedHeight(40)
     self.calorie_goal_label.setFont(QFont("Ariel", 15))
     self.calorie_goal_label.setAlignment(Qt.AlignCenter)
      
     self.progress_bar = QProgressBar()
     self.progress_bar.setStyleSheet("background-color:grey;")
     self.progress_bar.setMaximum(int(self.calorie_goal))
-    self.progress_bar.setValue(0)
+    self.progress_bar.setValue(500)
     calories_left = self.progress_bar.maximum() - self.progress_bar.value()
-    self.progress_bar.setFormat(" ".join([str(calories_left), "calories left"]))
+    self.progress_bar.setFormat("")
+    self.progress_bar.setAlignment(Qt.AlignCenter)
+    self.progress_bar.setMaximumHeight(12)
+    self.calorie_label = QLabel(str(calories_left) + " calories left from goal")
+    self.calorie_label.setAlignment(Qt.AlignCenter)
 
-    calorie_goal_layout.addWidget(self.calorie_goal_label)
+    intake_button_layout = QHBoxLayout()
+    self.calculate_intake = QPushButton("Calculate Daily Intake")
+    self.edit_intake = QPushButton("Edit Daily Intake")
+    intake_button_layout.addWidget(self.calculate_intake)
+    intake_button_layout.addWidget(self.edit_intake)
+
+    calorie_goal_layout.addWidget(self.dci_label)
     calorie_goal_layout.addWidget(self.progress_bar)
-    calorie_goal_frame.setLayout(calorie_goal_layout)
-    
-    weight_layout = QVBoxLayout()
-    weight_frame = QFrame()
+    calorie_goal_layout.addWidget(self.calorie_label)
+    calorie_goal_layout.addWidget(self.calorie_goal_label)
+    calorie_goal_layout.addLayout(intake_button_layout)
 
+    calorie_goal_frame.setLayout(calorie_goal_layout)
+    calorie_goal_frame.setFrameStyle(QFrame.Box)
+    calorie_goal_frame.setLineWidth(3)
+    calorie_goal_frame.setObjectName("frame")
+    calorie_goal_frame.setStyleSheet("""#frame {color: #322d2d;}""")
+    stats_layout.addWidget(calorie_goal_frame)
+
+    return stats_layout
+
+  def create_weight_panel(self):
     current_weight_layout = QHBoxLayout()
     self.current_weight_label = QLabel(" ".join(["Current Weight:", self.user_weight, self.units]))
     self.current_weight_label.setFont(QFont("Ariel", 15))
@@ -91,7 +149,13 @@ class NotesPanel(QWidget):
     edit_current_weight_button.clicked.connect(lambda: self.change_weight_dialog.show())
     current_weight_layout.addWidget(self.current_weight_label)
     current_weight_layout.addWidget(edit_current_weight_button)
-    
+
+    weight_layout = QVBoxLayout()
+    weight_frame = QFrame()
+    weight_frame.setFrameStyle(QFrame.Box)
+    weight_frame.setLineWidth(3)
+    weight_frame.setObjectName("frame")
+    weight_frame.setStyleSheet("""#frame {color: #322d2d;}""")
     goal_weight_layout = QHBoxLayout()
     self.goal_weight_label = QLabel(" ".join(["Goal Weight:", self.user_goal_weight, self.units]))
     self.goal_weight_label.setFont(QFont("Ariel", 15))
@@ -107,11 +171,7 @@ class NotesPanel(QWidget):
     weight_layout.addLayout(current_weight_layout)
     weight_layout.addLayout(goal_weight_layout)
     weight_frame.setLayout(weight_layout)
-    
-    stats_layout.addWidget(calorie_goal_frame)
-    stats_layout.addWidget(weight_frame)
-
-    return stats_layout
+    return weight_frame
 
   def create_notes(self):
     
