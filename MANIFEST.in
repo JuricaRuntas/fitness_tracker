@@ -1,1 +1,2 @@
 global-include *.db *.png *.bmp *.ttf *.svg
+include README.md LICENSE

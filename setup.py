@@ -9,6 +9,7 @@ setup(
   name="fitness_tracker",
   version="0.1.0",
   author="Jurica Runtas, Kristijan Milić",
+  url="https://github.com/JuricaRT/fitness_tracker"
   license="MIT",
   description="Fitness Tracker is a tool that offers a better way of tracking your fitness progress.",
   long_description=long_description,
@@ -18,6 +19,7 @@ setup(
   classifiers=["Programming Langugage :: Python :: 3",
                "License :: OSI Approved :: MIT License",
                "Operating System :: OS Independent"],
-  install_requires=["PyQt5", "requests", "psycopg2"],
+  install_requires=["PyQt5", "requests", "psycopg2",
+                    "matplotlib", "numpy"],
   python_requires=">=3.6",
 )
