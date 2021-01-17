@@ -9,7 +9,7 @@ setup(
   name="fitness_tracker",
   version="0.1.0",
   author="Jurica Runtas, Kristijan Milić",
-  url="https://github.com/JuricaRT/fitness_tracker"
+  url="https://github.com/JuricaRT/fitness_tracker",
   license="MIT",
   description="Fitness Tracker is a tool that offers a better way of tracking your fitness progress.",
   long_description=long_description,
