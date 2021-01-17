@@ -1,7 +1,6 @@
 import requests
 import os
 import shutil
-from fitness_tracker.config import SPOONACULAR_API_KEY as API_KEY
 
 class Spoonacular:
   def __init__(self, api_key):
@@ -66,7 +65,7 @@ class Spoonacular:
     return self.make_request(endpoint, params)
 
 class FoodDatabase(Spoonacular):
-  def __init__(self, api_key=API_KEY):
+  def __init__(self, api_key=os.environ["SPOONACULAR_API_KEY"]):
     Spoonacular.__init__(self, api_key)
 
   def food_search(self, food, number, intolerances=None):

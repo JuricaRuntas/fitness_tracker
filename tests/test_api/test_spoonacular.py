@@ -1,11 +1,11 @@
 import unittest
+import os
 from fitness_tracker.notes.nutrition.spoonacular import Spoonacular
-from fitness_tracker.config import SPOONACULAR_API_KEY as API_KEY
 
 class TestSpoonacular(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
-    cls.api = Spoonacular(API_KEY)
+    cls.api = Spoonacular(os.environ["SPOONACULAR_API_KEY"])
     cls.err_msg = "Response status != 200"
   
   def test_complex_recipe_search(self):
