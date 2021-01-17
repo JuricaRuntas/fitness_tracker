@@ -1,29 +1,34 @@
 import sys
-import sqlite3
 import os
+import importlib
+import sqlite3
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, QVBoxLayout, QWidget, QSpacerItem, QSizeGrip, QSizePolicy
 from PyQt5.QtCore import Qt, QObject, pyqtSlot
 from PyQt5.QtGui import QColor, QFontDatabase
-from homepage.homepage import Homepage
-from user_profile.profile import Profile
-from calculators.one_rep_max.one_rep_max import OneRepMaxCalculator
-from calculators.body_fat.body_fat import BodyFatCalculator
-from calculators.strength_estimator.strength_estimator import StrengthEstimator
-from notes.big_lifts.big_lifts import BigLiftsNotes
-from notes.weight_loss.weight_loss import WeightLossNotes
-from notes.workouts.workouts import WorkoutsNotes
-from notes.nutrition.nutrition import NutritionNotes
-from statistics.strength.strength import StrengthStats
-from statistics.weight_loss.weight_loss import WeightLossStats
-from login.login import Login
-from signup.signup import Signup
-from signup.signup_questions_panel import SignupQuestions
-from titlebar import TitleBar
+from fitness_tracker.homepage.homepage import Homepage
+from fitness_tracker.user_profile.profile import Profile
+from fitness_tracker.calculators.one_rep_max.one_rep_max import OneRepMaxCalculator
+from fitness_tracker.calculators.body_fat.body_fat import BodyFatCalculator
+from fitness_tracker.calculators.strength_estimator.strength_estimator import StrengthEstimator
+from fitness_tracker.notes.big_lifts.big_lifts import BigLiftsNotes
+from fitness_tracker.notes.weight_loss.weight_loss import WeightLossNotes
+from fitness_tracker.notes.workouts.workouts import WorkoutsNotes
+from fitness_tracker.notes.nutrition.nutrition import NutritionNotes
+from fitness_tracker.statistics.strength.strength import StrengthStats
+from fitness_tracker.statistics.weight_loss.weight_loss import WeightLossStats
+from fitness_tracker.login.login import Login
+from fitness_tracker.signup.signup import Signup
+from fitness_tracker.signup.signup_questions_panel import SignupQuestions
+from fitness_tracker.titlebar import TitleBar
+from fitness_tracker.config import get_db_paths, db_list
+
+db_paths = get_db_paths("profile.db")
 
 class FitnessTracker(QMainWindow):
   def __init__(self):
     super().__init__()
     self.create_window()
+    self.create_db_files()
     self.cw = Homepage() if self.user_info_exists() else Login()
     self.cw.display_layout_signal.connect(lambda layout: self.display_layout(layout))
     self.layouts = {"Login": Login, "Signup": Signup, "Continue": SignupQuestions,
@@ -91,20 +96,20 @@ class FitnessTracker(QMainWindow):
       self.setCentralWidget(self.layout)
 
   def user_info_exists(self):
-    table_exists = True
-    path = os.path.abspath(os.path.dirname(__file__))
-    db_path = os.path.sep.join([*path.split(os.path.sep)[:-1], "db"])
-    user_info_path = os.path.sep.join([db_path, "profile.db"])
-    if not os.path.isdir(db_path): os.makedirs(db_path)
-    with sqlite3.connect(user_info_path) as conn:
+    with sqlite3.connect(db_paths["profile.db"]) as conn:
       check_for_tables = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
       cursor = conn.cursor()
       cursor.execute(check_for_tables)
-      if cursor.fetchone() == None:
-        table_exists = False
-        os.remove(user_info_path)
-    return table_exists
-        
+      if cursor.fetchone() == None: return False
+    return True
+  
+  def create_db_files(self):
+    db_dir = os.path.join(os.path.dirname(importlib.util.find_spec("fitness_tracker").origin), "db")
+    if not os.path.isdir(db_dir):
+      os.mkdir(db_dir)
+      for db in db_list:
+        open(os.path.join(db_dir, db), "w")
+
 if __name__ == "__main__":
   app = QApplication(sys.argv)
   ft = FitnessTracker()
