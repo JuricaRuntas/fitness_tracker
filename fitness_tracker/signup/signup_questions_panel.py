@@ -5,12 +5,9 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLay
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt, pyqtSignal
 from .signup_helpers import create_user_info_after_signup
-from fitness_tracker.user_profile.profile_db import fetch_email
+from fitness_tracker.user_profile.profile_db import logged_in_user_email
 from fitness_tracker.notes.nutrition.nutrition_db import create_nutrition_table, insert_calorie_goal
 from fitness_tracker.notes.nutrition.calorie_goal_calculator import CalorieGoalCalculator
-from fitness_tracker.config import get_db_paths
-
-db_paths = get_db_paths(["profile.db", "nutrition.db"])
 
 class SignupQuestions(QWidget):
   display_layout_signal = pyqtSignal(str)
@@ -228,9 +225,9 @@ class SignupQuestions(QWidget):
         goal_params = json.loads(goal_params)
         calorie_goal_calculator = CalorieGoalCalculator(int(age), gender, float(height), float(weight), goal_params[0], goal, goal_params[1])
         calorie_goal = calorie_goal_calculator.calculate_calorie_goal()
-        email = fetch_email(db_paths["profile.db"])
+        email = logged_in_user_email()
         create_user_info_after_signup(user_info, email)
-        create_nutrition_table(db_paths["nutrition.db"])
+        create_nutrition_table()
         insert_calorie_goal(calorie_goal)
         self.display_layout_signal.emit("Home")
     except ValueError:

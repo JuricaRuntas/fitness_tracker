@@ -4,10 +4,7 @@ import string
 import hashlib
 import psycopg2
 from psycopg2 import sql
-from fitness_tracker.config import db_info, get_db_paths
-from fitness_tracker.user_profile.profile_db import fetch_table_name
-
-db_paths = get_db_paths("profile.db")
+from fitness_tracker.config import db_path, db_info
 
 def check_valid_email(email):
   # basic validation, checks for example@gmail.com and similar format
@@ -33,23 +30,21 @@ def create_user(user_email, user_password):
     try:
       with conn.cursor() as cursor:
         user_password = hashlib.sha256(user_password.encode('utf-8')).hexdigest()
-        query = "INSERT INTO users (email, password) VALUES (%s, %s)"
-        cursor.execute(query, (user_email, user_password,))
+        cursor.execute("INSERT INTO users (email, password) VALUES (%s, %s)", (user_email, user_password,))
     except psycopg2.errors.UniqueViolation: # user with given email already exists
       status = False
   return status
 
-def create_user_info_after_signup(user_info, email, user_path=db_paths["profile.db"]):
-  table_name = fetch_table_name(user_path)
+def create_user_info_after_signup(user_info, email, db_path=db_path):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
       update_query = create_update_query("users", email, user_info)
       cursor.execute(update_query)
     
-    with sqlite3.connect(user_path) as conn:
+    with sqlite3.connect(db_path) as conn:
       cursor = conn.cursor()
-      update_query = create_update_query(table_name, email, user_info, sqlite=True)
+      update_query = create_update_query("users",  email, user_info, sqlite=True)
       cursor.execute(update_query)
 
 def create_update_query(table_name, email, columns_values_dict, sqlite=False):
@@ -73,13 +68,12 @@ def create_update_query(table_name, email, columns_values_dict, sqlite=False):
     update_query = update_query.format(table=table_name)
     return update_query % email
 
-def create_user_table(email, password, user_path=db_paths["profile.db"]):
+def create_user_table(email, password, db_path=db_path):
   status = True
-  table_name = "".join([email, "_table"])
   password = hashlib.sha256(password.encode('UTF-8')).hexdigest()
   # set user table columns here
   create_table = """
-                 CREATE TABLE '%s' (
+                 CREATE TABLE 'users' (
                  email text NOT NULL,
                  password text NOT NULL,
                  name text,
@@ -91,12 +85,12 @@ def create_user_table(email, password, user_path=db_paths["profile.db"]):
                  goal text,
                  goalparams text,
                  goalweight text,
+                 logged_in text,
                  ID integer NOT NULL,
                  PRIMARY KEY (ID));
-                 """ % table_name
-                 
-  with sqlite3.connect(user_path) as conn:
+                 """ 
+  with sqlite3.connect(db_path) as conn:
     cursor = conn.cursor()
     cursor.execute(create_table)
-    insert_email = "INSERT INTO '%s'(email, password) VALUES ('%s', '%s')" % (table_name, email, password)
-    cursor.execute(insert_email)
+    cursor.execute("INSERT INTO 'users' (email, password) VALUES (?, ?)", (email, password,))
+    cursor.execute("UPDATE 'users' SET logged_in='YES' WHERE email=?", (email,))

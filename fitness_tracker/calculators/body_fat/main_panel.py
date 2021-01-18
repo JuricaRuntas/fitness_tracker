@@ -5,15 +5,11 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QFormLayout, QGridLayout,
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from .body_fat_calculator import BodyFatCalculator
-from fitness_tracker.user_profile.profile_db import fetch_units, fetch_table_name
-from fitness_tracker.config import get_db_paths
-
-db_paths = get_db_paths("profile.db")
+from fitness_tracker.user_profile.profile_db import fetch_units
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    self.table_name = fetch_table_name(db_paths["profile.db"])
     self.create_panel()
 
   def create_panel(self):
@@ -46,8 +42,7 @@ class MainPanel(QWidget):
     calculator_frame.setFrameStyle(QFrame.StyledPanel)
     calculator_frame.setFixedWidth(300)
      
-    table_name = fetch_table_name(db_paths["profile.db"])
-    form_layout = self.create_form_metric() if fetch_units(db_paths["profile.db"]) == "metric" else self.create_form_imperial()
+    form_layout = self.create_form_metric() if fetch_units() == "metric" else self.create_form_imperial()
     calculator_frame.setLayout(form_layout)
 
     wrapper_layout = QVBoxLayout()
@@ -177,7 +172,7 @@ class MainPanel(QWidget):
     return self.calculator_layout
 
   def hide_or_show_hip(self):
-    units = fetch_units(db_paths["profile.db"])
+    units = fetch_units()
     
     if self.female_button.isChecked():
       self.calculator_layout.removeWidget(self.calculate_button)
@@ -262,7 +257,7 @@ class MainPanel(QWidget):
 
   def calculate(self):
     gender = "male" if self.male_button.isChecked() else "female"
-    units = "kg" if fetch_units(db_paths["profile.db"]) == "metric" else "lbs"
+    units = "kg" if fetch_units() == "metric" else "lbs"
     m = self.get_measurements()
     try:
       calc = BodyFatCalculator(m["Gender"], m["Age"], m["Weight"], m["Height"], m["Neck"], m["Waist"], m["Units"], m["Hip"])
@@ -274,7 +269,7 @@ class MainPanel(QWidget):
   def get_measurements(self):
     measurements = {}
     measurements["Gender"] = "male" if self.male_button.isChecked() else "female"
-    units = fetch_units(db_paths["profile.db"])
+    units = fetch_units()
     try:
       measurements["Age"] = int(self.age_entry.text())
       measurements["Weight"] = int(self.weight_entry.text())

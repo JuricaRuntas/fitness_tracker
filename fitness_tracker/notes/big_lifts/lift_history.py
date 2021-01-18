@@ -5,14 +5,11 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot
 from .big_lifts_db import fetch_lift_history, delete_history_entry
 from fitness_tracker.user_profile.profile_db import fetch_units
-from fitness_tracker.config import get_db_paths
-
-db_paths = get_db_paths("profile.db")
 
 class LiftHistory(QWidget):
   def __init__(self):
     super().__init__()
-    self.units = "kg" if fetch_units(db_paths["profile.db"]) == "metric" else "lb"
+    self.units = "kg" if fetch_units() == "metric" else "lb"
     self.setWindowTitle("Lift History")
     self.layout = QVBoxLayout()
     self.setLayout(self.layout)

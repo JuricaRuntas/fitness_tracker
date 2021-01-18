@@ -20,16 +20,14 @@ from fitness_tracker.login.login import Login
 from fitness_tracker.signup.signup import Signup
 from fitness_tracker.signup.signup_questions_panel import SignupQuestions
 from fitness_tracker.titlebar import TitleBar
-from fitness_tracker.config import get_db_paths, db_list
-
-db_paths = get_db_paths("profile.db")
+from fitness_tracker.config import db_path
 
 class FitnessTracker(QMainWindow):
   def __init__(self):
     super().__init__()
     self.create_window()
-    self.create_db_files()
-    self.cw = Homepage() if self.user_info_exists() else Login()
+    self.create_db_file()
+    self.cw = Homepage() if self.users_table_exists() else Login()
     self.cw.display_layout_signal.connect(lambda layout: self.display_layout(layout))
     self.layouts = {"Login": Login, "Signup": Signup, "Continue": SignupQuestions,
                     "Home": Homepage, "Profile": Profile, "Logout": Login,
@@ -95,20 +93,17 @@ class FitnessTracker(QMainWindow):
       self.layout = self.setup_main_layout()
       self.setCentralWidget(self.layout)
 
-  def user_info_exists(self):
-    with sqlite3.connect(db_paths["profile.db"]) as conn:
-      check_for_tables = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+  def users_table_exists(self):
+    with sqlite3.connect(db_path) as conn:
       cursor = conn.cursor()
-      cursor.execute(check_for_tables)
-      if cursor.fetchone() == None: return False
-    return True
-  
-  def create_db_files(self):
-    db_dir = os.path.join(os.path.dirname(importlib.util.find_spec("fitness_tracker").origin), "db")
-    if not os.path.isdir(db_dir):
-      os.mkdir(db_dir)
-      for db in db_list:
-        open(os.path.join(db_dir, db), "w")
+      query = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'"
+      cursor.execute(query)
+      if cursor.fetchone()[0] == 0: return False
+      return True
+
+  def create_db_file(self):
+    db_file = os.path.join(os.path.dirname(importlib.util.find_spec("fitness_tracker").origin), "fitness_tracker.db")
+    if not os.path.isfile(db_file): open(db_file, "w")
 
 if __name__ == "__main__":
   app = QApplication(sys.argv)

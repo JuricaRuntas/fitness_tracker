@@ -7,7 +7,6 @@ from .profile_db import *
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    self.table_name = fetch_table_name()
     self.user_data = list(fetch_local_user_data())
     self.create_panel()
 

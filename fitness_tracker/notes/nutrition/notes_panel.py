@@ -5,11 +5,9 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
 from PyQt5.QtGui import QFont, QCursor, QIcon
 from PyQt5.QtCore import Qt, QSize, pyqtSlot
 from fitness_tracker.user_profile.profile_db import fetch_units, fetch_user_weight, fetch_goal_weight
-from fitness_tracker.config import get_db_paths
 from .nutrition_db import table_exists, create_nutrition_table, fetch_nutrition_data, fetch_calorie_goal
 from .change_weight_dialog import ChangeWeightDialog
 
-db_paths = get_db_paths("profile.db")
 path = os.path.abspath(os.path.dirname(__file__))
 icons_path = os.path.join(path, "icons")
 
@@ -32,9 +30,9 @@ class NotesPanel(QWidget):
       font-size: 16px;
       }
       """)
-    self.units = "kg" if fetch_units(db_paths["profile.db"]) == "metric" else "lb"
-    self.user_weight = fetch_user_weight(db_paths["profile.db"])
-    self.user_goal_weight = fetch_goal_weight(db_paths["profile.db"])
+    self.units = "kg" if fetch_units() == "metric" else "lb"
+    self.user_weight = fetch_user_weight()
+    self.user_goal_weight = fetch_goal_weight()
     self.calorie_goal = fetch_calorie_goal()
     self.change_weight_dialog = ChangeWeightDialog()
     self.change_weight_dialog.change_current_weight_signal.connect(lambda weight: self.change_current_weight(weight))

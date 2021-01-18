@@ -1,10 +1,7 @@
 import hashlib
 import psycopg2
 import sqlite3
-from psycopg2 import sql
-from fitness_tracker.config import db_info, get_db_paths
-
-db_paths = get_db_paths("profile.db")
+from fitness_tracker.config import db_info, db_path
 
 def check_password(email, password):
   status = True
@@ -17,8 +14,7 @@ def check_password(email, password):
       if not hashlib.sha256(password.encode('UTF-8')).hexdigest() == database_password: status = False
   return status
 
-def fetch_user_info(email, password, user_path=db_paths["profile.db"]):
-  table_name = "".join([email, "_table"])
+def fetch_user_info(email, password, db_path=db_path):
   columns = None
   user_info = None
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -36,13 +32,13 @@ def fetch_user_info(email, password, user_path=db_paths["profile.db"]):
         cursor.execute(query)
         columns = tuple(value[0] for value in cursor.fetchall() if not value[0] == 'id')
   
-  with sqlite3.connect(user_path) as conn:
-    table_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='{table}';"
+  with sqlite3.connect(db_path) as conn:
+    table_exists = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users';"
     cursor = conn.cursor()
-    cursor.execute(table_exists.format(table=table_name))
-    if cursor.fetchone() == None: # table doesn't exist
+    cursor.execute(table_exists)
+    if cursor.fetchone()[0] == 0: # table doesn't exist
       create_table = """
-                     CREATE TABLE "{table}" (
+                     CREATE TABLE "users" (
                      email text NOT NULL,
                      password text NOT NULL,
                      name text NOT NULL,
@@ -54,9 +50,12 @@ def fetch_user_info(email, password, user_path=db_paths["profile.db"]):
                      goal text NOT NULL,
                      goalparams text NOT NULL, 
                      goalweight text NOT NULL,
+                     logged_in text,
                      ID integer NOT NULL,
                      PRIMARY KEY (ID));
                      """
-      cursor.execute(create_table.format(table=table_name))
-      insert_values = "INSERT INTO '{table}' {columns} VALUES {values}"
-      cursor.execute(insert_values.format(table=table_name, columns=columns, values=user_info))
+      cursor.execute(create_table)
+      insert_values = "INSERT INTO 'users' {columns} VALUES {values}"
+      cursor.execute(insert_values.format(columns=columns, values=user_info))
+      set_logged_in = "UPDATE users SET logged_in='YES'"
+      cursor.execute(set_logged_in)

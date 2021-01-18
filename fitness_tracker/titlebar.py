@@ -3,10 +3,8 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QSpacerIt
 from PyQt5.QtGui import QFont, QIcon, QPainter, QBrush, QColor
 from PyQt5.QtCore import QPoint, Qt, QSize
 from fitness_tracker.user_profile.profile_db import fetch_username
-from fitness_tracker.config import get_db_paths
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
-db_paths = get_db_paths("profile.db")
 
 icons = {"close": os.path.join(path, "close.bmp"),
          "min": os.path.join(path, "min.bmp"),
@@ -21,7 +19,7 @@ class TitleBar(QWidget):
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.title = QLabel("Fitness Tracker")
-        self.username = fetch_username(db_paths["profile.db"])
+        self.username = fetch_username()
         if self.username == None:
           self.version = QLabel()
         else:

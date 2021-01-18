@@ -3,10 +3,8 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QVBoxLayout, QLabel, QFrame, 
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from .one_rep_max_calculator import OneRepMaxCalculator
-from fitness_tracker.user_profile.profile_db import fetch_units, fetch_table_name
-from fitness_tracker.config import get_db_paths
-
-db_paths = get_db_paths("profile.db")
+from fitness_tracker.user_profile.profile_db import fetch_units
+from fitness_tracker.config import db_path
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -120,8 +118,7 @@ class MainPanel(QWidget):
 
   def calculate(self):
     try:
-      table_name = fetch_table_name(db_paths["profile.db"])
-      units = fetch_units(db_paths["profile.db"])
+      units = fetch_units()
       weight = self.weight_entry.text()
       repetitions = self.reps_entry.text()
       units = "kg" if units == "metric" else "lb"

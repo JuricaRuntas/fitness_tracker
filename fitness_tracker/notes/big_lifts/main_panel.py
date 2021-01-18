@@ -12,9 +12,6 @@ from .big_lifts_db import (create_big_lifts_table, insert_default_values, table_
                            convert_lift_history_weight, fetch_preferred_lifts, clear_one_rep_maxes, clear_lifts_for_reps)
 from fitness_tracker.user_profile.profile_db import fetch_units
 from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
-from fitness_tracker.config import get_db_paths
-
-db_paths = get_db_paths("profile.db")
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -78,7 +75,7 @@ class MainPanel(QWidget):
     create_big_lifts_table()
     if table_is_empty(): insert_default_values()
     
-    self.units = "kg" if fetch_units(db_paths["profile.db"]) == "metric" else "lb"
+    self.units = "kg" if fetch_units() == "metric" else "lb"
     big_lifts_units = "kg" if fetch_units_from_big_lifts() == "metric" else "lb"
     
     one_rep_maxes = json.loads(fetch_one_rep_maxes())

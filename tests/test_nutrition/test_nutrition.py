@@ -5,7 +5,7 @@ from nutrition_test_helpers import *
 
 class TestNutrition(unittest.TestCase):
   def setUp(self):
-    create_test_user("test_user_profile.db")
+    create_test_user("test.db")
     create_nutrition_table("test.db")
     insert_nutrition_data(test_user["email"], "3250")
 
@@ -13,7 +13,6 @@ class TestNutrition(unittest.TestCase):
     delete_test_user(test_user["email"])
     delete_test_from_nutrition(test_user["email"])
     os.remove("test.db")
-    os.remove("test_user_profile.db")
 
   def test_create_nutrition_table(self):
     nutrition_columns = ("email", "calorie_goal")

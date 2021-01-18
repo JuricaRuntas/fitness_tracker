@@ -34,7 +34,7 @@ def delete_test_from_nutrition(email):
 def fetch_nutrition_columns():
   with sqlite3.connect("test.db") as conn:
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM nutrition")
+    cursor.execute("SELECT * FROM 'nutrition'")
     return tuple(description[0] for description in cursor.description if not description[0] == 'ID')
 
 def insert_nutrition_data(email, calorie_goal):

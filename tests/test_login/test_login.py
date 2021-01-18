@@ -43,6 +43,6 @@ class TestLogin(unittest.TestCase):
     
     table_columns = fetch_test_table_columns()
     self.assertEqual(table_columns, tuple(test_user.keys()))
-  
+
 if __name__ == "__main__":
  unittest.main() 

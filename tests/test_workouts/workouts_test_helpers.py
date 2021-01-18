@@ -33,7 +33,7 @@ def delete_test_from_workouts_table(email):
 def fetch_workouts_table_columns():
   with sqlite3.connect("test.db") as conn:
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM workouts")
+    cursor.execute("SELECT * FROM 'workouts' WHERE email=?", (test_user["email"],))
     return tuple(description[0] for description in cursor.description if not description[0] == "id") 
 
 def fetch_workouts_data(email):
@@ -47,8 +47,7 @@ def fetch_workouts_data(email):
 def fetch_local_workouts_data(path):
   with sqlite3.connect(path) as conn:
     cursor = conn.cursor()
-    fetch_query = "SELECT * FROM workouts"
-    cursor.execute(fetch_query)
+    cursor.execute("SELECT * FROM 'workouts' WHERE email=?", (test_user["email"],))
     return cursor.fetchall()
 
 def fetch_test_workouts(path, email):
@@ -61,9 +60,8 @@ def fetch_test_workouts(path, email):
       workouts.append(cursor.fetchone()[0])
 
   with sqlite3.connect(path) as conn:
-    query = "SELECT workouts FROM workouts"
     cursor = conn.cursor()
-    cursor.execute(query)
+    cursor.execute("SELECT workouts FROM 'workouts' WHERE email=?", (test_user["email"],))
     workouts.append(cursor.fetchone()[0])
   return workouts
  
@@ -72,13 +70,12 @@ def fetch_test_current_workout(path, email):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
-      query = """SELECT current_workout_plan FROM workouts WHERE email='%s'""" % email
+      query = "SELECT current_workout_plan FROM workouts WHERE email='%s'" % email
       cursor.execute(query)
       workouts.append(cursor.fetchone()[0])
 
   with sqlite3.connect(path) as conn:
-    query = "SELECT current_workout_plan FROM workouts"
     cursor = conn.cursor()
-    cursor.execute(query)
+    cursor.execute("SELECT current_workout_plan FROM 'workouts' WHERE email=?", (test_user["email"],))
     workouts.append(cursor.fetchone()[0])
   return workouts

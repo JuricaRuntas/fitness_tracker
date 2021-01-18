@@ -44,17 +44,13 @@ def fetch_name_and_password():
       return cursor.fetchone()
 
 def fetch_test_table_data():
-  table_name = "".join([test_user["email"], "_table"])
   with sqlite3.connect("test.db") as conn:
     cursor = conn.cursor()
-    fetch_query = "SELECT * FROM '%s'" % table_name
-    cursor.execute(fetch_query)
+    cursor.execute("SELECT * FROM 'users' WHERE email=?", (test_user["email"],))
     return cursor.fetchall()[0][:-1]
 
 def fetch_test_table_columns():
-  table_name = "".join([test_user["email"], "_table"])
   with sqlite3.connect("test.db") as conn:
     cursor = conn.cursor()
-    fetch_query = "SELECT * FROM '%s'" % table_name
-    cursor.execute(fetch_query)
-    return tuple(description[0] for description in cursor.description if not description[0] == "ID")
+    cursor.execute("SELECT * FROM 'users' WHERE email=?",  (test_user["email"],))
+    return tuple(description[0] for description in cursor.description)[:-2]

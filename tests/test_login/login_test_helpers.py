@@ -22,29 +22,23 @@ def delete_test_user():
                         database=db_info["database"], user=db_info["user"],
                         password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
-      delete_query = "DELETE FROM users WHERE email='%s'" % test_user["email"]
-      cursor.execute(delete_query)
+      cursor.execute("DELETE FROM users WHERE email=%s", (test_user["email"],))
 
 def test_table_exists():
   with sqlite3.connect("test.db") as conn:
-    table_name = "".join([test_user["email"], "_table"])
     cursor = conn.cursor()
-    table_exists = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='%s';" % table_name
+    table_exists = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='users';"
     cursor.execute(table_exists)
     return cursor.fetchone()[0]
 
 def fetch_test_table_data():
-  table_name = "".join([test_user["email"], "_table"])
   with sqlite3.connect("test.db") as conn:
     cursor = conn.cursor()
-    fetch_query = "SELECT * FROM '%s'" % table_name
-    cursor.execute(fetch_query)
-    return cursor.fetchall()[0][:-1]
+    cursor.execute("SELECT * FROM 'users' WHERE email=?", (test_user["email"],))
+    return cursor.fetchall()[0][:-2]
 
 def fetch_test_table_columns():
-  table_name = "".join([test_user["email"], "_table"])
   with sqlite3.connect("test.db") as conn:
     cursor = conn.cursor()
-    fetch_query = "SELECT * FROM '%s'" % table_name
-    cursor.execute(fetch_query)
-    return tuple(description[0] for description in cursor.description if not description[0] == "ID")
+    cursor.execute("SELECT * FROM 'users' WHERE email=?", (test_user["email"],))
+    return tuple(description[0] for description in cursor.description)[:-2]
