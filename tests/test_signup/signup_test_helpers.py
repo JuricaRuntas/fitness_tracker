@@ -22,16 +22,14 @@ def delete_test_user():
                         database=db_info["database"], user=db_info["user"],
                         password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
-      delete_query = "DELETE FROM users WHERE email='%s'" % test_user["email"]
-      cursor.execute(delete_query)
+      cursor.execute("DELETE FROM users WHERE email=%s", (test_user["email"],))
 
 def fetch_user_info():
   with psycopg2.connect(host=db_info["host"], port=db_info["port"],
                         database=db_info["database"], user=db_info["user"],
                         password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
-      select_query = "SELECT * FROM users WHERE email='%s'" % test_user["email"]
-      cursor.execute(select_query)
+      cursor.execute("SELECT * FROM users WHERE email=%s", (test_user["email"],))
       return cursor.fetchall()
 
 def fetch_name_and_password():
@@ -39,8 +37,7 @@ def fetch_name_and_password():
                         database=db_info["database"], user=db_info["user"],
                         password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
-      fetch_query = "SELECT email, password FROM users WHERE email='%s'" % test_user["email"]
-      cursor.execute(fetch_query)
+      cursor.execute("SELECT email, password FROM users WHERE email=%s", (test_user["email"],))
       return cursor.fetchone()
 
 def fetch_test_table_data():

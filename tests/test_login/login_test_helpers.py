@@ -27,8 +27,7 @@ def delete_test_user():
 def test_table_exists():
   with sqlite3.connect("test.db") as conn:
     cursor = conn.cursor()
-    table_exists = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='users';"
-    cursor.execute(table_exists)
+    cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'")
     return cursor.fetchone()[0]
 
 def fetch_test_table_data():

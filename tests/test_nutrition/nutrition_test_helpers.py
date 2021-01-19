@@ -21,15 +21,13 @@ def delete_test_user(email):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
-      delete = "DELETE FROM users WHERE email='%s'" % email
-      cursor.execute(delete)
+      cursor.execute("DELETE FROM users WHERE email=%s", (email,))
 
 def delete_test_from_nutrition(email):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
-      delete = "DELETE FROM nutrition WHERE email='%s'" % email
-      cursor.execute(delete)
+      cursor.execute("DELETE FROM nutrition WHERE email=%s", (email,))
 
 def fetch_nutrition_columns():
   with sqlite3.connect("test.db") as conn:
