@@ -6,7 +6,7 @@ from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt, pyqtSignal
 from .signup_helpers import create_user_info_after_signup
 from fitness_tracker.user_profile.profile_db import logged_in_user_email
-from fitness_tracker.notes.nutrition.nutrition_db import create_nutrition_table, insert_calorie_goal
+from fitness_tracker.notes.nutrition.nutrition_db import insert_calorie_goal
 from fitness_tracker.notes.nutrition.calorie_goal_calculator import CalorieGoalCalculator
 
 class SignupQuestions(QWidget):
@@ -227,7 +227,6 @@ class SignupQuestions(QWidget):
         calorie_goal = calorie_goal_calculator.calculate_calorie_goal()
         email = logged_in_user_email()
         create_user_info_after_signup(user_info, email)
-        create_nutrition_table()
         insert_calorie_goal(calorie_goal)
         self.display_layout_signal.emit("Home")
     except ValueError:

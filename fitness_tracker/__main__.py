@@ -42,7 +42,7 @@ class FitnessTracker(QMainWindow):
     self.setMouseTracking(True)
     main_widget = self.setup_main_layout()
     self.setCentralWidget(main_widget)
-
+  
   def colorize_background(self):
     self.setAutoFillBackground(True)
     bg_palette = self.palette()
@@ -96,9 +96,11 @@ class FitnessTracker(QMainWindow):
   def users_table_exists(self):
     with sqlite3.connect(db_path) as conn:
       cursor = conn.cursor()
-      query = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'"
-      cursor.execute(query)
+      cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'")
       if cursor.fetchone()[0] == 0: return False
+      else:
+        cursor.execute("SELECT COUNT(*) from 'users' WHERE logged_in='YES'")
+        if cursor.fetchone()[0] != 1: return False
       return True
 
   def create_db_file(self):

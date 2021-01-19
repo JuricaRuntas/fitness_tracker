@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
 from PyQt5.QtGui import QFont, QCursor, QIcon
 from PyQt5.QtCore import Qt, QSize, pyqtSlot
 from fitness_tracker.user_profile.profile_db import fetch_units, fetch_user_weight, fetch_goal_weight
-from .nutrition_db import table_exists, create_nutrition_table, fetch_nutrition_data, fetch_calorie_goal
+from .nutrition_db import create_nutrition_table, fetch_nutrition_data, fetch_calorie_goal
 from .change_weight_dialog import ChangeWeightDialog
 
 path = os.path.abspath(os.path.dirname(__file__))
@@ -19,9 +19,8 @@ icons = {"pencil": os.path.join(icons_path, "pencil.png"),
 class NotesPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    if not table_exists():
-      create_nutrition_table()
-      fetch_nutrition_data()
+    create_nutrition_table()
+    fetch_nutrition_data()
     self.setStyleSheet(   
     """QWidget{
       color:#c7c7c7;

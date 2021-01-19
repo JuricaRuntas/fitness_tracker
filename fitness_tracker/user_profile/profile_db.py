@@ -7,10 +7,13 @@ from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
 from fitness_tracker.config import db_info, db_path
 
 def logged_in_user_email(db_path=db_path):
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT email FROM 'users' WHERE logged_in='YES'")
-    return cursor.fetchone()[0]
+  try:
+    with sqlite3.connect(db_path) as conn:
+      cursor = conn.cursor()
+      cursor.execute("SELECT email FROM 'users' WHERE logged_in='YES'")
+      return cursor.fetchone()[0]
+  except TypeError: # all users have "logged_in='NO'"
+    pass
 
 def fetch_local_user_data():
   email = logged_in_user_email()
@@ -26,7 +29,7 @@ def fetch_username(db_path=db_path):
       cursor = conn.cursor()
       cursor.execute("SELECT name FROM 'users' WHERE email=?", (email,))
       return cursor.fetchone()[0]
-  except sqlite3.OperationalError: # titlebar will raise this error if users table doesn't exist
+  except (sqlite3.OperationalError, TypeError): # titlebar will raise this error if users table doesn't exist
     pass
 
 def fetch_units(db_path=db_path):

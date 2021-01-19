@@ -18,4 +18,4 @@ class Login(QWidget):
 
   @pyqtSlot(str)
   def emit_display_layout_signal(self, layout_name):
-    self.display_layout_signal.emit(layout_name) 
+    self.display_layout_signal.emit(layout_name)

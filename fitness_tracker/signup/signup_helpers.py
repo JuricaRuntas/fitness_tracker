@@ -4,6 +4,7 @@ import string
 import hashlib
 import psycopg2
 from psycopg2 import sql
+from fitness_tracker.user_profile.profile_db import logged_in_user_email
 from fitness_tracker.config import db_path, db_info
 
 def check_valid_email(email):
@@ -73,7 +74,7 @@ def create_user_table(email, password, db_path=db_path):
   password = hashlib.sha256(password.encode('UTF-8')).hexdigest()
   # set user table columns here
   create_table = """
-                 CREATE TABLE 'users' (
+                 CREATE TABLE IF NOT EXISTS 'users' (
                  email text NOT NULL,
                  password text NOT NULL,
                  name text,

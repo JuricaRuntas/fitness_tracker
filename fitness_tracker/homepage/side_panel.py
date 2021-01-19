@@ -2,6 +2,7 @@ import os
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout, QPushButton, QVBoxLayout
 from PyQt5.QtCore import Qt, QSize, QPoint, QDir, pyqtSignal
 from PyQt5.QtGui import QFont, QIcon, QCursor, QPainter, QColor, QBrush, QFontDatabase
+from fitness_tracker.login.login_helpers import logout_current_user
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
 
@@ -62,7 +63,7 @@ class SidePanel(QWidget):
     user_button = QPushButton("Profile", self)
     user_button.clicked.connect(lambda: self.emit_layout_name.emit(user_button.text()))
     logout_button = QPushButton("Logout", self)
-    logout_button.clicked.connect(lambda: self.emit_layout_name.emit(logout_button.text()))
+    logout_button.clicked.connect(lambda: self.logout())
 
     notes_layout = QVBoxLayout()
     notes_layout.setContentsMargins(0, 0, 0, 0)
@@ -106,7 +107,11 @@ class SidePanel(QWidget):
           widget.setIconSize(icon_size)
           widget.setCursor(QCursor(Qt.PointingHandCursor))
       grid.addLayout(key, i, 0)
-
+  
+  def logout(self):
+    logout_current_user()
+    self.emit_layout_name.emit("Logout")
+    
   def create_line_divider(self):
     line_divider = QWidget()
     line_divider.setStyleSheet("""

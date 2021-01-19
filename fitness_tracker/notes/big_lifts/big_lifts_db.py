@@ -82,7 +82,7 @@ def fetch_user_big_lifts_table_data(db_path=db_path):
       cursor.execute(select_units, (email,))
       units = cursor.fetchone()[0]
   
-  if table_is_empty():
+  if table_is_empty(db_path):
     insert_values = """
                     INSERT INTO 'big_lifts' (email, one_rep_maxes, lifts_for_reps, preferred_lifts, lift_history, units) VALUES
                     (?, ?, ?, ?, ?, ?)

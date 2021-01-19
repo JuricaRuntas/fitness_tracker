@@ -12,14 +12,6 @@ def table_is_empty(db_path=db_path):
     if cursor.fetchone()[0] == 0: return True
   return False
 
-def table_exists(db_path=db_path):
-  email = logged_in_user_email(db_path)
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='nutrition'")
-    if cursor.fetchone()[0] == 0: return False
-  return True
-
 def fetch_calorie_goal():
   email = logged_in_user_email(db_path) 
   with sqlite3.connect(db_path) as conn:
@@ -61,10 +53,6 @@ def insert_calorie_goal(calorie_goal):
       with conn.cursor() as cursor:
         cursor.execute(sql.SQL(insert).format(columns=columns), (values,))
     
-    insert = "INSERT INTO 'nutrition' {columns} VALUES {values}"
-    with sqlite3.connect(db_path) as conn:
-      cursor = conn.cursor()
-      cursor.execute(insert.format(columns=("email", "calorie_goal"), values=values))
   except psycopg2.errors.UniqueViolation:
     fetch_nutrition_data(db_path)
 
