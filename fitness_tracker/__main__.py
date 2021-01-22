@@ -57,7 +57,6 @@ class FitnessTracker(QMainWindow):
   def create_window(self):
     self.setWindowTitle("Fitness Tracker")
     self.resize(1126, 733)
-    self.setMinimumSize(1126, 733)
     self.center()
     self.show()
 
@@ -72,9 +71,6 @@ class FitnessTracker(QMainWindow):
     main_layout.setSpacing(0)
     main_layout.addWidget(self.title_bar)
     main_layout.addWidget(self.cw)
-    #sizegrip = QSizeGrip(self)
-    #sizegrip.setMaximumWidth(16)
-    #main_layout.addWidget(sizegrip)
     main_widget = QWidget()
     main_widget.setLayout(main_layout)
     return main_widget

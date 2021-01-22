@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from .main_panel import MainPanel
+from fitness_tracker.titlebar import TitleBar
 
 class Login(QWidget):
   display_layout_signal = pyqtSignal(str)
