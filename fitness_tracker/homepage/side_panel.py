@@ -78,7 +78,6 @@ class SidePanel(QWidget):
     calculators_layout = QVBoxLayout()
     calculators_layout.setContentsMargins(0, 0, 0, 0)
     max_button = QPushButton("1 Rep Max Calculator", self)
-    max_button.setStyleSheet("font: 15px;")
     max_button.clicked.connect(lambda: self.emit_layout_name.emit(max_button.text()))
     fat_button = QPushButton("Body Fat Calculator", self)
     fat_button.clicked.connect(lambda: self.emit_layout_name.emit(fat_button.text()))

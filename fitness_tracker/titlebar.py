@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QSpacerIt
 from PyQt5.QtGui import QFont, QIcon, QPainter, QBrush, QColor
 from PyQt5.QtCore import QPoint, Qt, QSize
 from fitness_tracker.user_profile.profile_db import fetch_username
+from fitness_tracker.settings import SettingsWindow
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
 
@@ -11,6 +12,8 @@ icons = {"close": os.path.join(path, "close.bmp"),
          "max": os.path.join(path, "max.bmp"),
          "small": os.path.join(path, "small.bmp"),
          "settings": os.path.join(path, "settings.png")}
+
+
 
 class TitleBar(QWidget):
     def __init__(self, parent):
@@ -81,6 +84,7 @@ class TitleBar(QWidget):
             "QPushButton{ background-color: rgba(255, 255, 255, 0); }"
             "QPushButton:hover{ background-color: rgba(255, 255, 255, 70); }"
             "QPushButton:pressed{ background-color: rgba(255, 255, 255, 40); }")
+        self.settings_button.clicked.connect(self.showSettings)
 
         self.settings_button.setObjectName("SettingsButton")
 
@@ -144,3 +148,8 @@ class TitleBar(QWidget):
 
     def removeSettingsButton(self):
         self.layout.removeWidget("SettingsButton")
+
+    def showSettings(self):
+        global w 
+        w = SettingsWindow()
+        w.show()
