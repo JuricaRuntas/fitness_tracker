@@ -33,7 +33,7 @@ class TitleBar(QWidget):
         version_space = QSpacerItem(20, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         title_font_size = 14
-        title_font = QFont('Arial', title_font_size)
+        title_font = QFont('Ubuntu', title_font_size)
         self.title.setFont(title_font)
 
         self.version.setFont(title_font)

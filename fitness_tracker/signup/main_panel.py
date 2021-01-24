@@ -13,7 +13,7 @@ class MainPanel(QWidget):
     QWidget{
       background-position: center;
       color: #D9D9D9;
-      font-family: Potta One;
+      font-family: Montserrat;
       font-size: 14px;
     }
     QPushButton{

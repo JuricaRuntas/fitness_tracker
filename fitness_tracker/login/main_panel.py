@@ -11,7 +11,7 @@ class MainPanel(QWidget):
     self.setStyleSheet("""
     QWidget{
       background-position: center;
-      font-family: Ubuntu;
+      font-family: Montserrat;
       color: #D9D9D9;
       font-size: 14px;
     }
@@ -91,7 +91,7 @@ class MainPanel(QWidget):
 
     self.forgot_button = QPushButton("Forgot password?")
     self.forgot_button.setStyleSheet("""""")
-    self.forgot_button.setFixedSize(124, 20)
+    self.forgot_button.setFixedSize(134, 20)
     self.forgot_button.setCursor(QCursor(Qt.PointingHandCursor))
     self.forgot_button.setStyleSheet("""
       background-color: rgba(255, 255, 255, 0);

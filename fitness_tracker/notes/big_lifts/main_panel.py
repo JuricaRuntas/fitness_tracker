@@ -31,7 +31,7 @@ class MainPanel(QWidget):
       white-space:nowrap;
       text-align: left;
       padding-left: 5%;
-      font-family: Ubuntu;
+      font-family: Montserrat;
     }
     QPushButton:hover:!pressed{
       border: 2px solid;

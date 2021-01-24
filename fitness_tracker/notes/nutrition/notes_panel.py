@@ -25,7 +25,7 @@ class NotesPanel(QWidget):
     """QWidget{
       color:#c7c7c7;
       font-weight: bold;
-      font-family: "Ubuntu";
+      font-family: Montserrat;
       font-size: 16px;
       }
       """)

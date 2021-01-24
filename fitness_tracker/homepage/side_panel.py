@@ -28,7 +28,6 @@ class SidePanel(QWidget):
     super().__init__(parent)
     self.create_panel()
     self.setMaximumWidth(201)
-    QFontDatabase.addApplicationFont(os.path.join(os.path.dirname(__file__), "font/PottaOne-Regular"))
     self.setStyleSheet("""
                        QPushButton{
                          text-align: center;
@@ -37,9 +36,9 @@ class SidePanel(QWidget):
                          min-height: 23px;
                          min-width: 180px;
                          color: #c7c7c7;
-                         font: 16px;
+                         font: 15px;
                          font-weight:500;
-                         font-family:Potta One;
+                         font-family:Montserrat;
                          padding-bottom: 3px;
                          }
                        QPushButton:hover:!pressed{
@@ -79,6 +78,7 @@ class SidePanel(QWidget):
     calculators_layout = QVBoxLayout()
     calculators_layout.setContentsMargins(0, 0, 0, 0)
     max_button = QPushButton("1 Rep Max Calculator", self)
+    max_button.setStyleSheet("font: 15px;")
     max_button.clicked.connect(lambda: self.emit_layout_name.emit(max_button.text()))
     fat_button = QPushButton("Body Fat Calculator", self)
     fat_button.clicked.connect(lambda: self.emit_layout_name.emit(fat_button.text()))
