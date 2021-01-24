@@ -28,7 +28,7 @@ class SidePanel(QWidget):
     super().__init__(parent)
     self.create_panel()
     self.setMaximumWidth(201)
-    QFontDatabase.addApplicationFont("font/Ubuntu-Regular.ttf")
+    QFontDatabase.addApplicationFont(os.path.join(os.path.dirname(__file__), "font/PottaOne-Regular"))
     self.setStyleSheet("""
                        QPushButton{
                          text-align: center;
@@ -39,7 +39,7 @@ class SidePanel(QWidget):
                          color: #c7c7c7;
                          font: 16px;
                          font-weight:500;
-                         font-family:Ubuntu;
+                         font-family:Potta One;
                          padding-bottom: 3px;
                          }
                        QPushButton:hover:!pressed{
