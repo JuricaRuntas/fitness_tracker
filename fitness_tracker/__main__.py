@@ -25,7 +25,7 @@ from fitness_tracker.config import db_path
 class FitnessTracker(QMainWindow):
   def __init__(self):
     super().__init__()
-    QFontDatabase.addApplicationFont(os.path.join(os.path.dirname(__file__), "font\PottaOne-Regular.ttf"))
+    QFontDatabase.addApplicationFont(os.path.join(os.path.dirname(__file__), "font", "PottaOne-Regular.ttf"))
     self.create_window()
     self.create_db_file()
     self.cw = Homepage() if self.users_table_exists() else Login()
