@@ -21,6 +21,10 @@ from fitness_tracker.signup.signup import Signup
 from fitness_tracker.signup.signup_questions_panel import SignupQuestions
 from fitness_tracker.titlebar import TitleBar
 from fitness_tracker.config import db_path
+from configparser import ConfigParser
+config_path = os.path.join(os.path.dirname(__file__), "config", "settings.ini")
+config = ConfigParser()
+config.read(config_path)
 
 class FitnessTracker(QMainWindow):
   def __init__(self):
@@ -42,6 +46,7 @@ class FitnessTracker(QMainWindow):
     self.setup_borders()
     self.title_bar = TitleBar(self)
     self.setMouseTracking(True)
+    #add funct that generates default config file if 'settings.ini' isn't found
     main_widget = self.setup_main_layout()
     self.setCentralWidget(main_widget)
   
@@ -58,13 +63,25 @@ class FitnessTracker(QMainWindow):
 
   def create_window(self):
     self.setWindowTitle("Fitness Tracker")
-    self.resize(1126, 733)
-    self.center()
+    windowX = config['WINDOW'].get('WindowX')
+    windowY = config['WINDOW'].get('WindowY')
+    self.resize(int(windowX), int(windowY))
+    if config['WINDOW'].get('CenterAtStartup') == 'yes':
+      self.center()
+    elif config['WINDOW'].get('CenterAtStartup') == 'no':
+      windowXPos = config['WINDOW'].get('WindowXPosition')
+      windowYPos = config['WINDOW'].get('WindowYPosition')
+      self.move(int(windowXPos), int(windowYPos))
+    else:
+      #use raw config parser or other opt
+      config.set('WINDOW', 'CenterAtStartup', 'yes')
+      with open(os.path.join(os.path.dirname(__file__), "config", "settings.ini"), 'w') as configfile:
+        config.write(configfile)
+      self.center()
     self.show()
 
   def setup_borders(self):
     self.setWindowFlags(Qt.FramelessWindowHint)
-    self.setMouseTracking(True)
     self.show()
 
   def setup_main_layout(self):
