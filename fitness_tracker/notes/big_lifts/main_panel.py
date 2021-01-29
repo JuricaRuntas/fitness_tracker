@@ -49,7 +49,7 @@ class MainPanel(QWidget):
       white-space:nowrap;
       text-align: left;
       padding-left: 5%;
-      font-family: Ubuntu;
+      font-family: Montserrat;
       min-height: 28px;
       background-color: #440D0F;
     }
@@ -131,7 +131,7 @@ class MainPanel(QWidget):
 
   def description(self):
     panel_description = QVBoxLayout()
-    desc_font = QFont("Ubuntu", 12)
+    desc_font = QFont("Montserrat", 12)
     description_label = QLabel("Keep notes and track progress of your preferred big lifts here.", self)
     description_label.setFont(desc_font)
     description_label.setFixedHeight(20)

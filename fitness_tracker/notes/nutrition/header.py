@@ -26,22 +26,9 @@ class Header(QWidget):
     nutrition_title_layout.addWidget(nutrition_label)
     nutrition_title_layout.addWidget(nutrition_description)
     
-    buttons_layout = QHBoxLayout()
-    self.notes_button = QPushButton("Notes")
-    self.notes_button.setStyleSheet("background-color: #603A40;")
-    self.notes_button.setFixedSize(60, 35)
-    self.notes_button.setCursor(QCursor(Qt.PointingHandCursor))
-    self.notes_button.clicked.connect(lambda: self.change_layout_signal.emit(self.notes_button.text()))
-    self.food_database_button = QPushButton("Food Database")
-    self.food_database_button.setFixedSize(110, 35)
-    self.food_database_button.setCursor(QCursor(Qt.PointingHandCursor))
-    self.food_database_button.clicked.connect(lambda: self.change_layout_signal.emit(self.food_database_button.text()))
-    
-    buttons_layout.addWidget(self.notes_button)
-    buttons_layout.addWidget(self.food_database_button)
+
     
     grid.addLayout(nutrition_title_layout, 0, 0)
-    grid.addLayout(buttons_layout, 0, 1)
     self.setLayout(grid)
 
   def set_current_layout_button(self, layout):

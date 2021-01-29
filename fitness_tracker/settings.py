@@ -47,7 +47,7 @@ class SettingsWindow(QWidget):
         if btn.isChecked() == True:
             config.set('WINDOW', 'CenterAtStartup', 'yes')
         if btn.isChecked() == False:
-            config.set('WINDOW', 'CenterAtStartUp', 'no')
+            config.set('WINDOW', 'CenterAtStartup', 'no')
         with open(os.path.join(os.path.dirname(__file__), "config", "settings.ini"), 'w') as configfile:
             config.write(configfile)
 

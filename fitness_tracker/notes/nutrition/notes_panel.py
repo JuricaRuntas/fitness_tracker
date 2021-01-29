@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QPushButton, QFrame, QHBoxLayout, QVBoxLayout,
                              QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView)
 from PyQt5.QtGui import QFont, QCursor, QIcon
-from PyQt5.QtCore import Qt, QSize, pyqtSlot
+from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal
 from fitness_tracker.user_profile.profile_db import fetch_units, fetch_user_weight, fetch_goal_weight
 from .nutrition_db import create_nutrition_table, fetch_nutrition_data, fetch_calorie_goal
 from .change_weight_dialog import ChangeWeightDialog
@@ -17,6 +17,7 @@ icons = {"pencil": os.path.join(icons_path, "pencil.png"),
          "right": os.path.join(icons_path, "right.png")}
 
 class NotesPanel(QWidget):
+  change_layout_signal = pyqtSignal(str)
   def __init__(self, parent):
     super().__init__(parent)
     create_nutrition_table()
@@ -59,6 +60,7 @@ class NotesPanel(QWidget):
     grid = QGridLayout()
     grid.setContentsMargins(2, 0, 8, 8)
     grid.addWidget(self.create_description(), 0, 0, 1, 3)
+    grid.addLayout(self.create_swap_buttons(), 0, 1, 1, 1)
     grid.addLayout(self.create_stats(), 6, 0, 6, 1)
     grid.addWidget(self.create_nutrition_summary(), 6, 1, 6, 1)
     grid.addWidget(self.create_weight_panel(), 7, 2, 5, 1)
@@ -66,7 +68,7 @@ class NotesPanel(QWidget):
     self.setLayout(grid)
 
   def create_description(self):
-    self.description = QLabel("Improve your diet and eating habits by tracking what you eat and searching through our database for healthy \nfoods.")
+    self.description = QLabel("Improve your diet and eating habits by tracking what you eat and searching through our database for healthy \nfood.")
     return self.description
 
   def create_nutrition_summary(self):
@@ -89,6 +91,23 @@ class NotesPanel(QWidget):
     nsummary_layout_framed.setObjectName("frame")
     nsummary_layout_framed.setStyleSheet("""#frame {color: #322d2d;}""")
     return nsummary_layout_framed
+
+  #WIP
+  def create_swap_buttons(self):
+    buttons_layout = QHBoxLayout()
+    self.notes_button = QPushButton("Notes")
+    self.notes_button.setStyleSheet("background-color: #603A40;")
+    self.notes_button.setFixedSize(60, 35)
+    self.notes_button.setCursor(QCursor(Qt.PointingHandCursor))
+    self.notes_button.clicked.connect(lambda: self.change_layout_signal.emit(self.notes_button.text()))
+    self.food_database_button = QPushButton("Food Database")
+    self.food_database_button.setFixedSize(110, 35)
+    self.food_database_button.setCursor(QCursor(Qt.PointingHandCursor))
+    self.food_database_button.clicked.connect(lambda: self.change_layout_signal.emit(self.food_database_button.text()))
+    
+    buttons_layout.addWidget(self.notes_button)
+    buttons_layout.addWidget(self.food_database_button)
+    return buttons_layout
 
   def create_stats(self):
     stats_layout = QHBoxLayout()
