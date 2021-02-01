@@ -46,6 +46,7 @@ class MainPanel(QWidget):
       background-color: rgb(33,33,33);  
       border: 1px solid;
       border-color: rgb(88, 88, 88);
+      font-size: 14px;
     }
     QHeaderView:section{
       background-color: rgb(54,54,54);  

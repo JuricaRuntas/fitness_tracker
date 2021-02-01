@@ -10,10 +10,55 @@ from fitness_tracker.user_profile.profile_db import fetch_units
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
+    self.setStyleSheet("""
+    QWidget{
+      font-family: Montserrat;
+      color:#c7c7c7;
+      font-weight: bold;
+    }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }
+    QLineEdit{
+      padding: 6px;
+      background-color: rgb(33,33,33);
+      border-radius: 2px;
+    }
+    QTableWidget{
+      background-color: rgb(33,33,33);  
+      border: 1px solid;
+      border-color: rgb(88, 88, 88);
+      font-size: 14px;
+    }
+    QHeaderView:section{
+      background-color: rgb(54,54,54);  
+      border: 1px solid;
+      border-color: rgb(88, 88, 88)
+    }
+    """)
     self.create_panel()
 
   def create_panel(self):
     grid = QGridLayout()
+    grid.setContentsMargins(0, 5, 5, 5)
     grid.addLayout(self.create_description(), 0, 0, 1, 2)
     grid.addLayout(self.create_calculator(), 1, 0, 1, 1)
     grid.addLayout(self.create_table(), 1, 1, 1, 1)
@@ -22,8 +67,10 @@ class MainPanel(QWidget):
   def create_description(self):
     description_layout = QVBoxLayout()
     
-    description_label = QLabel("Body Fat Calculator estimates your body fat percentage based on your measurements.", self)
-    description_label.setFixedHeight(70)
+    description_label = QLabel("Calculate your body fat percentage based on your physical measurements.", self)
+    description_label.setFont(QFont("Montserrat", 12))
+    description_label.setStyleSheet("font-size: 16px")
+    description_label.setFixedHeight(30)
     description_layout.addWidget(description_label)
     return description_layout
 
@@ -31,22 +78,26 @@ class MainPanel(QWidget):
     title_frame = QFrame()
     title_layout = QVBoxLayout()
 
-    calculator_label = QLabel("Calculate your body fat", self)
-    calculator_label.setFont(QFont("Ariel", 15))
-    calculator_label.setFixedHeight(70)
+    #calculator_label = QLabel("Calculate your body fat", self)
+    #calculator_label.setFont(QFont("Ariel", 15))
+    #calculator_label.setFixedHeight(70)
 
-    title_layout.addWidget(calculator_label)
-    title_frame.setLayout(title_layout)
+    #title_layout.addWidget(calculator_label)
+    #title_frame.setLayout(title_layout)
     
     calculator_frame = QFrame()
-    calculator_frame.setFrameStyle(QFrame.StyledPanel)
-    calculator_frame.setFixedWidth(300)
+    calculator_frame.setObjectName("frameObj")
+    calculator_frame.setFrameStyle(QFrame.Box)
+    calculator_frame.setLineWidth(3)
+    calculator_frame.setStyleSheet("""#frameObj {color: #322d2d;}""")
+    calculator_frame.setMaximumWidth(600)
+    calculator_frame.setMaximumHeight(350)
      
     form_layout = self.create_form_metric() if fetch_units() == "metric" else self.create_form_imperial()
     calculator_frame.setLayout(form_layout)
 
     wrapper_layout = QVBoxLayout()
-    wrapper_layout.addWidget(title_frame)
+    #wrapper_layout.addWidget(title_frame)
     wrapper_layout.addWidget(calculator_frame)
     return wrapper_layout
 
@@ -216,6 +267,7 @@ class MainPanel(QWidget):
   
   def create_table(self):
     frame = QFrame()
+    frame.setMinimumWidth(600)
     table_layout = QVBoxLayout()
 
     frame.setLayout(table_layout)
@@ -237,6 +289,8 @@ class MainPanel(QWidget):
     for row in rows:
       item1 = QTableWidgetItem(row[0])
       item2 = QTableWidgetItem(row[1])
+      item1.setFlags(Qt.ItemIsEnabled)
+      item2.setFlags(Qt.ItemIsEnabled)
       item1.setTextAlignment(Qt.AlignCenter)
       item2.setTextAlignment(Qt.AlignCenter)
       self.table.setItem(i, 0, item1)

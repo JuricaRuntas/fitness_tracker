@@ -10,6 +10,49 @@ from .exercise_standards import LiftStandards
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
+    self.setStyleSheet("""
+    QWidget{
+      font-family: Montserrat;
+      color:#c7c7c7;
+      font-weight: bold;
+    }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }
+    QLineEdit{
+      padding: 6px;
+      background-color: rgb(33,33,33);
+      border-radius: 2px;
+    }
+    QTableWidget{
+      background-color: rgb(33,33,33);  
+      border: 1px solid;
+      border-color: rgb(88, 88, 88);
+      font-size: 14px;
+    }
+    QHeaderView:section{
+      background-color: rgb(54,54,54);  
+      border: 1px solid;
+      border-color: rgb(88, 88, 88)
+    }""")
     self.units = "kg" if fetch_units() == "metric" else "lb"
     self.CreatePanel()
 

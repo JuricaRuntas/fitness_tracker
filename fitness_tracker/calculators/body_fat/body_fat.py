@@ -18,7 +18,8 @@ class BodyFatCalculator(QWidget):
 
   def create_grid(self):
     grid = QGridLayout()
-    grid.addWidget(self.header, 0, 1, 1, 4)
+    grid.setContentsMargins(0, 0, 0, 0)
+    #grid.addWidget(self.header, 0, 1, 1, 4)
     grid.addWidget(self.side_panel, 1, 1, 8, 1)
     grid.addWidget(self.main_panel, 1, 2, 8, 3)
     self.setLayout(grid)
