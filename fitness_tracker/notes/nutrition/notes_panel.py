@@ -29,6 +29,38 @@ class NotesPanel(QWidget):
       font-family: Montserrat;
       font-size: 16px;
       }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }
+    QTableWidget{
+      background-color: rgb(33,33,33);  
+      border: 1px solid;
+      border-color: rgb(88, 88, 88);
+      font-size: 14px;
+    }
+    QHeaderView:section{
+      background-color: rgb(54,54,54);  
+      border: 1px solid;
+      border-color: rgb(88, 88, 88)
+    }
       """)
     self.units = "kg" if fetch_units() == "metric" else "lb"
     self.user_weight = fetch_user_weight()
@@ -63,7 +95,7 @@ class NotesPanel(QWidget):
     grid.addLayout(self.create_swap_buttons(), 0, 1, 1, 1)
     grid.addLayout(self.create_stats(), 6, 0, 6, 1)
     grid.addWidget(self.create_nutrition_summary(), 6, 1, 6, 1)
-    grid.addWidget(self.create_weight_panel(), 7, 2, 5, 1)
+    #grid.addWidget(self.create_weight_panel(), 7, 2, 5, 1)
     grid.addLayout(self.create_notes(), 16, 0, 10, 3)
     self.setLayout(grid)
 
@@ -192,7 +224,6 @@ class NotesPanel(QWidget):
   def create_notes(self):
     
     table = QTableWidget(2, 4)
-    table.setStyleSheet("background-color: #603A40;color:white;")
     table.setEditTriggers(QAbstractItemView.NoEditTriggers)
     table.verticalHeader().setVisible(False)
     
@@ -215,27 +246,29 @@ class NotesPanel(QWidget):
 
     for i in range(2):
       table.verticalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-    
-    label = QLabel("Monday, 31.2.2005", self)
-    label.setAlignment(Qt.AlignCenter)
-    
+        
     table_title_layout = QHBoxLayout()
-    
-    left_button = QPushButton(QIcon(icons["left"]), "", self)
-    left_button.setFlat(True)
-    left_button.setFixedWidth(20)
-    left_button.setCursor(QCursor(Qt.PointingHandCursor))
-    right_button = QPushButton(QIcon(icons["right"]), "",self)
-    right_button.setFlat(True)
-    right_button.setFixedWidth(20)
-    right_button.setCursor(QCursor(Qt.PointingHandCursor))
 
-    table_title_layout.addWidget(left_button)
-    table_title_layout.addWidget(label)
-    table_title_layout.addWidget(right_button)
+    lastweek_button = QPushButton("Last Week")
+    thisweek_button = QPushButton("This Week")
+    nextweek_button = QPushButton("Next Week")
+    manage_meals = QPushButton("Manage Meals")
+    
+    #left_button = QPushButton(QIcon(icons["left"]), "", self)
+    #left_button.setFlat(True)
+    #left_button.setFixedWidth(20)
+    #left_button.setCursor(QCursor(Qt.PointingHandCursor))
+    #right_button = QPushButton(QIcon(icons["right"]), "",self)
+    #right_button.setFlat(True)
+    #right_button.setFixedWidth(20)
+    #right_button.setCursor(QCursor(Qt.PointingHandCursor))
+
+    table_title_layout.addWidget(lastweek_button)
+    table_title_layout.addWidget(thisweek_button)
+    table_title_layout.addWidget(nextweek_button)
+    table_title_layout.addWidget(manage_meals)
     
     title_frame = QFrame()
-    title_frame.setStyleSheet("background-color: #603A40;")
     title_frame.setFrameStyle(QFrame.StyledPanel)
     title_frame.setLayout(table_title_layout)
 
