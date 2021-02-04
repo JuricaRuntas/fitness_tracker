@@ -253,15 +253,6 @@ class NotesPanel(QWidget):
     thisweek_button = QPushButton("This Week")
     nextweek_button = QPushButton("Next Week")
     manage_meals = QPushButton("Manage Meals")
-    
-    #left_button = QPushButton(QIcon(icons["left"]), "", self)
-    #left_button.setFlat(True)
-    #left_button.setFixedWidth(20)
-    #left_button.setCursor(QCursor(Qt.PointingHandCursor))
-    #right_button = QPushButton(QIcon(icons["right"]), "",self)
-    #right_button.setFlat(True)
-    #right_button.setFixedWidth(20)
-    #right_button.setCursor(QCursor(Qt.PointingHandCursor))
 
     table_title_layout.addWidget(lastweek_button)
     table_title_layout.addWidget(thisweek_button)
