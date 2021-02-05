@@ -186,42 +186,6 @@ class NotesPanel(QWidget):
 
     return stats_layout
 
-  def create_weight_panel(self):
-    current_weight_layout = QHBoxLayout()
-    self.current_weight_label = QLabel(" ".join(["Current Weight:", self.user_weight, self.units]))
-    self.current_weight_label.setFont(QFont("Ariel", 15))
-    edit_current_weight_button = QPushButton()
-    edit_current_weight_button.setFlat(True)
-    edit_current_weight_button.setIcon(QIcon(icons["pencil"]))
-    edit_current_weight_button.setIconSize(QSize(16, 16))
-    edit_current_weight_button.setCursor(QCursor(Qt.PointingHandCursor))
-    edit_current_weight_button.clicked.connect(lambda: self.change_weight_dialog.show())
-    current_weight_layout.addWidget(self.current_weight_label)
-    current_weight_layout.addWidget(edit_current_weight_button)
-
-    weight_layout = QVBoxLayout()
-    weight_frame = QFrame()
-    weight_frame.setFrameStyle(QFrame.Box)
-    weight_frame.setLineWidth(3)
-    weight_frame.setObjectName("frame")
-    weight_frame.setStyleSheet("""#frame {color: #322d2d;}""")
-    goal_weight_layout = QHBoxLayout()
-    self.goal_weight_label = QLabel(" ".join(["Goal Weight:", self.user_goal_weight, self.units]))
-    self.goal_weight_label.setFont(QFont("Ariel", 15))
-    edit_goal_weight_button = QPushButton()
-    edit_goal_weight_button.setFlat(True)
-    edit_goal_weight_button.setIcon(QIcon(icons["pencil"]))
-    edit_goal_weight_button.setIconSize(QSize(16, 16))
-    edit_goal_weight_button.setCursor(QCursor(Qt.PointingHandCursor))
-    edit_goal_weight_button.clicked.connect(lambda: self.change_weight_dialog.show())
-    goal_weight_layout.addWidget(self.goal_weight_label)
-    goal_weight_layout.addWidget(edit_goal_weight_button)
-
-    weight_layout.addLayout(current_weight_layout)
-    weight_layout.addLayout(goal_weight_layout)
-    weight_frame.setLayout(weight_layout)
-    return weight_frame
-
   def create_notes(self):
     
     table = QTableWidget(2, 4)
