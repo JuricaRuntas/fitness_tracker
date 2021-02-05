@@ -51,15 +51,14 @@ class NotesPanel(QWidget):
       border-color: #6C6C6C;
     }
     QTableWidget{
-      background-color: rgb(33,33,33);  
-      border: 1px solid;
-      border-color: rgb(88, 88, 88);
+      background-color: rgba(135, 41, 41, 20%);  
+      border: 0px;
       font-size: 14px;
     }
     QHeaderView:section{
-      background-color: rgb(54,54,54);  
+      background-color: rgb(96,58,54);  
       border: 1px solid;
-      border-color: rgb(88, 88, 88)
+      border-color: #3C2323
     }
       """)
     self.units = "kg" if fetch_units() == "metric" else "lb"
@@ -92,10 +91,9 @@ class NotesPanel(QWidget):
     grid = QGridLayout()
     grid.setContentsMargins(2, 0, 8, 8)
     grid.addWidget(self.create_description(), 0, 0, 1, 3)
-    grid.addLayout(self.create_swap_buttons(), 0, 1, 1, 1)
+    #grid.addLayout(self.create_swap_buttons(), 0, 1, 1, 1)
     grid.addLayout(self.create_stats(), 6, 0, 6, 1)
     grid.addWidget(self.create_nutrition_summary(), 6, 1, 6, 1)
-    #grid.addWidget(self.create_weight_panel(), 7, 2, 5, 1)
     grid.addLayout(self.create_notes(), 16, 0, 10, 3)
     self.setLayout(grid)
 
@@ -106,14 +104,18 @@ class NotesPanel(QWidget):
   def create_nutrition_summary(self):
     nsummary_layout = QVBoxLayout()
     daily_monthlyavg_buttons = QHBoxLayout()
+    daily_monthlyavg_buttons.addStretch(0)
     daily_button = QPushButton("Daily")
+    daily_button.setFixedWidth(130)
     monthly_button = QPushButton("Monthly")
+    monthly_button.setFixedWidth(130)
     daily_monthlyavg_buttons.addWidget(daily_button)
     daily_monthlyavg_buttons.addWidget(monthly_button)
 
     nsummary_layout.addLayout(daily_monthlyavg_buttons)
     
     temp_label = QLabel("Proteins: 30g \nCarbs: 300g \nCalories: 2000kcal")
+    temp_label.setAlignment(Qt.AlignCenter)
     nsummary_layout.addWidget(temp_label) # Temp
 
     nsummary_layout_framed = QFrame()
@@ -149,7 +151,6 @@ class NotesPanel(QWidget):
     self.dci_label = QLabel("Daily Calorie Intake")
     self.dci_label.setAlignment(Qt.AlignCenter)
     self.calorie_goal_label = QLabel(" ".join(["Daily Goal: ", self.calorie_goal, "kcal"]))
-    #self.calorie_goal_label.setFixedHeight(40)
     self.calorie_goal_label.setFont(QFont("Ariel", 15))
     self.calorie_goal_label.setAlignment(Qt.AlignCenter)
      
@@ -248,26 +249,50 @@ class NotesPanel(QWidget):
       table.verticalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
         
     table_title_layout = QHBoxLayout()
-
+    style = """QPushButton{background-color: rgba(88, 41, 41, 20%);
+               border: 0px solid;
+               text-align: center;}
+               QPushButton:hover:!pressed {
+                 background-color: rgba(120, 55, 55, 20%);
+               }
+               QPushButton:pressed {
+                 background-color: rgba(166, 55, 55, 20%);
+               }
+             """
     lastweek_button = QPushButton("Last Week")
+    lastweek_button.setCursor(QCursor(Qt.PointingHandCursor))
+    lastweek_button.setStyleSheet(style)
     thisweek_button = QPushButton("This Week")
+    thisweek_button.setStyleSheet(style)
+    thisweek_button.setCursor(QCursor(Qt.PointingHandCursor))
     nextweek_button = QPushButton("Next Week")
+    nextweek_button.setStyleSheet(style)
+    nextweek_button.setCursor(QCursor(Qt.PointingHandCursor))
     manage_meals = QPushButton("Manage Meals")
+    manage_meals.setStyleSheet(style)
+    manage_meals.setCursor(QCursor(Qt.PointingHandCursor))
 
     table_title_layout.addWidget(lastweek_button)
     table_title_layout.addWidget(thisweek_button)
     table_title_layout.addWidget(nextweek_button)
     table_title_layout.addWidget(manage_meals)
-    
-    title_frame = QFrame()
-    title_frame.setFrameStyle(QFrame.StyledPanel)
-    title_frame.setLayout(table_title_layout)
 
     table_wrapper = QVBoxLayout()
     table_wrapper.addWidget(table)
     
     grid = QGridLayout()
-    grid.addWidget(title_frame, 0, 0)
+    grid.setVerticalSpacing(0)
+    grid.addLayout(table_title_layout, 0, 0)
     grid.addLayout(table_wrapper, 1, 0)
+
+    framed_grid = QFrame()
+    framed_grid.setFrameStyle(QFrame.Box)
+    framed_grid.setLineWidth(3)
+    framed_grid.setObjectName("frame")
+    framed_grid.setStyleSheet("""#frame {color: #322d2d;}""")
+    framed_grid.setLayout(grid)
+
+    framed_layout = QVBoxLayout()
+    framed_layout.addWidget(framed_grid)
     
-    return grid
+    return framed_layout
