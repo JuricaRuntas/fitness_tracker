@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QVBoxLayout, QLabel, QFrame, QLineEdit,
                              QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QHBoxLayout)
-from PyQt5.QtGui import QFont, QCursor
+from PyQt5.QtGui import QFont, QCursor, QIntValidator
 from PyQt5.QtCore import Qt
 from .one_rep_max_calculator import OneRepMaxCalculator
 from fitness_tracker.user_profile.profile_db import fetch_units
@@ -91,9 +91,13 @@ class MainPanel(QWidget):
     
     weight_label = QLabel("Weight", self)
     self.weight_entry = QLineEdit()
+    weight_validator = QIntValidator(1, 999)
+    self.weight_entry.setValidator(weight_validator)
     
     reps_label = QLabel("Repetitions", self)
     self.reps_entry = QLineEdit()
+    rep_validator = QIntValidator(1, 20)
+    self.reps_entry.setValidator(rep_validator)
     
     calculate_button = QPushButton("Calculate", self)
     calculate_button.setCursor(QCursor(Qt.PointingHandCursor))

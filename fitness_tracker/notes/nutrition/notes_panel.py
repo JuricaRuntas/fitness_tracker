@@ -105,12 +105,31 @@ class NotesPanel(QWidget):
     nsummary_layout = QVBoxLayout()
     daily_monthlyavg_buttons = QHBoxLayout()
     daily_monthlyavg_buttons.addStretch(0)
+    dm_style = """
+    QPushButton{
+      background-color: #440D0F;
+      border: 1px solid;
+      border-color: #603a36;
+    }
+    QPushButton:hover:!pressed{
+      background-color: #5D1A1D
+    }
+    QPushButton:pressed{
+      background-color: #551812
+    }
+    """
+    dm_style_selected = """"""
     daily_button = QPushButton("Daily")
     daily_button.setFixedWidth(130)
+    daily_button.setStyleSheet(dm_style)
     monthly_button = QPushButton("Monthly")
     monthly_button.setFixedWidth(130)
+    monthly_button.setStyleSheet(dm_style)
+    nutrients_button = QPushButton("Nutrients")
+    nutrients_button.setFixedWidth(145)
     daily_monthlyavg_buttons.addWidget(daily_button)
     daily_monthlyavg_buttons.addWidget(monthly_button)
+    daily_monthlyavg_buttons.addWidget(nutrients_button)
 
     nsummary_layout.addLayout(daily_monthlyavg_buttons)
     
