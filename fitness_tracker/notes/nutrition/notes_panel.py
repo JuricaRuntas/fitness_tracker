@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView)
 from PyQt5.QtGui import QFont, QCursor, QIcon
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal
-from fitness_tracker.user_profile.profile_db import fetch_units, fetch_user_weight, fetch_goal_weight
+from fitness_tracker.user_profile.profile_db import fetch_goal, fetch_height, fetch_units, fetch_user_weight, fetch_goal_weight, fetch_age, fetch_gender, fetch_goal_params
 from .nutrition_db import create_nutrition_table, fetch_nutrition_data, fetch_calorie_goal
 from .change_weight_dialog import ChangeWeightDialog
 
@@ -95,6 +95,10 @@ class NotesPanel(QWidget):
     grid.addLayout(self.create_stats(), 6, 0, 6, 1)
     grid.addWidget(self.create_nutrition_summary(), 6, 1, 6, 1)
     grid.addLayout(self.create_notes(), 16, 0, 10, 3)
+    #temp
+    print(fetch_goal_params())
+    print(self.calculate_bmr(float(fetch_user_weight()), float(fetch_height()), float(fetch_age()), fetch_gender()))
+    #temp
     self.setLayout(grid)
 
   def create_description(self):
@@ -279,3 +283,26 @@ class NotesPanel(QWidget):
     framed_layout.addWidget(framed_grid)
     
     return framed_layout
+
+  def calculate_calorie_intake(self, weight, height, age, gender, activity):
+    bmr = self.calculate_bmr(weight, height, age, gender)
+    sedentary_factor = 1.2
+    light_factor = 1.375
+    moderate_factor = 1.465
+    active_factor = 1.55
+    very_active_factor = 1.725
+    extra_active_factor = 1.9
+
+
+  def calculate_bmr(self, weight, height, age, gender):
+    #Only calculates base BMR, depending on exercise level, BMR will be multiplied
+    #Mifflin-St Jeor Equation
+    weight *= 10
+    height *= 6.25
+    age *= 5
+    bmr = weight + height - age
+    if gender == "female":
+      bmr -= 161
+    else:
+      bmr += 5
+    return int(bmr)
