@@ -69,10 +69,15 @@ class NotesPanel(QWidget):
     self.gender = fetch_gender()
     self.user_height = fetch_height()
     self.user_age = fetch_age()
+    self.loss_per_week = self.get_loss_pw()
+    self.user_activity = self.get_activity()
     #temp
     #"Sedentary", "Lightly active", "Moderately active", "Very active", "Extra active"
     print(fetch_goal())
+    print(self.goal_parameters)
     print(self.calculate_bmr(float(self.user_weight), float(self.user_height), float(self.user_age), self.gender))
+    print(self.get_activity())
+    print(self.get_loss_pw())
     #temp
     self.change_weight_dialog = ChangeWeightDialog()
     self.change_weight_dialog.change_current_weight_signal.connect(lambda weight: self.change_current_weight(weight))
@@ -80,7 +85,32 @@ class NotesPanel(QWidget):
     self.change_weight_dialog.change_calorie_goal_signal.connect(lambda calorie_goal: self.change_calorie_goal(calorie_goal))
     self.create_panel()
     self.setStyleSheet("QLabel{color:white;}")
+
+  def get_activity(self):
+    activity = ""
+    start = False
+    for char in range(len(self.goal_parameters)):
+      if start == True:
+        activity += self.goal_parameters[char]
+      if self.goal_parameters[char]== '"':
+        if start == True:
+          activity = activity[:-1]
+          break
+        start = True
+    return activity
   
+  def get_loss_pw(self):
+    lpw = ""
+    start = False
+    for char in range(len(self.goal_parameters)):
+      if start == True:
+        lpw += self.goal_parameters[char]
+      if self.goal_parameters[char] == ',':
+        start = True
+    lpw = lpw[:-1]
+    lpw = lpw[1:]
+    return lpw
+
   @pyqtSlot(str)
   def change_current_weight(self, weight):
     self.current_weight_label.setText(" ".join(["Current Weight:", weight, self.units]))
