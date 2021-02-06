@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
 from PyQt5.QtGui import QFont, QCursor, QIcon
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal
 from fitness_tracker.user_profile.profile_db import fetch_goal, fetch_height, fetch_units, fetch_user_weight, fetch_goal_weight, fetch_age, fetch_gender, fetch_goal_params
-from .nutrition_db import create_nutrition_table, fetch_nutrition_data, fetch_calorie_goal
+from .nutrition_db import create_nutrition_table, fetch_nutrition_data, fetch_calorie_goal, update_calorie_goal
 from .change_weight_dialog import ChangeWeightDialog
 
 path = os.path.abspath(os.path.dirname(__file__))
@@ -73,11 +73,11 @@ class NotesPanel(QWidget):
     self.user_activity = self.get_activity()
     #temp
     #"Sedentary", "Lightly active", "Moderately active", "Very active", "Extra active"
-    print(fetch_goal())
-    print(self.goal_parameters)
-    print(self.calculate_calorie_intake(float(self.user_weight), float(self.user_height), float(self.user_age), self.gender, self.user_activity, self.loss_per_week))
-    print(self.get_activity())
-    print(self.get_loss_pw())
+    #print(fetch_goal())
+    #print(self.goal_parameters)
+    #print(self.calculate_calorie_intake(float(self.user_weight), float(self.user_height), float(self.user_age), self.gender, self.user_activity, self.loss_per_week))
+    #print(self.get_activity())
+    #print(self.get_loss_pw())
     #temp
     self.change_weight_dialog = ChangeWeightDialog()
     self.change_weight_dialog.change_current_weight_signal.connect(lambda weight: self.change_current_weight(weight))
@@ -225,6 +225,7 @@ class NotesPanel(QWidget):
 
     intake_button_layout = QHBoxLayout()
     self.calculate_intake = QPushButton("Calculate Daily Intake")
+    self.calculate_intake.clicked.connect(lambda: self.calculate_calorie_intake(float(self.user_weight), float(self.user_height), float(self.user_age), self.gender, self.user_activity, self.loss_per_week))
     self.edit_intake = QPushButton("Edit Daily Intake")
     intake_button_layout.addWidget(self.calculate_intake)
     intake_button_layout.addWidget(self.edit_intake)
@@ -319,10 +320,6 @@ class NotesPanel(QWidget):
     
     return framed_layout
 
-  def calc_button_func(self):
-    calculated_intake = self.calculate_calorie_intake(self.user_weight, self.user_height, self.user_age, self.gender, self.goal_parameters[0], self.user_goal_weight)
-    return calculated_intake
-
   def calculate_calorie_intake(self, weight, height, age, gender, activity, weight_goal):
     bmr = self.calculate_bmr(weight, height, age, gender)
     #maintain 100%, 0.25kg/w 90%, 0.5kg/w 79%, 1kg/w 59%
@@ -345,7 +342,17 @@ class NotesPanel(QWidget):
     elif activity == "Extra active":
       extra_active_factor = 1.9
       bmr *= extra_active_factor
-    return int(bmr)
+    if weight_goal == "0.25":
+      bmr *= 0.9
+    elif weight_goal == "0.5":
+      bmr *= 0.79
+    elif weight_goal == "1":
+      bmr *= 0.59
+    update_calorie_goal(int(bmr))
+    self.calorie_goal = bmr
+    self.calorie_goal = int(self.calorie_goal)
+    self.calorie_goal = str(self.calorie_goal)
+    self.calorie_goal_label.setText(" ".join(["Daily Goal: ", self.calorie_goal, "kcal"]))
 
   def calculate_bmr(self, weight, height, age, gender):
     #Only calculates base BMR, depending on exercise level, BMR will be multiplied
