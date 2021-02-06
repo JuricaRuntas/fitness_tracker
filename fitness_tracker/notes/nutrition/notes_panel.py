@@ -64,7 +64,16 @@ class NotesPanel(QWidget):
     self.units = "kg" if fetch_units() == "metric" else "lb"
     self.user_weight = fetch_user_weight()
     self.user_goal_weight = fetch_goal_weight()
+    self.goal_parameters = fetch_goal_params()
     self.calorie_goal = fetch_calorie_goal()
+    self.gender = fetch_gender()
+    self.user_height = fetch_height()
+    self.user_age = fetch_age()
+    #temp
+    #"Sedentary", "Lightly active", "Moderately active", "Very active", "Extra active"
+    print(fetch_goal())
+    print(self.calculate_bmr(float(self.user_weight), float(self.user_height), float(self.user_age), self.gender))
+    #temp
     self.change_weight_dialog = ChangeWeightDialog()
     self.change_weight_dialog.change_current_weight_signal.connect(lambda weight: self.change_current_weight(weight))
     self.change_weight_dialog.change_goal_weight_signal.connect(lambda weight: self.change_goal_weight(weight))
@@ -95,10 +104,6 @@ class NotesPanel(QWidget):
     grid.addLayout(self.create_stats(), 6, 0, 6, 1)
     grid.addWidget(self.create_nutrition_summary(), 6, 1, 6, 1)
     grid.addLayout(self.create_notes(), 16, 0, 10, 3)
-    #temp
-    print(fetch_goal_params())
-    print(self.calculate_bmr(float(fetch_user_weight()), float(fetch_height()), float(fetch_age()), fetch_gender()))
-    #temp
     self.setLayout(grid)
 
   def create_description(self):
@@ -284,15 +289,33 @@ class NotesPanel(QWidget):
     
     return framed_layout
 
-  def calculate_calorie_intake(self, weight, height, age, gender, activity):
-    bmr = self.calculate_bmr(weight, height, age, gender)
-    sedentary_factor = 1.2
-    light_factor = 1.375
-    moderate_factor = 1.465
-    active_factor = 1.55
-    very_active_factor = 1.725
-    extra_active_factor = 1.9
+  def calc_button_func(self):
+    calculated_intake = self.calculate_calorie_intake(self.user_weight, self.user_height, self.user_age, self.gender, self.goal_parameters[0], self.user_goal_weight)
+    return calculated_intake
 
+  def calculate_calorie_intake(self, weight, height, age, gender, activity, weight_goal):
+    bmr = self.calculate_bmr(weight, height, age, gender)
+    #maintain 100%, 0.25kg/w 90%, 0.5kg/w 79%, 1kg/w 59%
+    #"Sedentary", "Lightly active", "Moderately active", "Very active", "Extra active"
+    if activity == "Sedentary":
+      sedentary_factor = 1.2
+      bmr *= sedentary_factor
+    elif activity == "Lightly active":
+      light_factor = 1.375
+      bmr *= light_factor
+    elif activity == "Moderately active":
+      moderate_factor = 1.465
+      bmr *= moderate_factor
+    elif activity == "Active":
+      active_factor = 1.55
+      bmr *= active_factor
+    elif activity == "Very active":
+      very_active_factor = 1.725
+      bmr *= very_active_factor
+    elif activity == "Extra active":
+      extra_active_factor = 1.9
+      bmr *= extra_active_factor
+    return bmr
 
   def calculate_bmr(self, weight, height, age, gender):
     #Only calculates base BMR, depending on exercise level, BMR will be multiplied
