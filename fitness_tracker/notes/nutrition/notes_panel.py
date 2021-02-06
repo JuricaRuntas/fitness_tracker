@@ -75,7 +75,7 @@ class NotesPanel(QWidget):
     #"Sedentary", "Lightly active", "Moderately active", "Very active", "Extra active"
     print(fetch_goal())
     print(self.goal_parameters)
-    print(self.calculate_bmr(float(self.user_weight), float(self.user_height), float(self.user_age), self.gender))
+    print(self.calculate_calorie_intake(float(self.user_weight), float(self.user_height), float(self.user_age), self.gender, self.user_activity, self.loss_per_week))
     print(self.get_activity())
     print(self.get_loss_pw())
     #temp
@@ -345,7 +345,7 @@ class NotesPanel(QWidget):
     elif activity == "Extra active":
       extra_active_factor = 1.9
       bmr *= extra_active_factor
-    return bmr
+    return int(bmr)
 
   def calculate_bmr(self, weight, height, age, gender):
     #Only calculates base BMR, depending on exercise level, BMR will be multiplied
