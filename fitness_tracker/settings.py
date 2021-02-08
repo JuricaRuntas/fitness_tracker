@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QRadioButton, QComboBox, QCheckBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QRadioButton, QComboBox, QCheckBox, QDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from configparser import ConfigParser
@@ -11,8 +11,7 @@ class SettingsWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.colorize_background()
-        self.setWindowFlags(Qt.FramelessWindowHint)
-
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint) #windowstaysontop is temporary, custom function is required for focus on the window and disabling mw
         self.setFixedSize(300, 500)
         layout = QVBoxLayout()
 
@@ -37,7 +36,7 @@ class SettingsWindow(QWidget):
     def colorize_background(self):
         self.setAutoFillBackground(True)
         bg_palette = self.palette()
-        bg_palette.setColor(self.backgroundRole(), QColor(25,23,22))
+        bg_palette.setColor(self.backgroundRole(), QColor(23,21,20))
         self.setPalette(bg_palette)
 
     def close_win(self):

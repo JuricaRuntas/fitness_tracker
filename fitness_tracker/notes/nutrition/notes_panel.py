@@ -2,8 +2,8 @@ import os
 import json
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QPushButton, QFrame, QHBoxLayout, QVBoxLayout,
-                             QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView)
-from PyQt5.QtGui import QFont, QCursor, QIcon
+                             QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QLineEdit)
+from PyQt5.QtGui import QFont, QCursor, QIcon, QIntValidator
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal
 from fitness_tracker.user_profile.profile_db import fetch_goal, fetch_height, fetch_units, fetch_user_weight, fetch_goal_weight, fetch_age, fetch_gender, fetch_goal_params
 from .nutrition_db import create_nutrition_table, fetch_nutrition_data, fetch_calorie_goal, update_calorie_goal
@@ -78,6 +78,14 @@ class NotesPanel(QWidget):
     self.change_weight_dialog.change_calorie_goal_signal.connect(lambda calorie_goal: self.change_calorie_goal(calorie_goal))
     self.create_panel()
     self.setStyleSheet("QLabel{color:white;}")
+
+  def set_current_layout_button(self, layout):
+    if layout == "Food Database":
+      self.food_database_button.setStyleSheet("background-color: #603A40;")
+      self.notes_button.setStyleSheet("background-color: #191716;")
+    elif layout == "Notes":
+      self.notes_button.setStyleSheet("background-color: #603A40;")
+      self.food_database_button.setStyleSheet("background-color: #191716;")
 
   @pyqtSlot(str)
   def change_current_weight(self, weight):
@@ -195,6 +203,7 @@ class NotesPanel(QWidget):
     self.calculate_intake = QPushButton("Calculate Daily Intake")
     self.calculate_intake.clicked.connect(lambda: self.calculate_calorie_intake(float(self.user_weight), float(self.user_height), float(self.user_age), self.gender, self.user_activity, self.loss_per_week))
     self.edit_intake = QPushButton("Edit Daily Intake")
+    self.edit_intake.clicked.connect(lambda: self.show_intake_entry())
     intake_button_layout.addWidget(self.calculate_intake)
     intake_button_layout.addWidget(self.edit_intake)
 
@@ -334,3 +343,78 @@ class NotesPanel(QWidget):
     else:
       bmr += 5
     return int(bmr)
+
+  def show_intake_entry(self):
+    global entry
+    entry = EditDailyIntake()
+    entry.show()
+
+class EditDailyIntake(QWidget):
+  def __init__(self):
+    super().__init__()
+
+    self.setStyleSheet(   
+    """QWidget{
+      background-color: #232120;
+      color:#c7c7c7;
+      font-weight: bold;
+      font-family: Montserrat;
+      font-size: 16px;
+      }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }""")
+
+    dialog_layout = QVBoxLayout()
+    self.setWindowFlags(Qt.FramelessWindowHint)
+    dialog_layout.addLayout(self.create_input_window())
+    self.setLayout(dialog_layout)
+
+  def create_input_window(self):
+    layout = QVBoxLayout()
+    entry_label = QLabel("Edit Intake")
+
+    self.calorie_line_edit = QLineEdit()
+    self.calorie_line_edit.setValidator(QIntValidator())
+
+    helper_layout = QHBoxLayout()
+
+    cancel_button = QPushButton("Cancel")
+    cancel_button.clicked.connect(lambda: self.close_button())
+
+    confirm_button = QPushButton("Confirm")
+    confirm_button.clicked.connect(lambda: self.confirm_button())
+
+    helper_layout.addWidget(cancel_button)
+    helper_layout.addWidget(confirm_button)
+
+    layout.addWidget(entry_label)
+    layout.addWidget(self.calorie_line_edit)
+    layout.addLayout(helper_layout)
+
+    return layout
+
+  def close_button(self):
+    self.close()
+
+  def confirm_button(self):
+    update_calorie_goal(self.calorie_line_edit.text())
+    self.close()
