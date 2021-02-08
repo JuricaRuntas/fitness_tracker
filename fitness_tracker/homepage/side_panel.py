@@ -92,13 +92,17 @@ class SidePanel(QWidget):
     weight_loss_button = QPushButton("Weight Loss Stats", self)
     weight_loss_button.clicked.connect(lambda: self.emit_layout_name.emit(weight_loss_button.text()))
     
-    layouts = {general_layout: [line_divider_general, home_button, user_button],
-               notes_layout: [line_divider_notes, lifts_button, workouts_button, nutrition_button, weight_notes_button],
-               calculators_layout: [line_divider_calc, max_button, fat_button, strength_es_button],
-               stats_layout: [line_divider_stats, strength_button, weight_loss_button, line_divider_logout, logout_button]}
+    layouts = {general_layout: [line_divider_general, home_button, user_button,
+                                line_divider_notes, lifts_button, workouts_button, nutrition_button, weight_notes_button,
+                                line_divider_calc, max_button, fat_button, strength_es_button,
+                                line_divider_stats, strength_button, weight_loss_button, line_divider_logout, logout_button],
+               notes_layout: [],
+               calculators_layout: [],
+               stats_layout: []}
     
     grid = QGridLayout()
-    self.setLayout(grid)
+    grid.setSpacing(11)
+    #grid.setAlignment(Qt.AlignTop)
     
     for i, (key, value) in enumerate(layouts.items()):
       for widget in value:
@@ -107,6 +111,8 @@ class SidePanel(QWidget):
           widget.setIconSize(icon_size)
           widget.setCursor(QCursor(Qt.PointingHandCursor))
       grid.addLayout(key, i, 0)
+    
+    self.setLayout(grid)
   
   def logout(self):
     logout_current_user()
