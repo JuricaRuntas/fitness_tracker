@@ -61,6 +61,14 @@ class NotesPanel(QWidget):
       border: 1px solid;
       border-color: #3C2323
     }
+    QProgressBar{
+      border: 1px solid;
+      border-color: #d7d7d7;
+      background-color: #d7d7d7;
+    }
+    QProgressBar:chunk{
+      background-color: qlineargradient(x1: 0, y1: 0.5, x2: 1, y2: 0.5, stop: 0 #434343, stop: 1 #440d0f);    
+    }
       """)
     self.units = "kg" if fetch_units() == "metric" else "lb"
     self.user_weight = fetch_user_weight()
@@ -195,7 +203,7 @@ class NotesPanel(QWidget):
     calories_left = self.progress_bar.maximum() - self.progress_bar.value()
     self.progress_bar.setFormat("")
     self.progress_bar.setAlignment(Qt.AlignCenter)
-    self.progress_bar.setMaximumHeight(12)
+    self.progress_bar.setMaximumHeight(18)
     self.calorie_label = QLabel(str(calories_left) + " calories left from goal")
     self.calorie_label.setAlignment(Qt.AlignCenter)
 
@@ -381,6 +389,12 @@ class EditDailyIntake(QWidget):
       border: 2px solid;
       background-color: #323232;
       border-color: #6C6C6C;
+    }
+    QLineEdit{
+      padding: 6px;
+      background-color: rgb(33,33,33);
+      border: 1px solid;
+      border-color: #cdcdcd;
     }""")
 
     dialog_layout = QVBoxLayout()
@@ -416,5 +430,6 @@ class EditDailyIntake(QWidget):
     self.close()
 
   def confirm_button(self):
-    update_calorie_goal(self.calorie_line_edit.text())
-    self.close()
+    if self.calorie_line_edit.text() != "":
+      update_calorie_goal(self.calorie_line_edit.text())
+      self.close()
