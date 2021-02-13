@@ -85,20 +85,13 @@ class SidePanel(QWidget):
     strength_es_button = QPushButton("Strength Estimator", self)
     strength_es_button.clicked.connect(lambda: self.emit_layout_name.emit(strength_es_button.text()))
     
-    stats_layout = QVBoxLayout()
-    stats_layout.setContentsMargins(0, 0, 0, 0)
-    strength_button = QPushButton("Strength Statistics", self)
-    strength_button.clicked.connect(lambda: self.emit_layout_name.emit(strength_button.text()))
-    weight_loss_button = QPushButton("Weight Loss Stats", self)
-    weight_loss_button.clicked.connect(lambda: self.emit_layout_name.emit(weight_loss_button.text()))
-    
     layouts = {general_layout: [line_divider_general, home_button, user_button,
                                 line_divider_notes, lifts_button, workouts_button, nutrition_button, weight_notes_button,
                                 line_divider_calc, max_button, fat_button, strength_es_button,
-                                line_divider_stats, strength_button, weight_loss_button, line_divider_logout, logout_button],
+                                line_divider_logout, logout_button],
                notes_layout: [],
                calculators_layout: [],
-               stats_layout: []}
+               }
     
     grid = QGridLayout()
     grid.setSpacing(11)

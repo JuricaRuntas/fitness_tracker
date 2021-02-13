@@ -11,6 +11,34 @@ class SettingsWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.colorize_background()
+        self.setStyleSheet("""
+        QWidget{
+            color:#c7c7c7;
+            font-weight: bold;
+            font-family: Montserrat;
+            font-size: 16px;
+            }
+        QPushButton{
+            background-color: rgba(0, 0, 0, 0);
+            border: 1px solid;
+            font-size: 18px;
+            font-weight: bold;
+            border-color: #808080;
+            min-height: 28px;
+            white-space:nowrap;
+            text-align: left;
+            padding-left: 5%;
+            font-family: Montserrat;
+        }
+        QPushButton:hover:!pressed{
+            border: 2px solid;
+            border-color: #747474;
+        }
+        QPushButton:pressed{
+            border: 2px solid;
+            background-color: #323232;
+            border-color: #6C6C6C;
+        }""")
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint) #windowstaysontop is temporary, custom function is required for focus on the window and disabling mw
         self.setFixedSize(300, 500)
         layout = QVBoxLayout()

@@ -3,11 +3,47 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QComboBox,
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from .profile_db import *
+import json
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    self.user_data = list(fetch_local_user_data())
+    self.username = fetch_username()
+    self.gender = fetch_gender()
+    self.age = fetch_age()
+    self.weight = fetch_user_weight()
+    self.weight_goal = fetch_goal_weight()
+    self.goal_params = json.loads(fetch_goal_params())
+    self.user_height = fetch_height()
+    self.goal = fetch_goal()
+    self.setStyleSheet(   
+    """QWidget{
+      color:#c7c7c7;
+      font-weight: bold;
+      font-family: Montserrat;
+      font-size: 16px;
+      }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }""")
     self.create_panel()
 
   def create_panel(self):
@@ -17,82 +53,73 @@ class MainPanel(QWidget):
     self.setLayout(main_panel_layout)
 
   def create_top_panel(self):
-    top_layout = QHBoxLayout()
-    top_left_layout = QVBoxLayout()
-    user_info_label = QLabel("User Info")
-    user_info_label.setFont(QFont("Ariel", 16))
-    top_left_layout.addWidget(user_info_label)
+    layout = QGridLayout()
+    self.username_layout = QHBoxLayout()
+    self.name_label = QLabel()
+    self.name_label.setText(" ".join(["Username:", self.username]))
+    self.edit_username_button = QPushButton("Edit")
+    self.edit_username_button.setFixedSize(60, 30)
+    self.username_layout.addWidget(self.name_label)
+    self.username_layout.addWidget(self.edit_username_button)
 
-    name_layout = QHBoxLayout()
-    name_label = QLabel("Name:")
-    name = QLabel(self.user_data[0])
-    name_label.setFont(QFont("Ariel", 10))
-    name.setFont(QFont("Ariel", 10))
+    framed_layout_username = QFrame()
+    framed_layout_username.setLayout(self.username_layout)
+    framed_layout_username = self.setup_frame(framed_layout_username)
 
-    name_layout.addWidget(name_label)
-    name_layout.addWidget(name)
+    self.age_layout = QHBoxLayout()
+    self.age_label = QLabel()
+    self.age_label.setText(" ".join(["Age:", self.age]))
+    self.edit_age_button = QPushButton("Edit")
+    self.edit_age_button.setFixedSize(60, 30)
+    self.age_layout.addWidget(self.age_label)
+    self.age_layout.addWidget(self.edit_age_button)
 
-    gender_layout = QHBoxLayout()
-    gender_label = QLabel("Gender:")
-    gender = QLabel(self.user_data[1])
-    gender_label.setFont(QFont("Ariel", 10))
-    gender.setFont(QFont("Ariel", 10))
+    framed_layout_age = QFrame()
+    framed_layout_age.setLayout(self.age_layout)
+    framed_layout_age = self.setup_frame(framed_layout_age)
 
-    gender_layout.addWidget(gender_label)
-    gender_layout.addWidget(gender)
+    self.height_layout = QHBoxLayout()
+    self.height_label = QLabel()
+    self.height_label.setText(" ".join(["Height:", self.user_height]))
+    self.edit_height_button = QPushButton("Edit")
+    self.edit_height_button.setFixedSize(60, 30)
+    self.height_layout.addWidget(self.height_label)
+    self.height_layout.addWidget(self.edit_height_button)
 
-    weight_layout = QHBoxLayout()
-    weight_label = QLabel("Weight:")
-    self.weight = QLabel(set_weight(self.user_data))
-    weight_label.setFont(QFont("Ariel", 10))
-    self.weight.setFont(QFont("Ariel", 10))
-   
-    weight_layout.addWidget(weight_label)
-    weight_layout.addWidget(self.weight)
-    
-    height_layout = QHBoxLayout()
-    height_label = QLabel("Height:")
-    height_label.setFont(QFont("Ariel", 10))
-    height_line_edit = QLineEdit()
-    height_unit = QComboBox()
-    
-    height_layout.addWidget(height_label)
-    height_layout.addWidget(height_line_edit)
-    height_layout.addWidget(height_unit)
-    
-    age_layout = QHBoxLayout()
-    age_label = QLabel("Age:")
-    age_label.setFont(QFont("Ariel", 10))
-    age_value = QLabel("20")
-    edit_age_button = QPushButton("Edit Age")
-    
-    age_layout.addWidget(age_label)
-    age_layout.addWidget(age_value)
-    age_layout.addWidget(edit_age_button)
+    framed_layout_height = QFrame()
+    framed_layout_height.setLayout(self.height_layout)
+    framed_layout_height = self.setup_frame(framed_layout_height)
 
-    birthday_layout = QHBoxLayout()
-    birthday_label = QLabel("Birthday:")
-    birthday_label.setFont(QFont("Ariel", 10))
-    birthday_day_combobox = QComboBox()
-    birthday_month_combobox = QComboBox()
-    
-    birthday_layout.addWidget(birthday_label)
-    birthday_layout.addWidget(birthday_day_combobox)
-    birthday_layout.addWidget(birthday_month_combobox)
+    self.weight_layout = QHBoxLayout()
+    self.weight_label = QLabel()
+    self.weight_label.setText(" ".join(["Weight:", self.weight]))
+    self.edit_weight_button = QPushButton("Edit")
+    self.edit_weight_button.setFixedSize(60, 30)
+    self.weight_layout.addWidget(self.weight_label)
+    self.weight_layout.addWidget(self.edit_weight_button)
 
-    top_left_layout.addLayout(name_layout)
-    top_left_layout.addLayout(gender_layout)
-    top_left_layout.addLayout(weight_layout)
-    top_left_layout.addLayout(height_layout)
-    top_left_layout.addLayout(age_layout)
-    top_left_layout.addLayout(birthday_layout)
+    framed_layout_weight = QFrame()
+    framed_layout_weight.setLayout(self.weight_layout)
+    framed_layout_weight = self.setup_frame(framed_layout_weight)
 
-    top_layout.addLayout(top_left_layout)
+    layout.setHorizontalSpacing(70)
+    layout.addWidget(framed_layout_username, 0, 0, 1, 1)
+    layout.addWidget(framed_layout_age, 1, 0, 1, 1)
+    layout.addWidget(framed_layout_height, 0, 1, 1, 1)
+    layout.addWidget(framed_layout_weight, 1, 1, 1, 1)
 
-    framed_top_layout = QFrame()
-    framed_top_layout.setFrameStyle(QFrame.StyledPanel)
-    framed_top_layout.setLayout(top_layout)
-    return framed_top_layout
+    framed_layout = QFrame()
+    framed_layout.setLayout(layout)
+    framed_layout = self.setup_frame(framed_layout)
+
+    return framed_layout
+
+  def setup_frame(self, frame):
+    frame.setFrameStyle(QFrame.Box)
+    frame.setLineWidth(3)
+    frame.setObjectName("frame")
+    frame.setStyleSheet("""#frame {color: #322d2d;}""")
+    return frame
 
   def settings_layout(self):
     settings = QVBoxLayout()
@@ -153,3 +180,15 @@ class MainPanel(QWidget):
       # update weight in user table
       update_weight(converted_weight)
       self.weight.setText(set_weight(self.user_data))
+
+  def update_weight(self, weight):
+    update_goal_weight(weight)
+
+  def update_goal(self, goal):
+    update_goal(goal)
+
+  def update_goal_params(self, goal_params):
+    update_goal_parameters(goal_params)
+
+  #def update_height(self, height):
+    #update height
