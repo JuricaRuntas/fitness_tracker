@@ -109,3 +109,9 @@ def fetch_local_lifts_for_reps(path):
     cursor = conn.cursor()
     cursor.execute("SELECT lifts_for_reps FROM 'big_lifts' WHERE email=?", (test_user["email"],))
     return cursor.fetchone()[0]
+
+def fetch_local_one_rm_history(path):
+  with sqlite3.connect(path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT rm_history FROM 'big_lifts' WHERE email=?", (test_user["email"],))
+    return cursor.fetchone()[0]
