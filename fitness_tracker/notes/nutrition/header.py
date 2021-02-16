@@ -31,10 +31,4 @@ class Header(QWidget):
     grid.addLayout(nutrition_title_layout, 0, 0)
     self.setLayout(grid)
 
-  def set_current_layout_button(self, layout):
-    if layout == "Food Database":
-      self.food_database_button.setStyleSheet("background-color: #603A40;")
-      self.notes_button.setStyleSheet("background-color: #191716;")
-    elif layout == "Notes":
-      self.notes_button.setStyleSheet("background-color: #603A40;")
-      self.food_database_button.setStyleSheet("background-color: #191716;")
+
