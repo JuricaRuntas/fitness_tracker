@@ -2,6 +2,7 @@ import sys
 import sqlite3
 import psycopg2
 import json
+from datetime import datetime
 from psycopg2 import sql
 from fitness_tracker.user_profile.profile_db import fetch_units, logged_in_user_email
 from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
@@ -50,6 +51,28 @@ def fetch_lift_history(db_path=db_path):
     cursor.execute("SELECT lift_history FROM 'big_lifts' WHERE email=?", (email,))
     return cursor.fetchone()[0]
 
+def fetch_rm_history(db_path=db_path):
+  email = logged_in_user_email(db_path)
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT rm_history FROM 'big_lifts' WHERE email=?", (email,))
+    return cursor.fetchone()[0]
+
+def fetch_user_rm_history(db_path=db_path):
+  email = logged_in_user_email(db_path)
+  rm_history = None
+  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                        user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      cursor.execute("SELECT rm_history FROM big_lifts WHERE email=%s", (email,))
+      rm_history = cursor.fetchone()[0]
+
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("UPDATE 'big_lifts' SET rm_history=? WHERE email=?", (rm_history, email,))
+  
+  return rm_history
+
 def fetch_user_big_lifts_table_data(db_path=db_path):
   email = logged_in_user_email(db_path)
   select_1RM = "SELECT one_rep_maxes FROM big_lifts WHERE email=%s"
@@ -57,12 +80,14 @@ def fetch_user_big_lifts_table_data(db_path=db_path):
   select_preferred_lifts = "SELECT preferred_lifts FROM big_lifts WHERE email=%s"
   select_lift_history = "SELECT lift_history FROM big_lifts WHERE email=%s"
   select_units = "SELECT units FROM big_lifts WHERE email=%s"
+  select_rm_history = "SELECT rm_history FROM big_lifts WHERE email=%s"
 
   one_rep_maxes = None
   lifts_for_reps = None
   preferred_lifts = None
   lift_history = None
   units = None
+  rm_history = None
 
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
@@ -81,29 +106,43 @@ def fetch_user_big_lifts_table_data(db_path=db_path):
 
       cursor.execute(select_units, (email,))
       units = cursor.fetchone()[0]
+
+      cursor.execute(select_rm_history, (email,))
+      rm_history = cursor.fetchone()[0]
   
   if table_is_empty(db_path):
     insert_values = """
-                    INSERT INTO 'big_lifts' (email, one_rep_maxes, lifts_for_reps, preferred_lifts, lift_history, units) VALUES
-                    (?, ?, ?, ?, ?, ?)
+    INSERT INTO 'big_lifts' (email, one_rep_maxes, lifts_for_reps, preferred_lifts, lift_history, units, rm_history) VALUES
+    (?, ?, ?, ?, ?, ?, ?)
                     """
     with sqlite3.connect(db_path) as conn:
       cursor = conn.cursor()
-      cursor.execute(insert_values, (email, one_rep_maxes, lifts_for_reps, preferred_lifts, lift_history, units,))
+      cursor.execute(insert_values, (email, one_rep_maxes, lifts_for_reps, preferred_lifts, lift_history, units, rm_history,))
 
 def insert_default_values(db_path=db_path):
-  default_exercises = ["Bench Press", "Deadlift", "Back Squat", "Overhead Press"]
   email = logged_in_user_email(db_path)
+  default_exercises = ["Bench Press", "Deadlift", "Back Squat", "Overhead Press"]
+  months = ["January", "February", "March", "April", "May", "June", "July",
+            "August", "September", "October", "November", "December"]
   units = fetch_units(db_path)
   one_RM_dict = json.dumps({exercise:"0" for exercise in default_exercises})
   lifts_for_reps = json.dumps({exercise:["0", "0"] for exercise in default_exercises})
-  preferred_lifts = json.dumps({"Horizontal Press": default_exercises[0],
-                                               "Floor Pull": default_exercises[1],
-                                               "Squat": default_exercises[2],
-                                               "Vertical Press": default_exercises[3]})
+  preferred_lifts = {"Horizontal Press": default_exercises[0],
+                     "Floor Pull": default_exercises[1],
+                     "Squat": default_exercises[2],
+                     "Vertical Press": default_exercises[3]}
+  
+  current_year = str(datetime.now().year)
+  rm_history = {current_year:{}}
+  for month in months:
+    exercises_dict = {}
+    for lift_type in preferred_lifts:
+      exercises_dict[lift_type] = {preferred_lifts[lift_type]:[]}
+    rm_history[current_year][month] = exercises_dict
 
   default_dict = {"one_rep_maxes": one_RM_dict, "lifts_for_reps": lifts_for_reps,
-                  "preferred_lifts": preferred_lifts, "email": email, "units": units}
+                  "preferred_lifts": json.dumps(preferred_lifts), "rm_history": json.dumps(rm_history),
+                  "email": email, "units": units}
 
   try:
     with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -132,6 +171,7 @@ def create_big_lifts_table(db_path=db_path):
                    preferred_lifts text,
                    lift_history text,
                    units text,
+                   rm_history text,
                    id integer NOT NULL,
                    PRIMARY KEY(id));
                    """
@@ -248,6 +288,62 @@ def update_big_lifts_units(db_path=db_path):
   with sqlite3.connect(db_path) as conn:
     cursor = conn.cursor()
     cursor.execute("UPDATE 'big_lifts' SET units=? WHERE email=?", (units, email,))
+
+def update_one_rep_maxes_history(new_values, year, db_path=db_path):
+  email = logged_in_user_email(db_path)
+  rm_history = json.loads(fetch_rm_history(db_path))
+  preferred_lifts = json.loads(fetch_preferred_lifts(db_path))
+  months = ["January", "February", "March", "April", "May", "June", "July",
+            "August", "September", "October", "November", "December"]
+  now = datetime.now()
+
+  if year not in rm_history:
+    rm_history[year] = {} 
+    for month in months:
+      exercises_dict = {}
+      for lift_type in preferred_lifts:
+        exercises_dict[lift_type] = {preferred_lifts[lift_type]:[]}
+      rm_history[year][month] = exercises_dict
+  
+  for i, (lift, weight) in enumerate(new_values.items()):
+    current_lift_type = rm_history[year][months[now.month-1]][list(preferred_lifts.keys())[i]]
+    if lift not in current_lift_type: current_lift_type[lift] = []
+    current_lift_type[lift].append(weight) 
+  
+  rm_history = json.dumps(rm_history)
+
+  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                        user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      cursor.execute("UPDATE big_lifts SET rm_history=%s WHERE email=%s", (rm_history, email,))
+
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("UPDATE 'big_lifts' SET rm_history=? WHERE email=?", (rm_history, email,))
+
+def add_year_to_rm_history(year):
+  email = logged_in_user_email()
+  rm_history = json.loads(fetch_rm_history())
+  preferred_lifts = json.loads(fetch_preferred_lifts())
+  months = ["January", "February", "March", "April", "May", "June", "July",
+            "August", "September", "October", "November", "December"]
+  new_year = {}
+  for month in months:
+    exercises_dict = {}
+    for lift_type in preferred_lifts:
+      exercises_dict[lift_type] = {preferred_lifts[lift_type]:[]}
+    new_year[month] = exercises_dict
+
+  rm_history[str(year)] = new_year
+
+  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                        user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      cursor.execute("UPDATE big_lifts SET rm_history=%s WHERE email=%s", (json.dumps(rm_history), email,))
+
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("UPDATE 'big_lifts' SET rm_history=? WHERE email=?", (json.dumps(rm_history), email,))
 
 def clear_one_rep_maxes():
   email = logged_in_user_email()

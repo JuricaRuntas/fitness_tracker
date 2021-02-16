@@ -1,4 +1,6 @@
 import json
+import matplotlib
+from datetime import datetime
 from PyQt5.QtWidgets import QPushButton, QGridLayout, QVBoxLayout, QWidget, QLabel, QComboBox, QFrame, QHBoxLayout
 from PyQt5.QtGui import QFont, QColor
 from PyQt5.QtCore import Qt, pyqtSlot
@@ -9,9 +11,14 @@ from .lift_history import LiftHistory
 from .big_lifts_db import (create_big_lifts_table, insert_default_values, table_is_empty,
                            fetch_units_from_big_lifts, fetch_one_rep_maxes, fetch_lifts_for_reps,
                            update_big_lifts_units, update_lifts_for_reps, update_1RM_lifts,
-                           convert_lift_history_weight, fetch_preferred_lifts, clear_one_rep_maxes, clear_lifts_for_reps)
+                           convert_lift_history_weight, fetch_preferred_lifts, clear_one_rep_maxes,
+                           clear_lifts_for_reps, fetch_rm_history, add_year_to_rm_history)
 from fitness_tracker.user_profile.profile_db import fetch_units
 from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
+from fitness_tracker.notes.big_lifts.one_rm_graphs import OneRMGraphCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+
+matplotlib.use("Qt5Agg")
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -72,6 +79,7 @@ class MainPanel(QWidget):
       background-color: #551812;
     }
     """)
+    self.current_year = str(datetime.now().year)
     create_big_lifts_table()
     if table_is_empty(): insert_default_values()
     
@@ -112,12 +120,20 @@ class MainPanel(QWidget):
     
     self.update_1RM_window = Update1RMWindow()
     self.update_1RM_window.change_1RM_lifts_signal.connect(self.changed_1RM_lifts)
-    self.update_1RM_window.history_signal.connect(
-    lambda signal: self.lift_history_window.create_history(signal))
-    
+    self.update_1RM_window.history_signal.connect(lambda signal: self.lift_history_window.create_history(signal))
+    self.update_1RM_window.update_graph_signal.connect(lambda signal: self.refresh_graph(signal))
+    self.update_1RM_window.currently_selected_year_signal.connect(lambda signal: self.set_one_rm_year(signal))
+
     self.lifts_for_reps = UpdateLiftsForRepsWindow()
     self.lifts_for_reps.change_lifts_for_reps_signal.connect(self.changed_lifts_for_reps)
     self.lifts_for_reps.history_signal.connect(lambda signal: self.lift_history_window.create_history(signal))
+     
+    self.preferred_lifts = json.loads(fetch_preferred_lifts())
+    self.rm_history = json.loads(fetch_rm_history())
+    
+    if not self.current_year in self.rm_history:
+      add_year_to_rm_history(self.current_year)
+      self.rm_history = json.loads(fetch_rm_history())
 
     self.create_panel()
 
@@ -139,24 +155,37 @@ class MainPanel(QWidget):
     return panel_description
 
   def create_time_graph(self):
-    time_graph = QVBoxLayout()
-    timeline_combobox = QComboBox(self)
-    timeline_combobox.addItems(["Daily", "Weekly", "Monthly", "Yearly"])
+    self.graph_layout = QVBoxLayout()
 
-    time_graph_graph = QWidget(self)
-    time_graph_graph.setStyleSheet("background-color: red")
+    graph = OneRMGraphCanvas("Horizontal Press", self.rm_history, self.current_year, self) 
+    
+    combobox_layout = QHBoxLayout()
+    self.lifts_combobox = QComboBox(self)
+    self.lifts_combobox.addItems(list(self.preferred_lifts.values()))
+    self.lifts_combobox.currentTextChanged.connect(lambda lift: self.change_exercise_graph(lift))
+     
+    self.change_year_combobox = QComboBox(self)
+    self.change_year_combobox.addItems(list(self.rm_history.keys()))
+    self.change_year_combobox.setCurrentText(self.current_year)
+    self.change_year_combobox.currentTextChanged.connect(lambda year: self.change_graph_year(year))
 
-    time_graph.addWidget(time_graph_graph)
-    time_graph.addWidget(timeline_combobox)
+    combobox_layout.addWidget(self.change_year_combobox)
+    combobox_layout.addWidget(self.lifts_combobox)
+
+    toolbar = NavigationToolbar(graph, self)
+    toolbar.setStyleSheet("background-color: white;")
+    
+    self.graph_layout.addWidget(toolbar)
+    self.graph_layout.addWidget(graph)
+    self.graph_layout.addLayout(combobox_layout)
+    
     framed_graph = QFrame(self)
-    framed_graph.setObjectName("graphObj")
     framed_graph.setFrameStyle(QFrame.Box)
     framed_graph.setLineWidth(3)
-    framed_graph.setStyleSheet("""#graphObj {color: #322d2d;}""")
-    framed_graph.setLayout(time_graph)
-
+    framed_graph.setLayout(self.graph_layout)
+    
     return framed_graph
-
+  
   def create_bottom_layout(self):
     bottom_layout = QHBoxLayout()
     bottom_layout.addWidget(self.create_one_rep_max())
@@ -262,8 +291,7 @@ class MainPanel(QWidget):
   @pyqtSlot(bool)
   def changed_preferred_lifts(self, changed):
     if changed:
-      fetch_lifts = fetch_preferred_lifts()
-      parsed_lifts = list(json.loads(fetch_lifts).values())
+      parsed_lifts = list(json.loads(self.fetch_preferred_lifts).values())
       one_RM_labels = [self.horizontal_press_label_ORM, self.floor_pull_label_ORM,
                        self.squat_label_ORM, self.vertical_press_label_ORM]
 
@@ -320,3 +348,41 @@ class MainPanel(QWidget):
     fetch_reps_and_weight = list(json.loads(fetch_lifts_for_reps()).values())
     self.set_lifts_for_reps_labels_text(fetch_reps_and_weight)
     self.lifts_for_reps.set_line_edit_values()
+  
+  def replace_graph(self, lift_type):
+    new_graph = OneRMGraphCanvas(lift_type, self.rm_history, self.current_year, self)
+    new_toolbar = NavigationToolbar(new_graph, self)
+
+    old_toolbar_reference = self.graph_layout.itemAt(0).widget()
+    old_graph_reference = self.graph_layout.itemAt(1).widget()
+    
+    self.graph_layout.replaceWidget(old_toolbar_reference, new_toolbar)
+    self.graph_layout.replaceWidget(old_graph_reference, new_graph)
+
+  def change_exercise_graph(self, exercise_name):
+    lift_type = None
+    for l_type, exercise in self.preferred_lifts.items():
+      if exercise == exercise_name: lift_type = l_type
+    self.replace_graph(lift_type)
+
+  def change_graph_year(self, year):
+    self.current_year = year
+    lift_type = None
+    for l_type, exercise in self.preferred_lifts.items():
+      if exercise == str(self.lifts_combobox.currentText()): lift_type = l_type
+    self.replace_graph(lift_type)
+    self.change_year_combobox.setCurrentText(self.current_year)
+  
+  @pyqtSlot(bool)
+  def refresh_graph(self, signal):
+    if signal:
+      self.rm_history = json.loads(fetch_rm_history())
+      lift_type = None
+      for l_type, exercise in self.preferred_lifts.items():
+        if exercise == str(self.lifts_combobox.currentText()): lift_type = l_type
+      self.replace_graph(lift_type)
+
+  @pyqtSlot(bool)
+  def set_one_rm_year(self, signal):
+    if signal:
+      self.update_1RM_window.get_year(self.current_year)

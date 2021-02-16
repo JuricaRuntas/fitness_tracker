@@ -3,15 +3,18 @@ import os
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QLineEdit, QHBoxLayout
 from PyQt5.QtCore import pyqtSignal
 from .big_lifts_db import (fetch_preferred_lifts, fetch_one_rep_maxes, lift_difference,
-                           update_lift_history, update_1RM_lifts)
+                           update_lift_history, update_1RM_lifts, update_one_rep_maxes_history)
 from fitness_tracker.user_profile.profile_db import fetch_units
 
 class Update1RMWindow(QWidget):
   change_1RM_lifts_signal = pyqtSignal(bool)
   history_signal = pyqtSignal(bool)
+  update_graph_signal = pyqtSignal(bool)
+  currently_selected_year_signal = pyqtSignal(bool)
 
   def __init__(self):
     super().__init__()
+    self.currently_selected_year = None
     self.units = "kg" if fetch_units() == "metric" else "lb"
     self.preferred_lifts = json.loads(fetch_preferred_lifts())
     self.setWindowTitle("Update One Rep Max Lifts")
@@ -76,10 +79,17 @@ class Update1RMWindow(QWidget):
                    exercises[2]:squat_max, exercises[3]:vertical_press_max}
       
       diff = lift_difference(new_maxes, one_RM=True)
+      
       update_lift_history(diff) 
       self.history_signal.emit(True)
+      
       update_1RM_lifts(new_maxes)
+      self.currently_selected_year_signal.emit(True)
+      update_one_rep_maxes_history(new_maxes, self.currently_selected_year)
+      
+      self.update_graph_signal.emit(True)
       self.change_1RM_lifts_signal.emit(True)
+      
       self.set_line_edit_values()
       self.close() 
     except ValueError: # user submitted text/empty string
@@ -95,3 +105,6 @@ class Update1RMWindow(QWidget):
     self.floor_pull_edit.setText(one_rep_maxes[1])
     self.squat_edit.setText(one_rep_maxes[2])
     self.vertical_press_edit.setText(one_rep_maxes[3])
+  
+  def get_year(self, year):
+    self.currently_selected_year = year
