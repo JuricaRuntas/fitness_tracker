@@ -211,12 +211,12 @@ def update_1RM_and_lifts_for_reps(db_path=db_path):
     cursor.execute("UPDATE 'big_lifts' SET lifts_for_reps=? WHERE email=?", (new_lifts_for_reps, email,))
 
 # updates weight
-def update_1RM_lifts(new_values, db_path=db_path):
-  new_values = list(new_values.values()) 
+def update_1RM_lifts(new_lifts, db_path=db_path):
   email = logged_in_user_email(db_path)
   one_rep_max_lifts = json.loads(fetch_one_rep_maxes(db_path))
   for i, lift in enumerate(one_rep_max_lifts.keys()):
-    one_rep_max_lifts[lift] = new_values[i]
+    if not lift in new_lifts: continue
+    one_rep_max_lifts[lift] = new_lifts[lift]
 
   one_rep_max_lifts = json.dumps(one_rep_max_lifts)
  

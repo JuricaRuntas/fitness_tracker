@@ -122,7 +122,6 @@ class MainPanel(QWidget):
     self.update_1RM_window.change_1RM_lifts_signal.connect(self.changed_1RM_lifts)
     self.update_1RM_window.history_signal.connect(lambda signal: self.lift_history_window.create_history(signal))
     self.update_1RM_window.update_graph_signal.connect(lambda signal: self.refresh_graph(signal))
-    self.update_1RM_window.currently_selected_year_signal.connect(lambda signal: self.set_one_rm_year(signal))
 
     self.lifts_for_reps = UpdateLiftsForRepsWindow()
     self.lifts_for_reps.change_lifts_for_reps_signal.connect(self.changed_lifts_for_reps)
@@ -381,8 +380,3 @@ class MainPanel(QWidget):
       for l_type, exercise in self.preferred_lifts.items():
         if exercise == str(self.lifts_combobox.currentText()): lift_type = l_type
       self.replace_graph(lift_type)
-
-  @pyqtSlot(bool)
-  def set_one_rm_year(self, signal):
-    if signal:
-      self.update_1RM_window.get_year(self.current_year)
