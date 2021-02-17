@@ -61,6 +61,7 @@ class MainPanel(QWidget):
     self.edit_username_button.setFixedSize(60, 30)
     self.username_layout.addWidget(self.name_label)
     self.username_layout.addWidget(self.edit_username_button)
+    self.edit_username_button.clicked.connect(lambda:self.update_username())
 
     framed_layout_username = QFrame()
     framed_layout_username.setLayout(self.username_layout)
@@ -92,6 +93,19 @@ class MainPanel(QWidget):
     framed_layout_height.setLayout(self.height_layout)
     framed_layout_height = self.setup_frame(framed_layout_height)
 
+    self.goalw_layout = QHBoxLayout()
+    self.goalw_label = QLabel()
+    self.goalw_label.setText(" ".join(["Goal Weight:", self.weight_goal]))
+    self.edit_goalw_button = QPushButton("Edit")
+    self.edit_goalw_button.setFixedSize(60, 30)
+    self.goalw_layout.addWidget(self.goalw_label)
+    self.goalw_layout.addWidget(self.edit_goalw_button)
+    self.edit_goalw_button.clicked.connect(lambda:self.update_goal_weight())
+
+    framed_layout_goalw = QFrame()
+    framed_layout_goalw.setLayout(self.goalw_layout)
+    framed_layout_goalw = self.setup_frame(framed_layout_goalw)
+
     self.weight_layout = QHBoxLayout()
     self.weight_label = QLabel()
     self.weight_label.setText(" ".join(["Weight:", self.weight]))
@@ -110,6 +124,7 @@ class MainPanel(QWidget):
     layout.addWidget(framed_layout_age, 1, 0, 1, 1)
     layout.addWidget(framed_layout_height, 0, 1, 1, 1)
     layout.addWidget(framed_layout_weight, 1, 1, 1, 1)
+    layout.addWidget(framed_layout_goalw, 2, 0, 1, 1)
 
     framed_layout = QFrame()
     framed_layout.setLayout(layout)
@@ -189,11 +204,11 @@ class MainPanel(QWidget):
     weight_edit = EditButtonLine("weight")
     weight_edit.show()
 
-  def update_goal(self, goal):
-    update_goal(goal)
+  #def update_goal(self):
+    #update_goal()
 
-  def update_goal_params(self, goal_params):
-    update_goal_parameters(goal_params)
+  #def update_goal_params(self, goal_params):
+    #update_goal_parameters(goal_params)
 
   def update_height(self):
     global height_edit
@@ -204,6 +219,16 @@ class MainPanel(QWidget):
     global age_edit
     age_edit = EditButtonLine("age")
     age_edit.show()
+
+  def update_username(self):
+    global name_edit
+    name_edit = EditButtonLine("username")
+    name_edit.show()
+
+  def update_goal_weight(self):
+    global gw_edit
+    gw_edit = EditButtonLine("goalweight")
+    gw_edit.show()
 
 class EditButtonLine(QWidget):
   def __init__(self, edit_func):
@@ -254,7 +279,6 @@ class EditButtonLine(QWidget):
     entry_label = QLabel("Edit ")
 
     self.line_edit = QLineEdit()
-    self.line_edit.setValidator(QIntValidator())
 
     helper_layout = QHBoxLayout()
 
@@ -263,14 +287,24 @@ class EditButtonLine(QWidget):
 
     confirm_button = QPushButton("Confirm")
     if self.edit_func == "weight":
+      self.line_edit.setValidator(QIntValidator())
       entry_label.setText("Weight")
       confirm_button.clicked.connect(lambda: self.confirm_weight())
     if self.edit_func == "height":
+      self.line_edit.setValidator(QIntValidator())
       entry_label.setText("Height")
       confirm_button.clicked.connect(lambda: self.confirm_height())
     if self.edit_func == "age":
+      self.line_edit.setValidator(QIntValidator())
       entry_label.setText("Age")
       confirm_button.clicked.connect(lambda: self.confirm_age())
+    if self.edit_func == "goalweight":
+      self.line_edit.setValidator(QIntValidator())
+      entry_label.setText("Goal Weight")
+      confirm_button.clicked.connect(lambda: self.confirm_goal_weight())
+    if self.edit_func == "username":
+      entry_label.setText("Username")
+      confirm_button.clicked.connect(lambda:self.confirm_name())
 
     helper_layout.addWidget(cancel_button)
     helper_layout.addWidget(confirm_button)
@@ -298,4 +332,14 @@ class EditButtonLine(QWidget):
     if self.line_edit.text() != "":
       update_age(self.line_edit.text())
       self.close()
+
+  def confirm_name(self):
+    if self.line_edit.text() != "":
+      update_username(self.line_edit.text())
+      self.close()
+
+  def confirm_goal_weight(self):
+    if self.line_edit.text() != "":
+      update_goal_weight(self.line_edit.text())
+      self.close()    
 

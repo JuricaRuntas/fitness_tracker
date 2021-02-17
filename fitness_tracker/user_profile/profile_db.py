@@ -135,6 +135,18 @@ def update_age(age, db_path=db_path):
   with sqlite3.connect(db_path) as conn:
     cursor = conn.cursor()
     cursor.execute("UPDATE 'users' SET age=? WHERE email=?", (str(age), email,))
+
+def update_username(name, db_path=db_path):
+  email = logged_in_user_email()
+  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+                        user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      cursor.execute("UPDATE users SET name=%s WHERE email=%s", (str(name), email,))
+      
+
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("UPDATE 'users' SET name=? WHERE email=?", (str(name), email,))
   
 def update_goal(goal, db_path=db_path):
   email = logged_in_user_email()
