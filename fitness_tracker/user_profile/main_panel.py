@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QPushButton,
                             QFrame, QHBoxLayout, QVBoxLayout)
-from PyQt5.QtGui import QFont, QCursor
+from PyQt5.QtGui import QFont, QCursor, QIntValidator
 from PyQt5.QtCore import Qt
 from .profile_db import *
 import json
@@ -73,6 +73,7 @@ class MainPanel(QWidget):
     self.edit_age_button.setFixedSize(60, 30)
     self.age_layout.addWidget(self.age_label)
     self.age_layout.addWidget(self.edit_age_button)
+    self.edit_age_button.clicked.connect(lambda:self.update_age())
 
     framed_layout_age = QFrame()
     framed_layout_age.setLayout(self.age_layout)
@@ -85,6 +86,7 @@ class MainPanel(QWidget):
     self.edit_height_button.setFixedSize(60, 30)
     self.height_layout.addWidget(self.height_label)
     self.height_layout.addWidget(self.edit_height_button)
+    self.edit_height_button.clicked.connect(lambda:self.update_height())
 
     framed_layout_height = QFrame()
     framed_layout_height.setLayout(self.height_layout)
@@ -97,6 +99,7 @@ class MainPanel(QWidget):
     self.edit_weight_button.setFixedSize(60, 30)
     self.weight_layout.addWidget(self.weight_label)
     self.weight_layout.addWidget(self.edit_weight_button)
+    self.edit_weight_button.clicked.connect(lambda:self.update_weight())
 
     framed_layout_weight = QFrame()
     framed_layout_weight.setLayout(self.weight_layout)
@@ -181,8 +184,10 @@ class MainPanel(QWidget):
       update_weight(converted_weight)
       self.weight.setText(set_weight(self.user_data))
 
-  def update_weight(self, weight):
-    update_goal_weight(weight)
+  def update_weight(self):
+    global weight_edit
+    weight_edit = EditButtonLine("weight")
+    weight_edit.show()
 
   def update_goal(self, goal):
     update_goal(goal)
@@ -190,5 +195,107 @@ class MainPanel(QWidget):
   def update_goal_params(self, goal_params):
     update_goal_parameters(goal_params)
 
-  #def update_height(self, height):
-    #update height
+  def update_height(self):
+    global height_edit
+    height_edit = EditButtonLine("height")
+    height_edit.show()
+
+  def update_age(self):
+    global age_edit
+    age_edit = EditButtonLine("age")
+    age_edit.show()
+
+class EditButtonLine(QWidget):
+  def __init__(self, edit_func):
+    super().__init__()
+    self.edit_func = edit_func
+    self.setStyleSheet(   
+    """QWidget{
+      background-color: #232120;
+      color:#c7c7c7;
+      font-weight: bold;
+      font-family: Montserrat;
+      font-size: 16px;
+      }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }
+    QLineEdit{
+      padding: 6px;
+      background-color: rgb(33,33,33);
+      border: 1px solid;
+      border-color: #cdcdcd;
+    }""")
+    dialog_layout = QVBoxLayout()
+    self.setWindowFlags(Qt.FramelessWindowHint)
+    dialog_layout.addLayout(self.create_input_window())
+    self.setLayout(dialog_layout)
+
+  def create_input_window(self):
+    layout = QVBoxLayout()
+    entry_label = QLabel("Edit ")
+
+    self.line_edit = QLineEdit()
+    self.line_edit.setValidator(QIntValidator())
+
+    helper_layout = QHBoxLayout()
+
+    cancel_button = QPushButton("Cancel")
+    cancel_button.clicked.connect(lambda: self.close_button())
+
+    confirm_button = QPushButton("Confirm")
+    if self.edit_func == "weight":
+      entry_label.setText("Weight")
+      confirm_button.clicked.connect(lambda: self.confirm_weight())
+    if self.edit_func == "height":
+      entry_label.setText("Height")
+      confirm_button.clicked.connect(lambda: self.confirm_height())
+    if self.edit_func == "age":
+      entry_label.setText("Age")
+      confirm_button.clicked.connect(lambda: self.confirm_age())
+
+    helper_layout.addWidget(cancel_button)
+    helper_layout.addWidget(confirm_button)
+
+    layout.addWidget(entry_label)
+    layout.addWidget(self.line_edit)
+    layout.addLayout(helper_layout)
+
+    return layout
+
+  def close_button(self):
+    self.close()
+
+  def confirm_height(self):
+    if self.line_edit.text() != "":
+      update_height(self.line_edit.text())
+      self.close()
+
+  def confirm_weight(self):
+    if self.line_edit.text() != "":
+      update_weight(self.line_edit.text())
+      self.close()
+
+  def confirm_age(self):
+    if self.line_edit.text() != "":
+      update_age(self.line_edit.text())
+      self.close()
+
