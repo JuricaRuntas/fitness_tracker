@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QPushButton,
+from PyQt5.QtWidgets import (QRadioButton, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QPushButton,
                             QFrame, QHBoxLayout, QVBoxLayout)
-from PyQt5.QtGui import QFont, QCursor, QIntValidator
+from PyQt5.QtGui import QFont, QCursor, QDoubleValidator
 from PyQt5.QtCore import Qt
 from .profile_db import *
 import json
@@ -48,8 +48,8 @@ class MainPanel(QWidget):
 
   def create_panel(self):
     main_panel_layout = QGridLayout()
-    main_panel_layout.addWidget(self.create_top_panel(), 0, 0, 1, 1)
-    main_panel_layout.addLayout(self.settings_layout(), 1, 0, 1, 1)
+    main_panel_layout.addWidget(self.create_top_panel(), 0, 0, 2, 1)
+    main_panel_layout.addLayout(self.settings_layout(), 2, 0, 1, 1)
     self.setLayout(main_panel_layout)
 
   def create_top_panel(self):
@@ -119,12 +119,40 @@ class MainPanel(QWidget):
     framed_layout_weight.setLayout(self.weight_layout)
     framed_layout_weight = self.setup_frame(framed_layout_weight)
 
+    self.gender_layout = QHBoxLayout()
+    self.gender_label = QLabel()
+    self.gender_label.setText(" ".join(["Gender:", self.gender]))
+    self.edit_gender_button = QPushButton("Edit")
+    self.edit_gender_button.setFixedSize(60, 30)
+    self.gender_layout.addWidget(self.gender_label)
+    self.gender_layout.addWidget(self.edit_gender_button)
+    self.edit_gender_button.clicked.connect(lambda:self.update_gender())
+
+    framed_layout_gender = QFrame()
+    framed_layout_gender.setLayout(self.gender_layout)
+    framed_layout_gender = self.setup_frame(framed_layout_gender)
+
+    self.goal_layout = QHBoxLayout()
+    self.goal_label = QLabel()
+    self.goal_label.setText(" ".join(["Goal:", self.goal]))
+    self.edit_goal_button = QPushButton("Edit")
+    self.edit_goal_button.setFixedSize(60, 30)
+    self.goal_layout.addWidget(self.goal_label)
+    self.goal_layout.addWidget(self.edit_goal_button)
+    self.edit_goal_button.clicked.connect(lambda:self.update_goal())
+
+    framed_layout_goal = QFrame()
+    framed_layout_goal.setLayout(self.goal_layout)
+    framed_layout_goal = self.setup_frame(framed_layout_goal)
+
     layout.setHorizontalSpacing(70)
     layout.addWidget(framed_layout_username, 0, 0, 1, 1)
     layout.addWidget(framed_layout_age, 1, 0, 1, 1)
     layout.addWidget(framed_layout_height, 0, 1, 1, 1)
     layout.addWidget(framed_layout_weight, 1, 1, 1, 1)
     layout.addWidget(framed_layout_goalw, 2, 0, 1, 1)
+    layout.addWidget(framed_layout_gender, 2, 1, 1, 1)
+    layout.addWidget(framed_layout_goal, 3, 0, 1, 1)
 
     framed_layout = QFrame()
     framed_layout.setLayout(layout)
@@ -141,7 +169,7 @@ class MainPanel(QWidget):
 
   def settings_layout(self):
     settings = QVBoxLayout()
-    settings_label = QLabel("Settings")
+    settings_label = QLabel("Other")
     settings_label.setFont(QFont("Ariel", 14))
     settings.addWidget(settings_label)
     
@@ -204,8 +232,10 @@ class MainPanel(QWidget):
     weight_edit = EditButtonLine("weight")
     weight_edit.show()
 
-  #def update_goal(self):
-    #update_goal()
+  def update_goal(self):
+    global goal_edit
+    goal_edit = EditRadioButton("goal")
+    goal_edit.show()
 
   #def update_goal_params(self, goal_params):
     #update_goal_parameters(goal_params)
@@ -229,6 +259,11 @@ class MainPanel(QWidget):
     global gw_edit
     gw_edit = EditButtonLine("goalweight")
     gw_edit.show()
+
+  def update_gender(self):
+    global gender_edit
+    gender_edit = EditRadioButton("gender")
+    gender_edit.show()
 
 class EditButtonLine(QWidget):
   def __init__(self, edit_func):
@@ -287,22 +322,22 @@ class EditButtonLine(QWidget):
 
     confirm_button = QPushButton("Confirm")
     if self.edit_func == "weight":
-      self.line_edit.setValidator(QIntValidator())
+      self.line_edit.setValidator(QDoubleValidator())
       entry_label.setText("Weight")
       confirm_button.clicked.connect(lambda: self.confirm_weight())
-    if self.edit_func == "height":
-      self.line_edit.setValidator(QIntValidator())
+    elif self.edit_func == "height":
+      self.line_edit.setValidator(QDoubleValidator())
       entry_label.setText("Height")
       confirm_button.clicked.connect(lambda: self.confirm_height())
-    if self.edit_func == "age":
-      self.line_edit.setValidator(QIntValidator())
+    elif self.edit_func == "age":
+      self.line_edit.setValidator(QDoubleValidator())
       entry_label.setText("Age")
       confirm_button.clicked.connect(lambda: self.confirm_age())
-    if self.edit_func == "goalweight":
-      self.line_edit.setValidator(QIntValidator())
+    elif self.edit_func == "goalweight":
+      self.line_edit.setValidator(QDoubleValidator())
       entry_label.setText("Goal Weight")
       confirm_button.clicked.connect(lambda: self.confirm_goal_weight())
-    if self.edit_func == "username":
+    elif self.edit_func == "username":
       entry_label.setText("Username")
       confirm_button.clicked.connect(lambda:self.confirm_name())
 
@@ -342,4 +377,113 @@ class EditButtonLine(QWidget):
     if self.line_edit.text() != "":
       update_goal_weight(self.line_edit.text())
       self.close()    
+
+class EditRadioButton(QWidget):
+  def __init__(self, edit_func):
+    super().__init__()
+    self.edit_func = edit_func
+    self.setStyleSheet(   
+    """QWidget{
+      background-color: #232120;
+      color:#c7c7c7;
+      font-weight: bold;
+      font-family: Montserrat;
+      font-size: 16px;
+      }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }""")
+    dialog_layout = QVBoxLayout()
+    self.setWindowFlags(Qt.FramelessWindowHint)
+    self.setLayout(dialog_layout)
+    if self.edit_func == "gender":
+      layout = self.create_radio_button_gender()
+    elif self.edit_func == "goal":
+      layout = self.create_radio_button_goal()
+    dialog_layout.addLayout(layout)
+
+  def create_radio_button_goal(self):
+    layout = QVBoxLayout()
+    label = QLabel("Goal")
+    #Weight loss, Maintain weight, Weight gain
+    radio_button_loss = QRadioButton("Weight Loss")
+    radio_button_loss.clicked.connect(lambda:self.update_goal("Weight loss"))
+    radio_button_maintain = QRadioButton("Weight Maintain")
+    radio_button_maintain.clicked.connect(lambda:self.update_goal("Maintain weight"))
+    radio_button_gain = QRadioButton("Weight Gain")
+    radio_button_gain.clicked.connect(lambda:self.update_goal("Weight gain"))
+
+    current_goal = fetch_goal()
+    if current_goal == "Weight loss":
+      radio_button_loss.setChecked(True)
+    elif current_goal == "Maintain weight":
+      radio_button_maintain.setChecked(True)
+    else:
+      radio_button_gain.setChecked(True)
+
+    close_button = QPushButton("Close")
+    close_button.clicked.connect(lambda:self.close_button())
+
+    layout.addWidget(label)
+    layout.addWidget(radio_button_loss)
+    layout.addWidget(radio_button_maintain)
+    layout.addWidget(radio_button_gain)
+    layout.addWidget(close_button)
+
+    return layout
+
+  def update_goal(self, goal):
+    update_goal(goal)
+
+  def create_radio_button_gender(self):
+    layout = QVBoxLayout()
+    label = QLabel("Gender")
+
+    radio_button_male = QRadioButton("Male")
+    radio_button_female = QRadioButton("Female")
+    radio_button_male.clicked.connect(lambda:update_gender("male"))
+    radio_button_female.clicked.connect(lambda:update_gender("female"))
+
+    gender = fetch_gender()
+    if gender == "male":
+      radio_button_male.setChecked(True)
+      radio_button_female.setChecked(False)
+    else:
+      radio_button_female.setChecked(True)
+      radio_button_male.setChecked(False)
+
+    close_button = QPushButton("Close")
+    close_button.clicked.connect(lambda:self.close_button())
+
+    layout.addWidget(label)
+    layout.addWidget(radio_button_male)
+    layout.addWidget(radio_button_female)
+    layout.addWidget(close_button)
+
+    return layout
+
+  def update_gender(self, gender):
+    update_gender(gender)
+
+  def close_button(self):
+    self.close()
+
 
