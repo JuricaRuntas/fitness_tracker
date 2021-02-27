@@ -1,12 +1,16 @@
 import os
 import json
+from datetime import datetime
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QPushButton, QFrame, QHBoxLayout, QVBoxLayout,
                              QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QLineEdit)
 from PyQt5.QtGui import QFont, QCursor, QIcon, QIntValidator
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal
-from fitness_tracker.user_profile.profile_db import fetch_goal, fetch_height, fetch_units, fetch_user_weight, fetch_goal_weight, fetch_age, fetch_gender, fetch_goal_params
-from .nutrition_db import create_nutrition_table, fetch_nutrition_data, fetch_calorie_goal, update_calorie_goal
+from fitness_tracker.user_profile.profile_db import (fetch_goal, fetch_height, fetch_units, fetch_user_weight,
+                                                     fetch_goal_weight, fetch_age, fetch_gender, fetch_goal_params)
+from .nutrition_db import (table_is_empty, create_nutrition_table, fetch_nutrition_data,
+                           fetch_calorie_goal, update_calorie_goal, fetch_meal_plans,
+                           rotate_meals, insert_default_meal_plans_values)
 from .change_weight_dialog import ChangeWeightDialog
 
 path = os.path.abspath(os.path.dirname(__file__))
@@ -22,7 +26,7 @@ class NotesPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
     create_nutrition_table()
-    fetch_nutrition_data()
+    if table_is_empty(): insert_default_meal_plans_values()
     self.setStyleSheet(   
     """QWidget{
       color:#c7c7c7;
@@ -70,6 +74,8 @@ class NotesPanel(QWidget):
       background-color: qlineargradient(x1: 0, y1: 0.5, x2: 1, y2: 0.5, stop: 0 #434343, stop: 1 #440d0f);    
     }
       """)
+    self.meal_plans = json.loads(fetch_meal_plans())
+    if datetime.now().strftime("%V") != self.meal_plans["Current Week Number"]: rotate_meals()
     self.units = "kg" if fetch_units() == "metric" else "lb"
     self.user_weight = fetch_user_weight()
     self.user_goal_weight = fetch_goal_weight()

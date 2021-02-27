@@ -43,3 +43,31 @@ def insert_nutrition_data(email, calorie_goal):
       columns = sql.SQL(", ").join(sql.Identifier(column) for column in ("email", "calorie_goal"))
       values = (email, calorie_goal)
       cursor.execute(sql.SQL(insert).format(columns=columns), (values,))
+
+def fetch_default_meal_plans_values(db_path):
+  values = None
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM 'nutrition' WHERE email=?", (test_user["email"],))
+    values = cursor.fetchall()[0][2:-1]
+  return values
+
+def fetch_server_nutrition_data():
+   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
+
+                         user=db_info["user"], password=db_info["password"]) as conn:
+    with conn.cursor() as cursor:
+      cursor.execute("SELECT * FROM nutrition WHERE email=%s", (test_user["email"],))
+      return cursor.fetchall()
+
+def fetch_local_nutrition_data(db_path):
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM 'nutrition' WHERE email=?", (test_user["email"],))
+    return cursor.fetchall() 
+
+def fetch_local_meal_plans(db_path):
+  with sqlite3.connect(db_path) as conn:
+    cursor = conn.cursor()
+    cursor.execute("SELECT meal_plans FROM 'nutrition' WHERE email=?", (test_user["email"],))
+    return cursor.fetchone()[0]

@@ -75,41 +75,21 @@ def fetch_user_rm_history(db_path=db_path):
 
 def fetch_user_big_lifts_table_data(db_path=db_path):
   email = logged_in_user_email(db_path)
-  select_1RM = "SELECT one_rep_maxes FROM big_lifts WHERE email=%s"
-  select_lifts_for_reps = "SELECT lifts_for_reps FROM big_lifts WHERE email=%s"
-  select_preferred_lifts = "SELECT preferred_lifts FROM big_lifts WHERE email=%s"
-  select_lift_history = "SELECT lift_history FROM big_lifts WHERE email=%s"
-  select_units = "SELECT units FROM big_lifts WHERE email=%s"
-  select_rm_history = "SELECT rm_history FROM big_lifts WHERE email=%s"
-
-  one_rep_maxes = None
-  lifts_for_reps = None
-  preferred_lifts = None
-  lift_history = None
-  units = None
-  rm_history = None
+  big_lifts_data = None
 
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
-      cursor.execute(select_1RM, (email,))
-      one_rep_maxes = cursor.fetchone()[0]
-      
-      cursor.execute(select_lifts_for_reps, (email,))
-      lifts_for_reps = cursor.fetchone()[0]
-      
-      cursor.execute(select_preferred_lifts, (email,))
-      preferred_lifts = cursor.fetchone()[0]
-      
-      cursor.execute(select_lift_history, (email,))
-      lift_history = cursor.fetchone()[0]
-
-      cursor.execute(select_units, (email,))
-      units = cursor.fetchone()[0]
-
-      cursor.execute(select_rm_history, (email,))
-      rm_history = cursor.fetchone()[0]
+      cursor.execute("SELECT * FROM big_lifts WHERE email=%s", (email,))
+      big_lifts_data = cursor.fetchall()[0][:-1]
   
+  one_rep_maxes = big_lifts_data[1]
+  lifts_for_reps = big_lifts_data[2]
+  preferred_lifts = big_lifts_data[3]
+  lift_history = big_lifts_data[4]
+  units = big_lifts_data[5]
+  rm_history = big_lifts_data[6]
+
   if table_is_empty(db_path):
     insert_values = """
     INSERT INTO 'big_lifts' (email, one_rep_maxes, lifts_for_reps, preferred_lifts, lift_history, units, rm_history) VALUES
