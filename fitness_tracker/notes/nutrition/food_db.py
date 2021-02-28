@@ -3,15 +3,15 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from .header import Header
 from fitness_tracker.homepage.side_panel import SidePanel
-from .main_panel import MainPanel
+from .food_database_panel import FoodDatabasePanel
 
-class WeightLossNotes(QWidget):
+class FoodDB(QWidget):
   display_layout_signal = pyqtSignal(str)
 
   def __init__(self):
     super().__init__()
-    self.header = Header(self, "Weight Loss")
-    self.main_panel = MainPanel(self)
+    self.header = Header(self)
+    self.main_panel = FoodDatabasePanel(self)
     self.side_panel = SidePanel(self)
     self.side_panel.emit_layout_name.connect(lambda layout_name: self.emit_display_layout_signal(layout_name))
     self.create_grid()

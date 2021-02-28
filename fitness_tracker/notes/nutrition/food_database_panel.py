@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayou
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt, pyqtSignal
 from .spoonacular import FoodDatabase
+from fitness_tracker.homepage.side_panel import SidePanel
 
 class FoodDatabasePanel(QWidget):
   search_signal = pyqtSignal(str)

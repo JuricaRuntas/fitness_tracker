@@ -75,6 +75,8 @@ class SidePanel(QWidget):
     nutrition_button.clicked.connect(lambda: self.emit_layout_name.emit(nutrition_button.text()))
     weight_notes_button = QPushButton("Weight Loss Notes", self)
     weight_notes_button.clicked.connect(lambda: self.emit_layout_name.emit(weight_notes_button.text()))
+    food_database_button = QPushButton("Food Database", self)
+    food_database_button.clicked.connect(lambda: self.emit_layout_name.emit(food_database_button.text()))
     
     calculators_layout = QVBoxLayout()
     calculators_layout.setContentsMargins(0, 0, 0, 0)
@@ -86,7 +88,7 @@ class SidePanel(QWidget):
     strength_es_button.clicked.connect(lambda: self.emit_layout_name.emit(strength_es_button.text()))
     
     layouts = {general_layout: [line_divider_general, home_button, user_button,
-                                line_divider_notes, lifts_button, workouts_button, nutrition_button, weight_notes_button,
+                                line_divider_notes, lifts_button, workouts_button, nutrition_button, weight_notes_button, food_database_button,
                                 line_divider_calc, max_button, fat_button, strength_es_button,
                                 line_divider_logout, logout_button],
                notes_layout: [],

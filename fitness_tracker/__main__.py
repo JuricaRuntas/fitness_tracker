@@ -16,6 +16,7 @@ from fitness_tracker.notes.workouts.workouts import WorkoutsNotes
 from fitness_tracker.notes.nutrition.nutrition import NutritionNotes
 from fitness_tracker.statistics.strength.strength import StrengthStats
 from fitness_tracker.statistics.weight_loss.weight_loss import WeightLossStats
+from fitness_tracker.notes.nutrition.food_db import FoodDB
 from fitness_tracker.login.login import Login
 from fitness_tracker.signup.signup import Signup
 from fitness_tracker.signup.signup_questions_panel import SignupQuestions
@@ -40,7 +41,7 @@ class FitnessTracker(QMainWindow):
                     "Big Lifts": BigLiftsNotes, "Workouts": WorkoutsNotes, "Nutrition": NutritionNotes,
                     "Weight Loss Notes": WeightLossNotes, "1 Rep Max Calculator": OneRepMaxCalculator,
                     "Body Fat Calculator": BodyFatCalculator, "Strength Estimator": StrengthEstimator,
-                    "Strength Statistics": StrengthStats, "Weight Loss Stats": WeightLossStats}
+                    "Strength Statistics": StrengthStats, "Weight Loss Stats": WeightLossStats, "Food Database": FoodDB}
     self.colorize_background()
     self.colorize_foreground()
     self.setup_borders()

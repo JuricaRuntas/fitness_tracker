@@ -3,7 +3,8 @@ import json
 from datetime import datetime
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QPushButton, QFrame, QHBoxLayout, QVBoxLayout,
-                             QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QLineEdit)
+                             QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, 
+                             QLineEdit, QScrollArea)
 from PyQt5.QtGui import QFont, QCursor, QIcon, QIntValidator
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal
 from fitness_tracker.user_profile.profile_db import (fetch_goal, fetch_height, fetch_units, fetch_user_weight,
@@ -19,13 +20,17 @@ icons_path = os.path.join(path, "icons")
 icons = {"pencil": os.path.join(icons_path, "pencil.png"),
          "plus": os.path.join(icons_path, "plus.png"),
          "left": os.path.join(icons_path, "left.png"),
-         "right": os.path.join(icons_path, "right.png")}
+         "right": os.path.join(icons_path, "right.png"),
+         "search": os.path.join(icons_path, "search.png")}
 
 class NotesPanel(QWidget):
   change_layout_signal = pyqtSignal(str)
   def __init__(self, parent):
     super().__init__(parent)
     create_nutrition_table()
+    global b
+    b = FoodDBSearchPanel()
+    b.show()
     if table_is_empty(): insert_default_meal_plans_values()
     self.setStyleSheet(   
     """QWidget{
@@ -92,14 +97,6 @@ class NotesPanel(QWidget):
     self.change_weight_dialog.change_calorie_goal_signal.connect(lambda calorie_goal: self.change_calorie_goal(calorie_goal))
     self.create_panel()
     self.setStyleSheet("QLabel{color:white;}")
-
-  def set_current_layout_button(self, layout):
-    if layout == "Food Database":
-      self.food_database_button.setStyleSheet("background-color: #603A40;")
-      self.notes_button.setStyleSheet("background-color: #191716;")
-    elif layout == "Notes":
-      self.notes_button.setStyleSheet("background-color: #603A40;")
-      self.food_database_button.setStyleSheet("background-color: #191716;")
 
   @pyqtSlot(str)
   def change_current_weight(self, weight):
@@ -173,23 +170,6 @@ class NotesPanel(QWidget):
     nsummary_layout_framed.setObjectName("frame")
     nsummary_layout_framed.setStyleSheet("""#frame {color: #322d2d;}""")
     return nsummary_layout_framed
-
-  #WIP
-  def create_swap_buttons(self):
-    buttons_layout = QHBoxLayout()
-    self.notes_button = QPushButton("Notes")
-    self.notes_button.setStyleSheet("background-color: #603A40;")
-    self.notes_button.setFixedSize(60, 35)
-    self.notes_button.setCursor(QCursor(Qt.PointingHandCursor))
-    self.notes_button.clicked.connect(lambda: self.change_layout_signal.emit(self.notes_button.text()))
-    self.food_database_button = QPushButton("Food Database")
-    self.food_database_button.setFixedSize(110, 35)
-    self.food_database_button.setCursor(QCursor(Qt.PointingHandCursor))
-    self.food_database_button.clicked.connect(lambda: self.change_layout_signal.emit(self.food_database_button.text()))
-    
-    buttons_layout.addWidget(self.notes_button)
-    buttons_layout.addWidget(self.food_database_button)
-    return buttons_layout
 
   def create_stats(self):
     stats_layout = QHBoxLayout()
@@ -439,3 +419,88 @@ class EditDailyIntake(QWidget):
     if self.calorie_line_edit.text() != "":
       update_calorie_goal(self.calorie_line_edit.text())
       self.close()
+
+class FoodDBSearchPanel(QWidget):
+  def __init__(self):
+    super().__init__()
+    self.setWindowFlags(Qt.FramelessWindowHint)
+    self.setMinimumWidth(430)
+    self.setStyleSheet(   
+    """QWidget{
+      background-color: #232120;
+      color:#c7c7c7;
+      font-weight: bold;
+      font-family: Montserrat;
+      font-size: 16px;
+      }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }
+    QLineEdit{
+      padding: 6px;
+      background-color: rgb(33,33,33);
+      border: 1px solid;
+      border-color: #cdcdcd;
+    }""")
+
+    layout = QVBoxLayout()
+    layout.addLayout(self.create_search_bar())
+    layout.addLayout(self.create_confirm_cancel())
+    self.setLayout(layout)
+
+  def create_search_bar(self):
+    search_bar_layout = QHBoxLayout()
+    search_bar_line_edit = QLineEdit()
+    search_bar_line_edit.setPlaceholderText("Search")
+
+    search_icon = QIcon(icons["search"])
+
+    search_bar_button = QPushButton()
+    search_bar_button.setIcon(search_icon)
+
+    search_bar_layout.addWidget(search_bar_line_edit)
+    search_bar_layout.addWidget(search_bar_button)
+
+    return search_bar_layout
+
+  def create_search_results(self):
+    return
+
+  def startup_search_results(self):
+    return
+
+  def create_confirm_cancel(self):
+    layout = QHBoxLayout()
+
+    cancel = QPushButton("Cancel")
+    cancel.clicked.connect(lambda:self.closefunc())
+
+    confirm = QPushButton("Confirm")
+    confirm.clicked.connect(lambda:self.closefunc())
+
+    layout.addWidget(cancel)
+    layout.addWidget(confirm)
+
+    return layout
+
+  def closefunc(self):
+    self.close()
+
