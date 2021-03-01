@@ -423,7 +423,8 @@ class EditDailyIntake(QWidget):
 class FoodDBSearchPanel(QWidget):
   def __init__(self):
     super().__init__()
-    self.setWindowFlags(Qt.FramelessWindowHint)
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
+    self.setWindowModality(Qt.ApplicationModal)
     self.setMinimumWidth(430)
     self.setStyleSheet(   
     """QWidget{
@@ -459,10 +460,13 @@ class FoodDBSearchPanel(QWidget):
       background-color: rgb(33,33,33);
       border: 1px solid;
       border-color: #cdcdcd;
+    }
+    QScrollArea{
+      background-color: #1A1A1A;
     }""")
-
     layout = QVBoxLayout()
     layout.addLayout(self.create_search_bar())
+    layout.addWidget(self.create_search_results())
     layout.addLayout(self.create_confirm_cancel())
     self.setLayout(layout)
 
@@ -475,6 +479,7 @@ class FoodDBSearchPanel(QWidget):
 
     search_bar_button = QPushButton()
     search_bar_button.setIcon(search_icon)
+    search_bar_button.clicked.connect(lambda:self.update_search_results(search_bar_line_edit.text()))
 
     search_bar_layout.addWidget(search_bar_line_edit)
     search_bar_layout.addWidget(search_bar_button)
@@ -482,10 +487,17 @@ class FoodDBSearchPanel(QWidget):
     return search_bar_layout
 
   def create_search_results(self):
-    return
+    self.result_layout = QVBoxLayout()
+    self.result_layout.setAlignment(Qt.AlignTop)
+    self.result_layout.addWidget(QPushButton("DA"))
+    scroll_area = QScrollArea()
+    scroll_area.setLayout(self.result_layout)
+    scroll_area.setFixedSize(415, 550)
+    return scroll_area
 
-  def startup_search_results(self):
-    return
+  def update_search_results(self, query):
+    for i in reversed(range(self.result_layout.count())): 
+      self.result_layout.itemAt(i).widget().setParent(None)
 
   def create_confirm_cancel(self):
     layout = QHBoxLayout()
