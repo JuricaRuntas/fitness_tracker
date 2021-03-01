@@ -1,7 +1,7 @@
 import json
 import os
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QLineEdit, QHBoxLayout
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 from .big_lifts_db import (fetch_preferred_lifts, fetch_lifts_for_reps, lift_difference,
                            update_lift_history, update_lifts_for_reps)
 from fitness_tracker.user_profile.profile_db import fetch_units
@@ -12,6 +12,7 @@ class UpdateLiftsForRepsWindow(QWidget):
 
   def __init__(self):
     super().__init__()
+    self.setWindowModality(Qt.ApplicationModal)
     self.units = "kg" if fetch_units() == "metric" else "lb"
     self.preferred_lifts = json.loads(fetch_preferred_lifts())
     self.setWindowTitle("Update Lifts For Reps")

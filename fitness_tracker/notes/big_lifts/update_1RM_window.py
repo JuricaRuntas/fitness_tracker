@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QLineEdit, QHBoxLayout
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 from .big_lifts_db import (fetch_preferred_lifts, fetch_one_rep_maxes, lift_difference,
                            update_lift_history, update_1RM_lifts, update_one_rep_maxes_history)
 from fitness_tracker.user_profile.profile_db import fetch_units
@@ -14,6 +14,7 @@ class Update1RMWindow(QWidget):
 
   def __init__(self):
     super().__init__()
+    self.setWindowModality(Qt.ApplicationModal)
     self.current_year = str(datetime.now().year)
     self.units = "kg" if fetch_units() == "metric" else "lb"
     self.preferred_lifts = json.loads(fetch_preferred_lifts())

@@ -2,13 +2,14 @@ from functools import partial
 import json
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, Qt
 from .big_lifts_db import fetch_lift_history, delete_history_entry
 from fitness_tracker.user_profile.profile_db import fetch_units
 
 class LiftHistory(QWidget):
   def __init__(self):
     super().__init__()
+    self.setWindowModality(Qt.ApplicationModal)
     self.units = "kg" if fetch_units() == "metric" else "lb"
     self.setWindowTitle("Lift History")
     self.layout = QVBoxLayout()
