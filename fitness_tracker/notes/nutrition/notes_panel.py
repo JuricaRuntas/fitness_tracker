@@ -13,6 +13,7 @@ from .nutrition_db import (table_is_empty, create_nutrition_table, fetch_nutriti
                            fetch_calorie_goal, update_calorie_goal, fetch_meal_plans,
                            rotate_meals, insert_default_meal_plans_values)
 from .change_weight_dialog import ChangeWeightDialog
+from .spoonacular import FoodDatabase
 
 path = os.path.abspath(os.path.dirname(__file__))
 icons_path = os.path.join(path, "icons")
@@ -29,7 +30,7 @@ class NotesPanel(QWidget):
     super().__init__(parent)
     create_nutrition_table()
     global b
-    b = FoodDBSearchPanel()
+    b = FoodDBSearchPanel("e", "e")
     b.show()
     if table_is_empty(): insert_default_meal_plans_values()
     self.setStyleSheet(   
@@ -421,8 +422,10 @@ class EditDailyIntake(QWidget):
       self.close()
 
 class FoodDBSearchPanel(QWidget):
-  def __init__(self):
+  def __init__(self, week, day):
     super().__init__()
+    self.week = week
+    self.day = day
     self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
     self.setWindowModality(Qt.ApplicationModal)
     self.setMinimumWidth(430)
@@ -490,14 +493,27 @@ class FoodDBSearchPanel(QWidget):
     self.result_layout = QVBoxLayout()
     self.result_layout.setAlignment(Qt.AlignTop)
     self.result_layout.addWidget(QPushButton("DA"))
-    scroll_area = QScrollArea()
-    scroll_area.setLayout(self.result_layout)
-    scroll_area.setFixedSize(415, 550)
-    return scroll_area
+    self.scroll_area = QScrollArea()
+    self.scroll_area.setWidgetResizable(True)
+    widg = QWidget()
+    widg.setLayout(self.result_layout)
+    self.scroll_area.setWidget(widg)
+    self.scroll_area.setFixedSize(415, 550)
+    return self.scroll_area
 
   def update_search_results(self, query):
     for i in reversed(range(self.result_layout.count())): 
       self.result_layout.itemAt(i).widget().setParent(None)
+    api = FoodDatabase()
+    response = api.food_search(query, 512)
+    response_button = [None] * len(response)
+    food_info = [None] * len(response)
+    for i in range(len(response)):
+      food_info[i] = api.food_info(response[i]["id"], "g", 100)
+      response_button[i] = QPushButton(str(food_info[i]["name"]) + str(food_info[i]["nutrition"]["nutrients"][1]["amount"]))
+      print(food_info[i]["name"])
+      response_button[i].clicked.connect(lambda:self.result_to_data(food_info[i]))
+      self.result_layout.addWidget(response_button[i])
 
   def create_confirm_cancel(self):
     layout = QHBoxLayout()
@@ -509,9 +525,18 @@ class FoodDBSearchPanel(QWidget):
     confirm.clicked.connect(lambda:self.closefunc())
 
     layout.addWidget(cancel)
-    layout.addWidget(confirm)
+    #layout.addWidget(confirm)
 
     return layout
+
+  def result_to_data(self, response):
+    print(response["name"])
+    #test stage
+    return
+
+  def data_to_table(self):
+    #Update data in database
+    return
 
   def closefunc(self):
     self.close()
