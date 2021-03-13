@@ -12,12 +12,10 @@ icons = {"Home": os.path.join(path, "home.png"),
          "Compound Exercises": os.path.join(path, "big_lifts.png"),
          "Workouts": os.path.join(path, "workouts.png"),
          "Nutrition": os.path.join(path, "calories.png"),
-         "Weight Loss Notes": os.path.join(path, "weight_loss.png"),
+         "Weight Loss": os.path.join(path, "weight_loss.png"),
          "1 Rep Max": os.path.join(path, "one_rep_max.png"),
          "Body Fat": os.path.join(path, "body_fat.png"),
-         "Strength Estimator": os.path.join(path, "strength_es.png"),
-         "Strength": os.path.join(path, "strength.png"),
-         "Weight Loss": os.path.join(path, "weight_loss.png")}
+         "Strength Estimator": os.path.join(path, "strength_es.png")}
 
 icon_size = QSize(24, 24)
 
@@ -73,7 +71,7 @@ class SidePanel(QWidget):
     workouts_button.clicked.connect(lambda: self.emit_layout_name.emit(workouts_button.text()))
     nutrition_button = QPushButton("Nutrition", self)
     nutrition_button.clicked.connect(lambda: self.emit_layout_name.emit(nutrition_button.text()))
-    weight_notes_button = QPushButton("Weight Loss Notes", self)
+    weight_notes_button = QPushButton("Weight Loss", self)
     weight_notes_button.clicked.connect(lambda: self.emit_layout_name.emit(weight_notes_button.text()))
     food_database_button = QPushButton("Food Database", self)
     food_database_button.clicked.connect(lambda: self.emit_layout_name.emit(food_database_button.text()))
@@ -88,7 +86,8 @@ class SidePanel(QWidget):
     strength_es_button.clicked.connect(lambda: self.emit_layout_name.emit(strength_es_button.text()))
     
     layouts = {general_layout: [line_divider_general, home_button, user_button,
-                                line_divider_notes, lifts_button, workouts_button, nutrition_button, weight_notes_button, food_database_button,
+                                line_divider_notes, lifts_button, workouts_button,
+                                nutrition_button, weight_notes_button, food_database_button,
                                 line_divider_calc, max_button, fat_button, strength_es_button,
                                 line_divider_logout, logout_button],
                notes_layout: [],
