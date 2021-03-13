@@ -3,14 +3,14 @@ import sqlite3
 import json
 import os
 from datetime import datetime
-from fitness_tracker.notes.big_lifts.big_lifts_db import (create_big_lifts_table, insert_default_values,
-                                                         fetch_user_big_lifts_table_data, update_big_lifts_units,
-                                                         update_1RM_lifts, update_lifts_for_reps, lift_difference,
-                                                         update_lift_history, convert_lift_history_weight,
-                                                         delete_history_entry, update_preferred_lifts,
-                                                         update_1RM_and_lifts_for_reps,
-                                                         update_one_rep_maxes_history)
-from big_lifts_test_helpers import *
+from fitness_tracker.notes.compound_exercises.compound_exercises_db import (create_big_lifts_table, insert_default_values,
+                                                                            fetch_user_big_lifts_table_data, update_big_lifts_units,
+                                                                            update_1RM_lifts, update_lifts_for_reps, lift_difference,
+                                                                            update_lift_history, convert_lift_history_weight,
+                                                                            delete_history_entry, update_preferred_lifts,
+                                                                            update_1RM_and_lifts_for_reps,
+                                                                            update_one_rep_maxes_history)
+from compound_exercises_test_helpers import *
 
 class TestBigLifts(unittest.TestCase):
   def setUp(self):  
@@ -253,7 +253,7 @@ class TestBigLifts(unittest.TestCase):
                     "Back Squat": "150.0", "Overhead Press": "100.0"}
     
     for i, (lift, weight) in enumerate(new_RM_lifts.items()):
-      current_lift_type = RM_dict[current_year]["February"][list(preferred_lifts.keys())[i]]
+      current_lift_type = RM_dict[current_year]["March"][list(preferred_lifts.keys())[i]]
       current_lift_type[lift].append(weight)
     
     # test 1: history doesn't exist
@@ -265,7 +265,7 @@ class TestBigLifts(unittest.TestCase):
     new_RM_lifts = {"Incline Bench Press": "123.0", "Front Squat": "120.0"}
     
     for i, (lift, weight) in enumerate(new_RM_lifts.items()):
-      current_lift_type = RM_dict[current_year]["February"][list(preferred_lifts.keys())[i]]
+      current_lift_type = RM_dict[current_year]["March"][list(preferred_lifts.keys())[i]]
       if lift not in current_lift_type: current_lift_type[lift] = []
       current_lift_type[lift].append(weight)
 
@@ -284,7 +284,7 @@ class TestBigLifts(unittest.TestCase):
     RM_dict["2020"] = previous_year_dict
     
     for i, (lift, weight) in enumerate(new_RM_lifts_2020.items()):
-      current_lift_type = RM_dict["2020"]["February"][list(preferred_lifts.keys())[i]]
+      current_lift_type = RM_dict["2020"]["March"][list(preferred_lifts.keys())[i]]
       if lift not in current_lift_type: current_lift_type[lift] = []
       current_lift_type[lift].append(weight)
     
