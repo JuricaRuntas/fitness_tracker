@@ -353,11 +353,11 @@ def clear_lifts_for_reps():
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
-      cursor.execute("UPDATE big_lifts SET lifts_for_reps=%s WHERE email=%s", (lift_for_reps, email,))
+      cursor.execute("UPDATE big_lifts SET lifts_for_reps=%s WHERE email=%s", (lifts_for_reps, email,))
 
   with sqlite3.connect(db_path) as conn:
     cursor = conn.cursor()
-    cursor.execute("UPDATE 'big_lifts' SET lifts_for_reps=? WHERE email=?", (lift_for_reps, email,))
+    cursor.execute("UPDATE 'big_lifts' SET lifts_for_reps=? WHERE email=?", (lifts_for_reps, email,))
 
 def sort_exercises(exercise):
   if exercise in ["Bench Press", "Incline Bench Press"]: return 4
