@@ -3,8 +3,8 @@ import os
 from datetime import datetime
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QLineEdit, QHBoxLayout
 from PyQt5.QtCore import pyqtSignal, Qt
-from .big_lifts_db import (fetch_preferred_lifts, fetch_one_rep_maxes, lift_difference,
-                           update_lift_history, update_1RM_lifts, update_one_rep_maxes_history)
+from .compound_exercises_db import (fetch_preferred_lifts, fetch_one_rep_maxes, lift_difference,
+                                    update_lift_history, update_1RM_lifts, update_one_rep_maxes_history)
 from fitness_tracker.user_profile.profile_db import fetch_units
 
 class Update1RMWindow(QWidget):

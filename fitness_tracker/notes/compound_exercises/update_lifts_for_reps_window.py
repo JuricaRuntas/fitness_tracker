@@ -2,8 +2,8 @@ import json
 import os
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QLineEdit, QHBoxLayout
 from PyQt5.QtCore import pyqtSignal, Qt
-from .big_lifts_db import (fetch_preferred_lifts, fetch_lifts_for_reps, lift_difference,
-                           update_lift_history, update_lifts_for_reps)
+from .compound_exercises_db import (fetch_preferred_lifts, fetch_lifts_for_reps, lift_difference,
+                                    update_lift_history, update_lifts_for_reps)
 from fitness_tracker.user_profile.profile_db import fetch_units
 
 class UpdateLiftsForRepsWindow(QWidget):

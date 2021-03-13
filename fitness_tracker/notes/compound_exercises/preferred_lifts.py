@@ -2,7 +2,7 @@ import json
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QComboBox
 from PyQt5.QtGui import  QFont
 from PyQt5.QtCore import pyqtSignal, Qt
-from .big_lifts_db import fetch_preferred_lifts, update_preferred_lifts, update_1RM_and_lifts_for_reps
+from .compound_exercises_db import fetch_preferred_lifts, update_preferred_lifts, update_1RM_and_lifts_for_reps
 
 class PreferredLifts(QWidget):
   change_lifts_signal = pyqtSignal(bool)

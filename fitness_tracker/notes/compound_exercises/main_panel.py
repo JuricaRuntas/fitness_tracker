@@ -8,14 +8,14 @@ from .preferred_lifts import PreferredLifts
 from .update_1RM_window import Update1RMWindow
 from .update_lifts_for_reps_window import UpdateLiftsForRepsWindow
 from .lift_history import LiftHistory
-from .big_lifts_db import (create_big_lifts_table, insert_default_values, table_is_empty,
-                           fetch_units_from_big_lifts, fetch_one_rep_maxes, fetch_lifts_for_reps,
-                           update_big_lifts_units, update_lifts_for_reps, update_1RM_lifts,
-                           convert_lift_history_weight, fetch_preferred_lifts, clear_one_rep_maxes,
-                           clear_lifts_for_reps, fetch_rm_history, add_year_to_rm_history)
+from .compound_exercises_db import (create_big_lifts_table, insert_default_values, table_is_empty,
+                                    fetch_units_from_big_lifts, fetch_one_rep_maxes, fetch_lifts_for_reps,
+                                    update_big_lifts_units, update_lifts_for_reps, update_1RM_lifts,
+                                    convert_lift_history_weight, fetch_preferred_lifts, clear_one_rep_maxes,
+                                    clear_lifts_for_reps, fetch_rm_history, add_year_to_rm_history)
 from fitness_tracker.user_profile.profile_db import fetch_units
 from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
-from fitness_tracker.notes.big_lifts.one_rm_graphs import OneRMGraphCanvas
+from fitness_tracker.notes.compound_exercises.one_rm_graphs import OneRMGraphCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 matplotlib.use("Qt5Agg")

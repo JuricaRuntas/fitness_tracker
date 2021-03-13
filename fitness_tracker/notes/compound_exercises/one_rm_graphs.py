@@ -1,6 +1,6 @@
 import json
 import matplotlib
-from fitness_tracker.notes.big_lifts.big_lifts_db import fetch_user_rm_history, fetch_preferred_lifts
+from fitness_tracker.notes.compound_exercises.compound_exercises_db import fetch_user_rm_history, fetch_preferred_lifts
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PyQt5.QtWidgets import QSizePolicy

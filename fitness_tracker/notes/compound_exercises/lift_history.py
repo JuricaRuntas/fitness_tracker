@@ -3,7 +3,7 @@ import json
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot, Qt
-from .big_lifts_db import fetch_lift_history, delete_history_entry
+from .compound_exercises_db import fetch_lift_history, delete_history_entry
 from fitness_tracker.user_profile.profile_db import fetch_units
 
 class LiftHistory(QWidget):

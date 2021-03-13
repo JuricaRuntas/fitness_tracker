@@ -9,7 +9,7 @@ path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
 icons = {"Home": os.path.join(path, "home.png"),
          "Profile": os.path.join(path, "user.png"),
          "Logout": os.path.join(path, "logout.png"),
-         "Big Lifts": os.path.join(path, "big_lifts.png"),
+         "Compound Exercises": os.path.join(path, "big_lifts.png"),
          "Workouts": os.path.join(path, "workouts.png"),
          "Nutrition": os.path.join(path, "calories.png"),
          "Weight Loss Notes": os.path.join(path, "weight_loss.png"),
@@ -67,7 +67,7 @@ class SidePanel(QWidget):
 
     notes_layout = QVBoxLayout()
     notes_layout.setContentsMargins(0, 0, 0, 0)
-    lifts_button = QPushButton("Big Lifts", self)
+    lifts_button = QPushButton("Compound Exercises", self)
     lifts_button.clicked.connect(lambda: self.emit_layout_name.emit(lifts_button.text()))
     workouts_button = QPushButton("Workouts", self)
     workouts_button.clicked.connect(lambda: self.emit_layout_name.emit(workouts_button.text()))

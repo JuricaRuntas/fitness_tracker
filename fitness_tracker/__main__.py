@@ -10,7 +10,7 @@ from fitness_tracker.user_profile.profile import Profile
 from fitness_tracker.calculators.one_rep_max.one_rep_max import OneRepMaxCalculator
 from fitness_tracker.calculators.body_fat.body_fat import BodyFatCalculator
 from fitness_tracker.calculators.strength_estimator.strength_estimator import StrengthEstimator
-from fitness_tracker.notes.big_lifts.big_lifts import BigLiftsNotes
+from fitness_tracker.notes.compound_exercises.compound_exercises import BigLiftsNotes
 from fitness_tracker.notes.weight_loss.weight_loss import WeightLossNotes
 from fitness_tracker.notes.workouts.workouts import WorkoutsNotes
 from fitness_tracker.notes.nutrition.nutrition import NutritionNotes
@@ -38,7 +38,7 @@ class FitnessTracker(QMainWindow):
     self.cw.display_layout_signal.connect(lambda layout: self.display_layout(layout))
     self.layouts = {"Login": Login, "Signup": Signup, "Continue": SignupQuestions,
                     "Home": Homepage, "Profile": Profile, "Logout": Login,
-                    "Big Lifts": BigLiftsNotes, "Workouts": WorkoutsNotes, "Nutrition": NutritionNotes,
+                    "Compound Exercises": BigLiftsNotes, "Workouts": WorkoutsNotes, "Nutrition": NutritionNotes,
                     "Weight Loss Notes": WeightLossNotes, "1 Rep Max Calculator": OneRepMaxCalculator,
                     "Body Fat Calculator": BodyFatCalculator, "Strength Estimator": StrengthEstimator,
                     "Strength Statistics": StrengthStats, "Weight Loss Stats": WeightLossStats, "Food Database": FoodDB}
