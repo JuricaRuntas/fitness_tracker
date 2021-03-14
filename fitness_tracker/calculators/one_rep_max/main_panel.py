@@ -132,7 +132,7 @@ class MainPanel(QWidget):
     
     table_items = {"table_headers": ["Set", "%", "Weight", "Reps", "Rest"], 
                    "sets": ["1", "2", "3", "4", "5", "6", "7", "8"],
-                   "percentages": ["~30%-50%", "~60%", "~70", "~80%", "~90%", "~100%", "~102%"],
+                   "percentages": ["~30%-50%", "~60%", "~70%", "~80%", "~90%", "~100%", "~102%"],
                    "weight": [""]*7,
                    "number_of_reps": ["8", "5", "3", "1", "1", "1", "1"],
                    "rest": ["~2 min", "~2 min", "~3 min", "~3 min", "~5 min", "~5-15 min", "~5-15 min"]}
