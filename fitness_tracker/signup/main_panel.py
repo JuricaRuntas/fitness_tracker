@@ -66,7 +66,7 @@ class MainPanel(QWidget):
 
   def create_form_layout(self):
     form_layout = QFormLayout()
-    form_layout.setAlignment(Qt.AlignCenter)
+    form_layout.setFormAlignment(Qt.AlignCenter)
 
     sign_up_label = QLabel("Sign Up")
     sign_up_label.setAlignment(Qt.AlignCenter)
@@ -94,7 +94,7 @@ class MainPanel(QWidget):
     self.continue_button = QPushButton("Continue", self)
     self.continue_button.setCursor(QCursor(Qt.PointingHandCursor))
     self.continue_button.clicked.connect(lambda: self.continue_signup())
-    self.continue_button.setFixedSize(220, 30)
+    self.continue_button.setFixedSize(300, 30)
     
     form_layout.addRow(self.login_button, sign_up_label)
     form_layout.addRow(self.email_entry)

@@ -36,7 +36,9 @@ class TestBigLifts(unittest.TestCase):
     lifts_for_reps = json.dumps({exercise: ["0", "0"] for exercise in default_exercises})
     preferred_lifts = {"Horizontal Press": "Bench Press", "Floor Pull": "Deadlift",
                        "Squat": "Back Squat", "Vertical Press": "Overhead Press"}
-    
+    secondary_exercises = {"Horizontal Press": "Incline Bench Press", "Floor Pull": "Sumo Deadlift",
+                           "Squat": "Front Squat", "Vertical Press": "Push Press"}
+  
     months = ["January", "February", "March", "April", "May", "June", "July",
                   "August", "September", "October", "November", "December"]
     current_year = str(datetime.now().year)
@@ -45,6 +47,9 @@ class TestBigLifts(unittest.TestCase):
       exercises_dict = {}
       for lift_type in preferred_lifts:
         exercises_dict[lift_type] = {preferred_lifts[lift_type]:[]}
+      for lift_type in secondary_exercises:
+        exercises_dict[lift_type][secondary_exercises[lift_type]] = []
+      
       rm_history[current_year][month] = exercises_dict
 
     default_values = {"one_rep_maxes": one_RM, "lifts_for_reps": lifts_for_reps,
@@ -243,10 +248,16 @@ class TestBigLifts(unittest.TestCase):
               "July", "August", "September", "October", "November", "December"] 
     preferred_lifts = {"Horizontal Press": "Bench Press", "Floor Pull": "Deadlift",
                        "Squat": "Back Squat", "Vertical Press": "Overhead Press"}
+    secondary_exercises = {"Horizontal Press": "Incline Bench Press", "Floor Pull": "Sumo Deadlift",
+                           "Squat": "Front Squat", "Vertical Press": "Push Press"}
+
     for month in months:
       exercises_dict = {}
       for lift_type in preferred_lifts:
         exercises_dict[lift_type] = {preferred_lifts[lift_type]:[]}
+      for lift_type in secondary_exercises:
+        exercises_dict[lift_type][secondary_exercises[lift_type]] = []
+
       RM_dict[current_year][month] = exercises_dict
 
     new_RM_lifts = {"Bench Press": "500.0", "Deadlift": "300.0",

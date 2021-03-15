@@ -44,6 +44,7 @@ class OneRMGraphCanvas(FigureCanvas):
 
     for month in self.rm_history[self.year]:
       current_month = self.rm_history[self.year][month]
+      
       horizontal_press_values = list(map(float, current_month["Horizontal Press"][horizontal_press]))
       floor_pull_values = list(map(float, current_month["Floor Pull"][floor_pull]))
       squat_values = list(map(float, current_month["Squat"][squat]))

@@ -102,6 +102,8 @@ def fetch_user_big_lifts_table_data(db_path=db_path):
 def insert_default_values(db_path=db_path):
   email = logged_in_user_email(db_path)
   default_exercises = ["Bench Press", "Deadlift", "Back Squat", "Overhead Press"]
+  secondary_exercises = {"Horizontal Press": "Incline Bench Press", "Floor Pull": "Sumo Deadlift",
+                         "Squat": "Front Squat", "Vertical Press": "Push Press"}
   months = ["January", "February", "March", "April", "May", "June", "July",
             "August", "September", "October", "November", "December"]
   units = fetch_units(db_path)
@@ -118,6 +120,9 @@ def insert_default_values(db_path=db_path):
     exercises_dict = {}
     for lift_type in preferred_lifts:
       exercises_dict[lift_type] = {preferred_lifts[lift_type]:[]}
+    for lift_type in secondary_exercises:
+      exercises_dict[lift_type][secondary_exercises[lift_type]] = []
+
     rm_history[current_year][month] = exercises_dict
 
   default_dict = {"one_rep_maxes": one_RM_dict, "lifts_for_reps": lifts_for_reps,

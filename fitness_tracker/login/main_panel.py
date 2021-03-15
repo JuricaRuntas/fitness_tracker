@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit, QLabel, QPushButton, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit,
+                             QLabel, QPushButton, QSpacerItem, QSizePolicy)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt, pyqtSignal
 from .login_helpers import check_password, fetch_user_info
@@ -79,7 +80,7 @@ class MainPanel(QWidget):
     self.signup_button.setCursor(QCursor(Qt.PointingHandCursor))
     self.signup_button.clicked.connect(lambda: self.emit_layout_name.emit(self.signup_button.text()))
     self.signup_button.setFixedSize(115, 30)
-
+     
     self.email_entry = QLineEdit()
     self.email_entry.setPlaceholderText("Email")
     self.email_entry.setFixedSize(300, 30)
@@ -102,7 +103,7 @@ class MainPanel(QWidget):
     self.login_button = QPushButton("Login", self)
     self.login_button.clicked.connect(lambda: self.login())
     self.login_button.setCursor(QCursor(Qt.PointingHandCursor))
-    self.login_button.setFixedSize(220, 30)
+    self.login_button.setFixedSize(300, 30)
     self.login_button.frameGeometry().center()
 
     form_layout.addRow(sign_in_label, self.signup_button)

@@ -290,13 +290,15 @@ class MainPanel(QWidget):
   @pyqtSlot(bool)
   def changed_preferred_lifts(self, changed):
     if changed:
-      parsed_lifts = list(json.loads(self.fetch_preferred_lifts).values())
+      self.preferred_lifts = json.loads(fetch_preferred_lifts())
+      parsed_lifts = list(self.preferred_lifts.values())
+      
       one_RM_labels = [self.horizontal_press_label_ORM, self.floor_pull_label_ORM,
                        self.squat_label_ORM, self.vertical_press_label_ORM]
 
       lifts_for_reps_labels = [self.horizontal_press_label_reps, self.floor_pull_label_reps,
                                self.squat_label_reps, self.vertical_press_label_reps]
-      
+       
       for i, label in enumerate(one_RM_labels):
         label_text = label.text().split(":")
         label_text[0] = parsed_lifts[i]
@@ -306,6 +308,8 @@ class MainPanel(QWidget):
         label_text = label.text().split(":")
         label_text[0] = parsed_lifts[i]
         label.setText(": ".join(label_text))
+  
+      self.refresh_graph(True)
   
   @pyqtSlot(bool)
   def changed_1RM_lifts(self, changed):
