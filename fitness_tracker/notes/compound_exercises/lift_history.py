@@ -1,20 +1,55 @@
 from functools import partial
 import json
-from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QFormLayout, QScrollArea
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot, Qt
 from .compound_exercises_db import fetch_lift_history, delete_history_entry
 from fitness_tracker.user_profile.profile_db import fetch_units
 
-class LiftHistory(QWidget):
+class LiftHistory(QScrollArea):
   def __init__(self):
     super().__init__()
+    self.setStyleSheet("""
+    QWidget{
+      background-color: #322d2d;
+      font-weight: bold;
+      color:#c7c7c7;
+    }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: center;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+    }
+    """)
     self.setWindowModality(Qt.ApplicationModal)
     self.setWindowFlags(Qt.Tool)
     self.units = "kg" if fetch_units() == "metric" else "lb"
     self.setWindowTitle("Lift History")
-    self.layout = QVBoxLayout()
-    self.setLayout(self.layout)
+    
+    widget = QWidget()
+    self.layout = QFormLayout(widget)
+    exercise_label = QLabel("Exercise")
+    exercise_label.setAlignment(Qt.AlignCenter)
+    delete_label = QLabel("Delete")
+    delete_label.setAlignment(Qt.AlignCenter)
+    self.layout.addRow(exercise_label, delete_label)
+    self.setWidget(widget)
+    self.setWidgetResizable(True)
     self.create_history(True, True)
 
   @pyqtSlot(bool)
@@ -24,12 +59,10 @@ class LiftHistory(QWidget):
       if not init_layout: 
         self.delete_history()
       lift_history = json.loads(lift_history)
-      self.layouts = [None] * len(lift_history)
       self.labels = [None] * len(lift_history)
       self.delete_buttons = [None] * len(lift_history)
 
       for i in range(len(lift_history)):
-        self.layouts[i] = QHBoxLayout()
         self.labels[i] = QLabel(self)
         self.delete_buttons[i] = QPushButton("X", self)
       
@@ -40,24 +73,15 @@ class LiftHistory(QWidget):
           self.labels[j].setText(": ".join([exercise[0], " ".join(["x".join(exercise[1]), self.units])]))
         
         self.delete_buttons[j].setProperty("entry_index", exercise[-1])
-        self.delete_buttons[j].clicked.connect(partial(self.delete_history_entry, j, self.delete_buttons[j].property("entry_index")))
+        self.delete_buttons[j].clicked.connect(partial(self.delete_history_entry_from_layout, j, self.delete_buttons[j].property("entry_index")))
         
-        self.layouts[j].addWidget(self.labels[j])
-        self.layouts[j].addWidget(self.delete_buttons[j])
-        self.layout.addLayout(self.layouts[j])
+        self.layout.addRow(self.labels[j], self.delete_buttons[j])
 
   def delete_history(self):
-    index = self.layout.count()
-    for i in reversed(range(index)):
-      history_entry = self.layout.itemAt(i).layout()
-      history_entry_index = history_entry.count()
-      for j in reversed(range(history_entry_index)):
-        history_entry_widget = history_entry.itemAt(j).widget()
-        history_entry_widget.setParent(None)
-      self.layout.removeItem(self.layouts[i])
+    for i in reversed(range(self.layout.count())):
+      self.layout.itemAt(i).widget().setParent(None)
   
-  def delete_history_entry(self, i, entry_index):
+  def delete_history_entry_from_layout(self, i, entry_index):
     self.labels[i].setParent(None)
     self.delete_buttons[i].setParent(None)
-    self.layout.removeItem(self.layouts[i])
     delete_history_entry(entry_index)
