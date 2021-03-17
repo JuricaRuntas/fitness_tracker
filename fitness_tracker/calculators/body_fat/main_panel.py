@@ -1,3 +1,4 @@
+import sqlite3
 from PyQt5.QtWidgets import (QWidget, QFrame, QFormLayout, QGridLayout,
                             QVBoxLayout, QLabel, QGroupBox, QRadioButton,
                             QHBoxLayout, QLineEdit, QPushButton, QTableWidget,
@@ -6,10 +7,15 @@ from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 from .body_fat_calculator import BodyFatCalculator
 from fitness_tracker.user_profile.profile_db import fetch_units
+from fitness_tracker.config import db_path
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
+    with sqlite3.connect(db_path) as conn:
+      self.sqlite_connection = conn
+      self.sqlite_cursor = conn.cursor()
+    self.units = fetch_units(self.sqlite_cursor)
     self.setStyleSheet("""
     QWidget{
       font-family: Montserrat;
@@ -93,7 +99,7 @@ class MainPanel(QWidget):
     calculator_frame.setMaximumWidth(600)
     calculator_frame.setMaximumHeight(350)
      
-    form_layout = self.create_form_metric() if fetch_units() == "metric" else self.create_form_imperial()
+    form_layout = self.create_form_metric() if self.units == "metric" else self.create_form_imperial()
     calculator_frame.setLayout(form_layout)
 
     wrapper_layout = QVBoxLayout()
@@ -223,8 +229,6 @@ class MainPanel(QWidget):
     return self.calculator_layout
 
   def hide_or_show_hip(self):
-    units = fetch_units()
-    
     if self.female_button.isChecked():
       self.calculator_layout.removeWidget(self.calculate_button)
       self.calculate_button.deleteLater()
@@ -235,11 +239,11 @@ class MainPanel(QWidget):
       
       self.hip_label = QLabel("Hip", self)
       
-      if units == "metric":
+      if self.units == "metric":
         self.hip_entry = QLineEdit()
         self.hip_entry.setPlaceholderText("cm")
         self.calculator_layout.addRow(self.hip_label, self.hip_entry)
-      elif units == "imperial":
+      elif self.units == "imperial":
         self.hip_layout = QHBoxLayout()
         self.hip_feet_entry = QLineEdit()
         self.hip_feet_entry.setPlaceholderText("feet")
@@ -252,12 +256,12 @@ class MainPanel(QWidget):
 
       self.calculator_layout.addRow(self.calculate_button)
     else:
-      if units == "metric":
+      if self.units == "metric":
         self.calculator_layout.removeWidget(self.hip_label)
         self.hip_label.deleteLater()
         self.calculator_layout.removeWidget(self.hip_entry)
         self.hip_entry.deleteLater()
-      elif units == "imperial":
+      elif self.units == "imperial":
         self.calculator_layout.removeWidget(self.hip_label)
         self.hip_label.deleteLater()
         self.calculator_layout.removeWidget(self.hip_feet_entry)
@@ -311,7 +315,7 @@ class MainPanel(QWidget):
 
   def calculate(self):
     gender = "male" if self.male_button.isChecked() else "female"
-    units = "kg" if fetch_units() == "metric" else "lbs"
+    units = "kg" if self.units == "metric" else "lbs"
     m = self.get_measurements()
     try:
       calc = BodyFatCalculator(m["Gender"], m["Age"], m["Weight"], m["Height"], m["Neck"], m["Waist"], m["Units"], m["Hip"])
@@ -323,12 +327,11 @@ class MainPanel(QWidget):
   def get_measurements(self):
     measurements = {}
     measurements["Gender"] = "male" if self.male_button.isChecked() else "female"
-    units = fetch_units()
     try:
       measurements["Age"] = int(self.age_entry.text())
       measurements["Weight"] = int(self.weight_entry.text())
-      measurements["Units"] = units
-      if units == "metric":
+      measurements["Units"] = self.units
+      if self.units == "metric":
         measurements["Height"] = int(self.height_entry.text())
         measurements["Neck"] = int(self.neck_entry.text())
         measurements["Waist"] = int(self.waist_entry.text())
@@ -336,7 +339,7 @@ class MainPanel(QWidget):
           measurements["Hip"] = int(self.hip_entry.text())
         except (AttributeError, RuntimeError): # hip entry might not exist
           measurements["Hip"] = None
-      elif units == "imperial":
+      elif self.units == "imperial":
         measurements["Height"] = int(self.height_feet_entry.text())*12+float(self.height_inches_entry.text())
         measurements["Neck"] = int(self.neck_feet_entry.text())*12+float(self.neck_inches_entry.text())
         measurements["Waist"] = int(self.waist_feet_entry.text())*12+float(self.waist_inches_entry.text())

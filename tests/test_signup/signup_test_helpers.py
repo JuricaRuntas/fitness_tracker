@@ -12,10 +12,10 @@ test_user = {"email": "test@gmail.com",
              "weight": "100", "height": "190", "goal": "Weight gain",
              "goalparams": json.dumps(["Moderately active", 0.25]), "goalweight": "120"}
 
-def create_test_user(path):
+def create_test_user(cursor):
   create_user(test_user["email"], "testpassword123")
-  create_user_table(test_user["email"], "testpassword123", path)
-  create_user_info_after_signup(test_user, test_user["email"], path)
+  create_user_table(test_user["email"], "testpassword123", cursor)
+  create_user_info_after_signup(test_user, test_user["email"], cursor)
 
 def delete_test_user():
   with psycopg2.connect(host=db_info["host"], port=db_info["port"],
@@ -40,14 +40,10 @@ def fetch_name_and_password():
       cursor.execute("SELECT email, password FROM users WHERE email=%s", (test_user["email"],))
       return cursor.fetchone()
 
-def fetch_test_table_data():
-  with sqlite3.connect("test.db") as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM 'users' WHERE email=?", (test_user["email"],))
-    return cursor.fetchall()[0][:-1]
+def fetch_test_table_data(cursor):
+  cursor.execute("SELECT * FROM 'users' WHERE email=?", (test_user["email"],))
+  return cursor.fetchall()[0][:-1]
 
-def fetch_test_table_columns():
-  with sqlite3.connect("test.db") as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM 'users' WHERE email=?",  (test_user["email"],))
-    return tuple(description[0] for description in cursor.description)[:-2]
+def fetch_test_table_columns(cursor):
+  cursor.execute("SELECT * FROM 'users' WHERE email=?",  (test_user["email"],))
+  return tuple(description[0] for description in cursor.description)[:-2]

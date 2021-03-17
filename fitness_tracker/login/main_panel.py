@@ -1,8 +1,10 @@
+import sqlite3
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit,
                              QLabel, QPushButton, QSpacerItem, QSizePolicy)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt, pyqtSignal
 from .login_helpers import check_password, fetch_user_info
+from fitness_tracker.config import db_path
 
 class MainPanel(QWidget):
   emit_layout_name = pyqtSignal(str)
@@ -118,5 +120,7 @@ class MainPanel(QWidget):
     email = self.email_entry.text()
     password = self.password_entry.text()
     if check_password(email, password):
-      fetch_user_info(email, password)
+      with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        fetch_user_info(email, password, cursor)
       self.emit_layout_name.emit("Home")

@@ -2,29 +2,29 @@ import json
 from PyQt5.QtWidgets import (QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout,
                              QFormLayout, QLineEdit, QComboBox, QRadioButton, QGroupBox)
 from PyQt5.QtCore import pyqtSignal
-from fitness_tracker.user_profile.profile_db import (fetch_user_weight, fetch_goal_weight, fetch_goal,
-                                                     fetch_age, fetch_gender, fetch_height, fetch_goal_params,
-                                                     update_weight, update_goal, update_goal_parameters,
-                                                     update_goal_weight)
 from .nutrition_db import update_calorie_goal
 from .calorie_goal_calculator import CalorieGoalCalculator
+from fitness_tracker.user_profile.profile_db import fetch_local_user_data, update_user_info_parameter
 
 class ChangeWeightDialog(QWidget):
   change_current_weight_signal = pyqtSignal(str)
   change_goal_weight_signal = pyqtSignal(str)
   change_calorie_goal_signal = pyqtSignal(str)
 
-  def __init__(self):
+  def __init__(self, sqlite_connection):
     super().__init__()
-    self.user_weight = fetch_user_weight()
-    self.goal_weight = fetch_goal_weight()
-    goal_parameters = json.loads(fetch_goal_params())
-    self.goal = fetch_goal()
+    self.sqlite_connection = sqlite_connection
+    self.sqlite_cursor = sqlite_connection.cursor()
+    self.user_data = fetch_local_user_data(self.sqlite_cursor)
+    self.user_weight = self.user_data["Weight"]
+    self.goal_weight = self.user_data["Weight Goal"]
+    goal_parameters = self.user_data["Goal Params"]
+    self.goal = self.user_data["Goal"]
     self.activity_level = goal_parameters[0]
     self.weight_per_week = goal_parameters[1]
-    self.age = fetch_age()
-    self.gender = fetch_gender()
-    self.height = fetch_height()
+    self.age = self.user_data["Age"]
+    self.gender = self.user_data["Gender"]
+    self.height = self.user_data["Height"]
     self.setWindowTitle("Edit weight")
     self.create_layout()
     
@@ -100,12 +100,12 @@ class ChangeWeightDialog(QWidget):
 
     try:
       if not current_weight == self.user_weight:
-        update_weight(str(float(current_weight)))
+        update_user_info_parameter(self.sqlite_connection, "weight", str(float(current_weight)))
         self.user_weight = current_weight
         self.change_current_weight_signal.emit(current_weight)
         self.current_weight_line_edit.setText(current_weight)
       if not goal == self.goal:
-        update_goal(goal)
+        update_user_info_parameter(self.sqlite_connection, "goal", goal)
         self.goal = goal
         if goal == "Weight loss":
           self.weight_loss_button.setChecked(True)
@@ -114,18 +114,18 @@ class ChangeWeightDialog(QWidget):
         elif goal == "Weight gain":
           self.weight_gain_button.setChecked(True)
       if not goal_params[0] == self.activity_level or not goal_params[1] == self.weight_per_week:
-        update_goal_parameters(json.dumps(goal_params))
+        update_user_info_parameters(self.sqlite_connection, "goalparams", goal_params)
         self.activity_level = goal_params[0]
         self.weight_per_week = goal_params[1]
       if not goal_weight == self.goal_weight:
-        update_goal_weight(goal_weight)
+        update_user_info_parameters(self.sqlite_connection, "goalweight", goal_weight)
         self.goal_weight = goal_weight
         self.change_goal_weight_signal.emit(goal_weight)
         self.goal_weight_line_edit.setText(goal_weight)
       
       calculator = CalorieGoalCalculator(int(self.age), self.gender, float(self.height), float(self.user_weight), goal_params[0], goal, goal_params[1])
       calorie_goal = calculator.calculate_calorie_goal()
-      update_calorie_goal(calorie_goal)
+      update_calorie_goal(calorie_goal, self.sqlite_connection)
       self.change_calorie_goal_signal.emit(str(calorie_goal))
       self.close()
     except ValueError:

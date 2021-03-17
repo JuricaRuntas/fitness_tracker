@@ -11,10 +11,10 @@ test_user = {"email": "test@gmail.com",
              "weight": "100", "height": "190", "goal": "Weight gain",
              "goalparams": json.dumps(["Moderately active", 0.25]), "goalweight": "120"}
 
-def create_test_user(path):
+def create_test_user(cursor):
   create_user(test_user["email"], "testpassword123")
-  create_user_table(test_user["email"], "testpassword123", path)
-  create_user_info_after_signup(test_user, test_user["email"], path)
+  create_user_table(test_user["email"], "testpassword123", cursor)
+  create_user_info_after_signup(test_user, test_user["email"], cursor)
 
 def delete_test_user(email):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -22,11 +22,9 @@ def delete_test_user(email):
     with conn.cursor() as cursor:
       cursor.execute("DELETE FROM users WHERE email=%s", (email,))
 
-def fetch_big_lifts_columns():
-  with sqlite3.connect("test.db") as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM big_lifts")
-    return tuple(description[0] for description in cursor.description if not description[0] == "id")
+def fetch_big_lifts_columns(cursor):
+  cursor.execute("SELECT * FROM big_lifts")
+  return tuple(description[0] for description in cursor.description if not description[0] == "id")
 
 def fetch_big_lifts_data(email):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -35,22 +33,16 @@ def fetch_big_lifts_data(email):
       cursor.execute("SELECT * FROM big_lifts WHERE email=%s", (email,))
       return cursor.fetchall()
 
-def fetch_local_big_lifts_data(path):
-  with sqlite3.connect(path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM 'big_lifts' WHERE email=?", (test_user["email"],))
-    return cursor.fetchall()
+def fetch_local_big_lifts_data(cursor):
+  cursor.execute("SELECT * FROM 'big_lifts' WHERE email=?", (test_user["email"],))
+  return cursor.fetchall()
 
-def fetch_local_big_lifts_units(path):
-  with sqlite3.connect(path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT units FROM big_lifts WHERE email=?", (test_user["email"],))
-    return cursor.fetchone()[0]
+def fetch_local_big_lifts_units(cursor):
+  cursor.execute("SELECT units FROM big_lifts WHERE email=?", (test_user["email"],))
+  return cursor.fetchone()[0]
 
-def update_test_user_table_units(units, path):
-  with sqlite3.connect(path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("UPDATE 'users' SET units=? WHERE email=?", (units, test_user["email"],))
+def update_test_user_table_units(units, cursor):
+  cursor.execute("UPDATE 'users' SET units=? WHERE email=?", (units, test_user["email"],))
 
 def delete_test_from_big_lifts(email):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -58,7 +50,7 @@ def delete_test_from_big_lifts(email):
     with conn.cursor() as cursor:
       cursor.execute("DELETE FROM big_lifts WHERE email=%s", (test_user["email"],))
 
-def fetch_1RM_lifts(db_path, email):
+def fetch_1RM_lifts(sqlite_cursor, email):
   one_rep_maxes = []
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
@@ -66,13 +58,11 @@ def fetch_1RM_lifts(db_path, email):
       cursor.execute("SELECT one_rep_maxes FROM big_lifts WHERE email=%s", (test_user["email"],))
       one_rep_maxes.append(cursor.fetchone()[0])
 
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT one_rep_maxes FROM 'big_lifts' WHERE email=?", (test_user["email"],))
-    one_rep_maxes.append(cursor.fetchone()[0])
+  sqlite_cursor.execute("SELECT one_rep_maxes FROM 'big_lifts' WHERE email=?", (test_user["email"],))
+  one_rep_maxes.append(sqlite_cursor.fetchone()[0])
   return one_rep_maxes
 
-def fetch_lifts_for_reps(db_path, email):
+def fetch_lifts_for_reps(sqlite_cursor, email):
   lifts_for_reps = []
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
@@ -80,38 +70,26 @@ def fetch_lifts_for_reps(db_path, email):
       cursor.execute("SELECT lifts_for_reps FROM big_lifts WHERE email=%s", (test_user["email"],))
       lifts_for_reps.append(cursor.fetchone()[0])
 
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT lifts_for_reps FROM 'big_lifts' WHERE email=?", (test_user["email"],))
-    lifts_for_reps.append(cursor.fetchone()[0])
+  sqlite_cursor.execute("SELECT lifts_for_reps FROM 'big_lifts' WHERE email=?", (test_user["email"],))
+  lifts_for_reps.append(sqlite_cursor.fetchone()[0])
   return lifts_for_reps
 
-def fetch_local_lift_history(path):
-  with sqlite3.connect(path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT lift_history FROM 'big_lifts' WHERE email=?", (test_user["email"],))
-    return cursor.fetchone()[0]
+def fetch_local_lift_history(cursor):
+  cursor.execute("SELECT lift_history FROM 'big_lifts' WHERE email=?", (test_user["email"],))
+  return cursor.fetchone()[0]
 
-def fetch_local_preferred_lifts(path):
-  with sqlite3.connect(path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT preferred_lifts FROM 'big_lifts' WHERE email=?", (test_user["email"],))
-    return cursor.fetchone()[0]
+def fetch_local_preferred_lifts(cursor):
+  cursor.execute("SELECT preferred_lifts FROM 'big_lifts' WHERE email=?", (test_user["email"],))
+  return cursor.fetchone()[0]
 
-def fetch_local_one_rep_maxes(path):
-  with sqlite3.connect(path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT one_rep_maxes FROM 'big_lifts' WHERE email=?", (test_user["email"],))
-    return cursor.fetchone()[0]
+def fetch_local_one_rep_maxes(cursor):
+  cursor.execute("SELECT one_rep_maxes FROM 'big_lifts' WHERE email=?", (test_user["email"],))
+  return cursor.fetchone()[0]
 
-def fetch_local_lifts_for_reps(path):
-  with sqlite3.connect(path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT lifts_for_reps FROM 'big_lifts' WHERE email=?", (test_user["email"],))
-    return cursor.fetchone()[0]
+def fetch_local_lifts_for_reps(cursor):
+  cursor.execute("SELECT lifts_for_reps FROM 'big_lifts' WHERE email=?", (test_user["email"],))
+  return cursor.fetchone()[0]
 
-def fetch_local_one_rm_history(path):
-  with sqlite3.connect(path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT rm_history FROM 'big_lifts' WHERE email=?", (test_user["email"],))
-    return cursor.fetchone()[0]
+def fetch_local_one_rm_history(cursor):
+  cursor.execute("SELECT rm_history FROM 'big_lifts' WHERE email=?", (test_user["email"],))
+  return cursor.fetchone()[0]

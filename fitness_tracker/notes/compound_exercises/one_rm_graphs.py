@@ -6,8 +6,10 @@ from matplotlib.figure import Figure
 from PyQt5.QtWidgets import QSizePolicy
 
 class OneRMGraphCanvas(FigureCanvas):
-  def __init__(self, lift_type, rm_history, year, parent=None, width=5, height=4, dpi=100):
+  def __init__(self, sqlite_connection, lift_type, rm_history, year, parent=None, width=5, height=4, dpi=100):
     assert lift_type in ["Horizontal Press", "Floor Pull", "Squat", "Vertical Press"], "Invalid lift type: '%s'" % lift_type
+    self.sqlite_connection = sqlite_connection
+    self.sqlite_cursor = sqlite_connection.cursor()
     self.lift_type = lift_type
     self.rm_history = rm_history
     self.year = year
@@ -33,7 +35,7 @@ class OneRMGraphCanvas(FigureCanvas):
     self.axes.set_title(self.preferred_lifts[self.lift_type])
      
   def parse_data(self):
-    self.preferred_lifts = json.loads(fetch_preferred_lifts())
+    self.preferred_lifts = json.loads(fetch_preferred_lifts(self.sqlite_cursor))
     parsed_exercises = {self.preferred_lifts["Horizontal Press"]: [], self.preferred_lifts["Floor Pull"]: [],
                         self.preferred_lifts["Squat"]: [], self.preferred_lifts["Vertical Press"]: []}
 

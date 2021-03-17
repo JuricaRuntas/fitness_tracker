@@ -1,15 +1,22 @@
+import sqlite3
 from PyQt5.QtWidgets import (QPushButton, QLabel, QComboBox, QLineEdit, QGridLayout, QWidget,
                              QVBoxLayout, QHBoxLayout, QRadioButton, QScrollArea, QTableWidget,
                              QTableWidgetItem, QAbstractItemView, QFrame, QFormLayout)
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
-from fitness_tracker.user_profile.profile_db import fetch_units
 from .estimator import StrengthLevelEstimator
 from .exercise_standards import LiftStandards
+from fitness_tracker.user_profile.profile_db import fetch_units
+from fitness_tracker.config import db_path
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
+    with sqlite3.connect(db_path) as conn:
+      self.sqlite_connection = conn
+      self.sqlite_cursor = conn.cursor()
+    
+    self.units = fetch_units(self.sqlite_cursor)
     self.setStyleSheet("""
     QWidget{
       font-family: Montserrat;
@@ -53,7 +60,7 @@ class MainPanel(QWidget):
       border: 1px solid;
       border-color: rgb(88, 88, 88)
     }""")
-    self.units = "kg" if fetch_units() == "metric" else "lb"
+    self.units = "kg" if self.units == "metric" else "lb"
     self.CreatePanel()
 
   def CreatePanel(self):

@@ -1,21 +1,30 @@
+import sqlite3
+import json
 from PyQt5.QtWidgets import (QRadioButton, QWidget, QGridLayout, QLabel, QLineEdit, QComboBox, QPushButton,
-                            QFrame, QHBoxLayout, QVBoxLayout)
+                             QFrame, QHBoxLayout, QVBoxLayout)
 from PyQt5.QtGui import QFont, QCursor, QDoubleValidator
 from PyQt5.QtCore import Qt
 from .profile_db import *
-import json
+from fitness_tracker.config import db_path
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    self.username = fetch_username()
-    self.gender = fetch_gender()
-    self.age = fetch_age()
-    self.weight = fetch_user_weight()
-    self.weight_goal = fetch_goal_weight()
-    self.goal_params = json.loads(fetch_goal_params())
-    self.user_height = fetch_height()
-    self.goal = fetch_goal()
+    with sqlite3.connect(db_path) as conn:
+      self.sqlite_connection = conn
+      self.sqlite_cursor = conn.cursor()
+
+    self.user_data = fetch_local_user_data(self.sqlite_cursor)
+    self.username = self.user_data["Name"]
+    self.gender = self.user_data["Gender"]
+    self.age = self.user_data["Age"]
+    self.weight = self.user_data["Weight"]
+    self.weight_goal = self.user_data["Weight Goal"]
+    self.goal_params = self.user_data["Goal Params"]
+    self.user_height = self.user_data["Height"]
+    self.goal = self.user_data["Goal"]
+    self.units = fetch_units(self.sqlite_cursor)
+    
     self.setStyleSheet(   
     """QWidget{
       color:#c7c7c7;
@@ -184,7 +193,7 @@ class MainPanel(QWidget):
     self.display_units_combobox.setCursor(QCursor(Qt.PointingHandCursor))
     self.display_units_combobox.addItems(["Metric", "Imperial"])
     
-    current_index = 0 if fetch_units() == "metric" else 1
+    current_index = 0 if self.units == "metric" else 1
     self.display_units_combobox.setCurrentIndex(current_index)
     self.display_units_combobox.activated.connect(lambda: self.change_units(self.display_units_combobox.currentText()))
     
@@ -215,9 +224,9 @@ class MainPanel(QWidget):
       pass
     else:
       # update units in user table
-      update_units()
+      update_units(self.sqlite_connection)
       # get updated units
-      updated_units = fetch_units()
+      updated_units = fetch_units(self.sqlite_cursor)
       current_weight = float(self.user_data[4])
       converted_weight = convert_weight(self.user_data[3], current_weight)
       # update self.user_data
@@ -229,46 +238,44 @@ class MainPanel(QWidget):
 
   def update_weight(self):
     global weight_edit
-    weight_edit = EditButtonLine("weight")
+    weight_edit = EditButtonLine("weight", self.sqlite_connection)
     weight_edit.show()
 
   def update_goal(self):
     global goal_edit
-    goal_edit = EditRadioButton("goal")
+    goal_edit = EditRadioButton("goal", self.sqlite_connection, self.goal)
     goal_edit.show()
-
-  #def update_goal_params(self, goal_params):
-    #update_goal_parameters(goal_params)
 
   def update_height(self):
     global height_edit
-    height_edit = EditButtonLine("height")
+    height_edit = EditButtonLine("height", self.sqlite_connection)
     height_edit.show()
 
   def update_age(self):
     global age_edit
-    age_edit = EditButtonLine("age")
+    age_edit = EditButtonLine("age", self.sqlite_connection)
     age_edit.show()
 
   def update_username(self):
     global name_edit
-    name_edit = EditButtonLine("username")
+    name_edit = EditButtonLine("username", self.sqlite_connection)
     name_edit.show()
 
   def update_goal_weight(self):
     global gw_edit
-    gw_edit = EditButtonLine("goalweight")
+    gw_edit = EditButtonLine("goalweight", self.sqlite_connection)
     gw_edit.show()
 
   def update_gender(self):
     global gender_edit
-    gender_edit = EditRadioButton("gender")
+    gender_edit = EditRadioButton("gender", self.sqlite_connection, self.gender)
     gender_edit.show()
 
 class EditButtonLine(QWidget):
-  def __init__(self, edit_func):
+  def __init__(self, edit_func, sqlite_connection):
     super().__init__()
     self.edit_func = edit_func
+    self.sqlite_connection = sqlite_connection
     self.setStyleSheet(   
     """QWidget{
       background-color: #232120;
@@ -355,33 +362,35 @@ class EditButtonLine(QWidget):
 
   def confirm_height(self):
     if self.line_edit.text() != "":
-      update_height(self.line_edit.text())
+      update_user_info_parameter(self.sqlite_connection, "height", self.line_edit.text())
       self.close()
 
   def confirm_weight(self):
     if self.line_edit.text() != "":
-      update_weight(self.line_edit.text())
+      update_user_info_parameter(self.sqlite_connection, "weight", self.line_edit.text())
       self.close()
 
   def confirm_age(self):
     if self.line_edit.text() != "":
-      update_age(self.line_edit.text())
+      update_user_info_parameter(self.sqlite_connection, "age", self.line_edit.text())
       self.close()
 
   def confirm_name(self):
     if self.line_edit.text() != "":
-      update_username(self.line_edit.text())
+      update_user_info_parameter(self.sqlite_connection, "name", self.line_edit.text())
       self.close()
 
   def confirm_goal_weight(self):
     if self.line_edit.text() != "":
-      update_goal_weight(self.line_edit.text())
+      update_user_info_parameter(self.sqlite_connection, "goalweight", self.line_edit.text())
       self.close()    
 
 class EditRadioButton(QWidget):
-  def __init__(self, edit_func):
+  def __init__(self, edit_func, sqlite_connection, parameter):
     super().__init__()
+    self.sqlite_connection = sqlite_connection
     self.edit_func = edit_func
+    self.parameter = parameter # goal or gender
     self.setStyleSheet(   
     """QWidget{
       background-color: #232120;
@@ -425,16 +434,15 @@ class EditRadioButton(QWidget):
     label = QLabel("Goal")
     #Weight loss, Maintain weight, Weight gain
     radio_button_loss = QRadioButton("Weight Loss")
-    radio_button_loss.clicked.connect(lambda:self.update_goal("Weight loss"))
+    radio_button_loss.clicked.connect(lambda:update_user_info_parameter(self.sqlite_connection, "goal", "Weight loss"))
     radio_button_maintain = QRadioButton("Weight Maintain")
-    radio_button_maintain.clicked.connect(lambda:self.update_goal("Maintain weight"))
+    radio_button_maintain.clicked.connect(lambda:update_user_info_parameter(self.sqlite_connection, "goal", "Maintain weight"))
     radio_button_gain = QRadioButton("Weight Gain")
-    radio_button_gain.clicked.connect(lambda:self.update_goal("Weight gain"))
+    radio_button_gain.clicked.connect(lambda:update_user_info_parameter(self.sqlite_connection, "goal", "Weight gain"))
 
-    current_goal = fetch_goal()
-    if current_goal == "Weight loss":
+    if self.parameter == "Weight loss":
       radio_button_loss.setChecked(True)
-    elif current_goal == "Maintain weight":
+    elif self.parameter == "Maintain weight":
       radio_button_maintain.setChecked(True)
     else:
       radio_button_gain.setChecked(True)
@@ -459,11 +467,10 @@ class EditRadioButton(QWidget):
 
     radio_button_male = QRadioButton("Male")
     radio_button_female = QRadioButton("Female")
-    radio_button_male.clicked.connect(lambda:update_gender("male"))
-    radio_button_female.clicked.connect(lambda:update_gender("female"))
+    radio_button_male.clicked.connect(lambda:update_user_info_parameter(self.sqlite_connection, "gender", "male"))
+    radio_button_female.clicked.connect(lambda:update_user_info_parameter(self.sqlite_connection, "gender", "female"))
 
-    gender = fetch_gender()
-    if gender == "male":
+    if self.parameter == "male":
       radio_button_male.setChecked(True)
       radio_button_female.setChecked(False)
     else:
@@ -480,10 +487,5 @@ class EditRadioButton(QWidget):
 
     return layout
 
-  def update_gender(self, gender):
-    update_gender(gender)
-
   def close_button(self):
     self.close()
-
-

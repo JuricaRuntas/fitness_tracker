@@ -36,17 +36,17 @@ def create_user(user_email, user_password):
       status = False
   return status
 
-def create_user_info_after_signup(user_info, email, db_path=db_path):
+def create_user_info_after_signup(user_info, email, sqlite_connection):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
       update_query = create_update_query("users", email, user_info)
       cursor.execute(update_query)
     
-    with sqlite3.connect(db_path) as conn:
-      cursor = conn.cursor()
-      update_query = create_update_query("users",  email, user_info, sqlite=True)
-      cursor.execute(update_query)
+  update_query = create_update_query("users",  email, user_info, sqlite=True)
+  sqlite_cursor = sqlite_connection.cursor()
+  sqlite_cursor.execute(update_query)
+  sqlite_connection.commit()
 
 def create_update_query(table_name, email, columns_values_dict, sqlite=False):
   update_query = "UPDATE {table} SET"
@@ -69,8 +69,8 @@ def create_update_query(table_name, email, columns_values_dict, sqlite=False):
     update_query = update_query.format(table=table_name)
     return update_query % email
 
-def create_user_table(email, password, db_path=db_path):
-  status = True
+def create_user_table(email, password, sqlite_connection):
+  sqlite_cursor = sqlite_connection.cursor()
   password = hashlib.sha256(password.encode('UTF-8')).hexdigest()
   # set user table columns here
   create_table = """
@@ -90,8 +90,7 @@ def create_user_table(email, password, db_path=db_path):
                  ID integer NOT NULL,
                  PRIMARY KEY (ID));
                  """ 
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute(create_table)
-    cursor.execute("INSERT INTO 'users' (email, password) VALUES (?, ?)", (email, password,))
-    cursor.execute("UPDATE 'users' SET logged_in='YES' WHERE email=?", (email,))
+  sqlite_cursor.execute(create_table)
+  sqlite_cursor.execute("INSERT INTO 'users' (email, password) VALUES (?, ?)", (email, password,))
+  sqlite_cursor.execute("UPDATE 'users' SET logged_in='YES' WHERE email=?", (email,))
+  sqlite_connection.commit()

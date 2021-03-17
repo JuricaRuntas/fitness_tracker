@@ -6,37 +6,30 @@ from psycopg2 import sql
 from fitness_tracker.user_profile.profile_db import logged_in_user_email
 from fitness_tracker.config import db_path, db_info
 
-def table_exists(db_path=db_path):
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='nutrition'")
-    if cursor.fetchone()[0] == 0: return False
+def table_exists(sqlite_cursor):
+  sqlite_cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='nutrition'")
+  if sqlite_cursor.fetchone()[0] == 0: return False
   return True
 
-def table_is_empty(db_path=db_path):
-  email = logged_in_user_email(db_path) 
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT COUNT (*) FROM 'nutrition' WHERE email=?", (email,))
-    if cursor.fetchone()[0] == 0: return True
+def table_is_empty(sqlite_cursor):
+  email = logged_in_user_email(sqlite_cursor) 
+  sqlite_cursor.execute("SELECT COUNT (*) FROM 'nutrition' WHERE email=?", (email,))
+  if sqlite_cursor.fetchone()[0] == 0: return True
   return False
 
-def fetch_calorie_goal():
-  email = logged_in_user_email(db_path) 
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT calorie_goal FROM 'nutrition' WHERE email=?", (email,))
-    return cursor.fetchone()[0]
+def fetch_calorie_goal(sqlite_cursor):
+  email = logged_in_user_email(sqlite_cursor) 
+  sqlite_cursor.execute("SELECT calorie_goal FROM 'nutrition' WHERE email=?", (email,))
+  return sqlite_cursor.fetchone()[0]
 
-def fetch_meal_plans(db_path=db_path):
-  email = logged_in_user_email(db_path)
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT meal_plans FROM 'nutrition' WHERE email=?", (email,))
-    return cursor.fetchone()[0]
+def fetch_meal_plans(sqlite_cursor):
+  email = logged_in_user_email(sqlite_cursor)
+  sqlite_cursor.execute("SELECT meal_plans FROM 'nutrition' WHERE email=?", (email,))
+  return sqlite_cursor.fetchone()[0]
 
-def fetch_nutrition_data(db_path=db_path):
-  email = logged_in_user_email(db_path) 
+def fetch_nutrition_data(sqlite_connection):
+  sqlite_cursor = sqlite_connection.cursor()
+  email = logged_in_user_email(sqlite_cursor) 
   nutrition_data = None
   
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -49,39 +42,42 @@ def fetch_nutrition_data(db_path=db_path):
   meal_plans = nutrition_data[2]
   manage_meals = nutrition_data[3]
   
-  if table_is_empty(db_path):
-    with sqlite3.connect(db_path) as conn:
-      cursor = conn.cursor()
-      insert_query = "INSERT INTO 'nutrition' (email, calorie_goal, meal_plans, manage_meals) VALUES (?, ?, ?, ?)"
-      cursor.execute(insert_query, (email, calorie_goal, meal_plans, manage_meals,))
+  if table_is_empty(sqlite_cursor):
+    insert_query = "INSERT INTO 'nutrition' (email, calorie_goal, meal_plans, manage_meals) VALUES (?, ?, ?, ?)"
+    sqlite_cursor.execute(insert_query, (email, calorie_goal, meal_plans, manage_meals,))
+    sqlite_connection.commit()
 
-def update_calorie_goal(calorie_goal, db_path=db_path):
-  email = logged_in_user_email(db_path) 
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("UPDATE 'nutrition' SET calorie_goal=?", (calorie_goal,))
+def update_calorie_goal(calorie_goal, sqlite_connection):
+  sqlite_cursor = sqlite_connection.cursor()
+  email = logged_in_user_email(sqlite_cursor) 
+  sqlite_cursor.execute("UPDATE 'nutrition' SET calorie_goal=?", (calorie_goal,))
+  
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
     with conn.cursor() as cursor:
       cursor.execute("UPDATE nutrition SET calorie_goal=%s WHERE email=%s", (calorie_goal, email,))
+      
+  sqlite_cursor.execute("UPDATE 'nutrition' SET calorie_goal=? WHERE email=?", (calorie_goal, email,))
+  sqlite_connection.commit()
+   
+def create_nutrition_table(sqlite_connection):
+  sqlite_cursor = sqlite_connection.cursor()
+  create_table = """
+                 CREATE TABLE IF NOT EXISTS
+                 'nutrition' (
+                 email text,
+                 calorie_goal text,
+                 meal_plans text,
+                 manage_meals text,
+                 ID integer NOT NULL,
+                 PRIMARY KEY(ID));
+                 """
+  sqlite_cursor.execute(create_table)
+  sqlite_connection.commit()
 
-def create_nutrition_table(db_path=db_path):
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    create_table = """
-                   CREATE TABLE IF NOT EXISTS
-                   'nutrition' (
-                   email text,
-                   calorie_goal text,
-                   meal_plans text,
-                   manage_meals text,
-                   ID integer NOT NULL,
-                   PRIMARY KEY(ID));
-                   """
-    cursor.execute(create_table)
-
-def insert_default_meal_plans_values(db_path=db_path, calorie_goal=None):
-  email = logged_in_user_email(db_path)
+def insert_default_meal_plans_values(sqlite_connection, calorie_goal=None):
+  sqlite_cursor = sqlite_connection.cursor()
+  email = logged_in_user_email(sqlite_cursor)
   days_in_a_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
   default_meal_names = ["Breakfast", "Lunch", "Snack", "Dinner"]
   meals = {"Past": [], "Present": [], "Future":[], "Current Week Number": int(datetime.now().strftime("%V"))}
@@ -107,22 +103,22 @@ def insert_default_meal_plans_values(db_path=db_path, calorie_goal=None):
       with conn.cursor() as cursor:
         cursor.execute(sql.SQL("INSERT INTO nutrition ({columns}) VALUES %s").format(columns=columns), (values,))
     
-    if not table_exists(db_path): create_nutrition_table(db_path)
-    with sqlite3.connect(db_path) as conn:
-      cursor = conn.cursor()
-      cursor.execute("INSERT INTO 'nutrition' {columns} VALUES {values}".format(columns=tuple(default_values.keys()), values=tuple(default_values.values())))
+    if not table_exists(sqlite_cursor): create_nutrition_table(sqlite_connection)
+    sqlite_cursor.execute("INSERT INTO 'nutrition' {columns} VALUES {values}".format(columns=tuple(default_values.keys()), values=tuple(default_values.values())))
+    sqlite_connection.commit()
   except psycopg2.errors.UniqueViolation:
-    fetch_nutrition_data(db_path)
+    fetch_nutrition_data(sqlite_connection)
 
-def modify_meal(action, meal_to_modify, day=None, modify_to=None, this_week=False, next_week=False, db_path=db_path):
+def modify_meal(action, meal_to_modify, sqlite_connection, day=None, modify_to=None, this_week=False, next_week=False):
   assert action in ("Add", "Delete", "Rename")
   assert this_week != False or next_week != False
   assert day != None
   if action == "Rename": assert modify_to != None
   elif action == "Add": assert modify_to == None
    
-  email = logged_in_user_email(db_path)
-  fetched_meal_plans = json.loads(fetch_meal_plans(db_path))
+  sqlite_cursor = sqlite_connection.cursor()
+  email = logged_in_user_email(sqlite_cursor)
+  fetched_meal_plans = json.loads(fetch_meal_plans(sqlite_cursor))
   when = [("Present" if this_week == True else None), ("Future" if next_week == True else None)]
   
   for time in fetched_meal_plans:
@@ -147,17 +143,17 @@ def modify_meal(action, meal_to_modify, day=None, modify_to=None, this_week=Fals
     with conn.cursor() as cursor:
       cursor.execute("UPDATE nutrition SET meal_plans=%s WHERE email=%s", (new_meal_plans, email,))
 
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("UPDATE 'nutrition' SET meal_plans=? WHERE email=?", (new_meal_plans, email,))
+  sqlite_cursor.execute("UPDATE 'nutrition' SET meal_plans=? WHERE email=?", (new_meal_plans, email,))
+  sqlite_connection.commit()
 
-def update_meal(meal_name, food_info, day, this_week=False, next_week=False, db_path=db_path):
+def update_meal(meal_name, food_info, day, sqlite_connection, this_week=False, next_week=False):
   assert this_week != False or next_week != False
   assert not (this_week == True and next_week == True)
   
+  sqlite_cursor = sqlite_connection.cursor()
   time = "Present" if this_week == True else "Future"
-  email = logged_in_user_email(db_path)
-  fetched_meal_plans = json.loads(fetch_meal_plans(db_path))
+  email = logged_in_user_email(sqlite_cursor)
+  fetched_meal_plans = json.loads(fetch_meal_plans(sqlite_cursor))
 
   fetched_meal_plans[time][day][meal_name].append(food_info)
 
@@ -168,13 +164,13 @@ def update_meal(meal_name, food_info, day, this_week=False, next_week=False, db_
     with conn.cursor() as cursor:
       cursor.execute("UPDATE nutrition SET meal_plans=%s WHERE email=%s", (new_meal_plans, email,))
 
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("UPDATE 'nutrition' SET meal_plans=? WHERE email=?", (new_meal_plans, email,))
+  sqlite_cursor.execute("UPDATE 'nutrition' SET meal_plans=? WHERE email=?", (new_meal_plans, email,))
+  sqlite_connection.commit()
 
-def rotate_meals(db_path=db_path):
-  email = logged_in_user_email(db_path)
-  fetched_meal_plans = json.loads(fetch_meal_plans(db_path))
+def rotate_meals(sqlite_connection):
+  sqlite_cursor = sqlite_connection.cursor()
+  email = logged_in_user_email(sqlite_cursor)
+  fetched_meal_plans = json.loads(fetch_meal_plans(sqlite_cursor))
   fetched_meal_plans["Current Week Number"] = int(datetime.now().strftime("%V"))
   
   if (len(fetched_meal_plans["Past"]) == 8): del fetched_meal_plans["Past"][0]
@@ -200,6 +196,5 @@ def rotate_meals(db_path=db_path):
     with conn.cursor() as cursor:
       cursor.execute("UPDATE nutrition SET meal_plans=%s WHERE email=%s", (new_meal_plans, email,))
 
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("UPDATE 'nutrition' SET meal_plans=? WHERE email=?", (new_meal_plans, email,))
+  sqlite_cursor.execute("UPDATE 'nutrition' SET meal_plans=? WHERE email=?", (new_meal_plans, email,))
+  sqlite_connection.commit()

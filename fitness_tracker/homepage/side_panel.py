@@ -1,8 +1,10 @@
 import os
+import sqlite3
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout, QPushButton, QVBoxLayout
 from PyQt5.QtCore import Qt, QSize, QPoint, QDir, pyqtSignal
 from PyQt5.QtGui import QFont, QIcon, QCursor, QPainter, QColor, QBrush, QFontDatabase
 from fitness_tracker.login.login_helpers import logout_current_user
+from fitness_tracker.config import db_path
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
 
@@ -109,7 +111,8 @@ class SidePanel(QWidget):
     self.setLayout(grid)
   
   def logout(self):
-    logout_current_user()
+    with sqlite3.connect(db_path) as conn:
+      logout_current_user(conn)
     self.emit_layout_name.emit("Logout")
     
   def create_line_divider(self):

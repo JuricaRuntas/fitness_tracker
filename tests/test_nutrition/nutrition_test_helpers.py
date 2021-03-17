@@ -12,10 +12,10 @@ test_user = {"email": "test@gmail.com",
              "weight": "100", "height": "190", "goal": "Weight gain",
              "goalparams": json.dumps(["Moderately active", 0.25]), "goalweight": "120"}
 
-def create_test_user(path):
+def create_test_user(cursor):
   create_user(test_user["email"], "testpassword123")
-  create_user_table(test_user["email"], "testpassword123", path)
-  create_user_info_after_signup(test_user, test_user["email"], path)
+  create_user_table(test_user["email"], "testpassword123", cursor)
+  create_user_info_after_signup(test_user, test_user["email"], cursor)
 
 def delete_test_user(email):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -29,11 +29,9 @@ def delete_test_from_nutrition(email):
     with conn.cursor() as cursor:
       cursor.execute("DELETE FROM nutrition WHERE email=%s", (email,))
 
-def fetch_nutrition_columns():
-  with sqlite3.connect("test.db") as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM 'nutrition'")
-    return tuple(description[0] for description in cursor.description if not description[0] == 'ID')
+def fetch_nutrition_columns(cursor):
+  cursor.execute("SELECT * FROM 'nutrition'")
+  return tuple(description[0] for description in cursor.description if not description[0] == 'ID')
 
 def insert_nutrition_data(email, calorie_goal):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -44,12 +42,10 @@ def insert_nutrition_data(email, calorie_goal):
       values = (email, calorie_goal)
       cursor.execute(sql.SQL(insert).format(columns=columns), (values,))
 
-def fetch_default_meal_plans_values(db_path):
+def fetch_default_meal_plans_values(sqlite_cursor):
   values = None
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM 'nutrition' WHERE email=?", (test_user["email"],))
-    values = cursor.fetchall()[0][2:-1]
+  sqlite_cursor.execute("SELECT * FROM 'nutrition' WHERE email=?", (test_user["email"],))
+  values = sqlite_cursor.fetchall()[0][2:-1]
   return values
 
 def fetch_server_nutrition_data():
@@ -60,14 +56,10 @@ def fetch_server_nutrition_data():
       cursor.execute("SELECT * FROM nutrition WHERE email=%s", (test_user["email"],))
       return cursor.fetchall()
 
-def fetch_local_nutrition_data(db_path):
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM 'nutrition' WHERE email=?", (test_user["email"],))
-    return cursor.fetchall() 
+def fetch_local_nutrition_data(sqlite_cursor):
+  sqlite_cursor.execute("SELECT * FROM 'nutrition' WHERE email=?", (test_user["email"],))
+  return sqlite_cursor.fetchall() 
 
-def fetch_local_meal_plans(db_path):
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT meal_plans FROM 'nutrition' WHERE email=?", (test_user["email"],))
-    return cursor.fetchone()[0]
+def fetch_local_meal_plans(sqlite_cursor):
+  sqlite_cursor.execute("SELECT meal_plans FROM 'nutrition' WHERE email=?", (test_user["email"],))
+  return sqlite_cursor.fetchone()[0]

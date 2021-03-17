@@ -13,8 +13,10 @@ class Update1RMWindow(QWidget):
   history_signal = pyqtSignal(bool)
   update_graph_signal = pyqtSignal(bool)
 
-  def __init__(self):
+  def __init__(self, sqlite_connection):
     super().__init__()
+    self.sqlite_connection = sqlite_connection
+    self.sqlite_cursor = sqlite_connection.cursor()
     self.setStyleSheet("""
     QWidget{
       background-color: #322d2d;
@@ -44,8 +46,8 @@ class Update1RMWindow(QWidget):
     """)
     self.setWindowModality(Qt.ApplicationModal)
     self.current_year = str(datetime.now().year)
-    self.units = "kg" if fetch_units() == "metric" else "lb"
-    self.preferred_lifts = json.loads(fetch_preferred_lifts())
+    self.units = "kg" if fetch_units(self.sqlite_cursor) == "metric" else "lb"
+    self.preferred_lifts = json.loads(fetch_preferred_lifts(self.sqlite_cursor))
     self.setWindowTitle("Update One Rep Max Lifts")
     self.setLayout(self.create_panel())
     self.set_line_edit_values()
@@ -114,7 +116,7 @@ class Update1RMWindow(QWidget):
   
   def save_1RM_lifts(self):
     try:
-      exercises = list(json.loads(fetch_one_rep_maxes()).keys())
+      exercises = list(json.loads(fetch_one_rep_maxes(self.sqlite_cursor)).keys())
       horizontal_press_max = str(int(self.horizontal_press_edit.text()))
       floor_pull_max = str(int(self.floor_pull_edit.text()))
       squat_max = str(int(self.squat_edit.text()))
@@ -122,13 +124,13 @@ class Update1RMWindow(QWidget):
       new_maxes = {exercises[0]:horizontal_press_max, exercises[1]:floor_pull_max,
                    exercises[2]:squat_max, exercises[3]:vertical_press_max}
       
-      diff = lift_difference(new_maxes, one_RM=True)
+      diff = lift_difference(new_maxes, self.sqlite_cursor, one_RM=True)
       
-      update_lift_history(diff) 
+      update_lift_history(diff, self.sqlite_connection) 
       self.history_signal.emit(True)
       
-      update_1RM_lifts(diff)
-      update_one_rep_maxes_history(diff, self.current_year)
+      update_1RM_lifts(diff, self.sqlite_connection)
+      update_one_rep_maxes_history(diff, self.current_year, self.sqlite_connection)
       
       self.update_graph_signal.emit(True)
       self.change_1RM_lifts_signal.emit(True)
@@ -143,7 +145,7 @@ class Update1RMWindow(QWidget):
     self.set_line_edit_values()
 
   def set_line_edit_values(self):
-    one_rep_maxes = list(json.loads(fetch_one_rep_maxes()).values())
+    one_rep_maxes = list(json.loads(fetch_one_rep_maxes(self.sqlite_cursor)).values())
     self.horizontal_press_edit.setText(one_rep_maxes[0])
     self.floor_pull_edit.setText(one_rep_maxes[1])
     self.squat_edit.setText(one_rep_maxes[2])

@@ -1,3 +1,4 @@
+import sqlite3
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QVBoxLayout, QLabel, QFrame, QLineEdit,
                              QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QHBoxLayout)
 from PyQt5.QtGui import QFont, QCursor, QIntValidator
@@ -9,6 +10,10 @@ from fitness_tracker.config import db_path
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__()
+    with sqlite3.connect(db_path) as conn:
+      self.sqlite_connection = conn
+      self.sqlite_cursor = conn.cursor()
+
     self.setStyleSheet("""
     QWidget{
       font-family: Montserrat;
@@ -167,7 +172,7 @@ class MainPanel(QWidget):
 
   def calculate(self):
     try:
-      units = fetch_units()
+      units = fetch_units(self.sqlite_cursor)
       weight = self.weight_entry.text()
       repetitions = self.reps_entry.text()
       units = "kg" if units == "metric" else "lb"

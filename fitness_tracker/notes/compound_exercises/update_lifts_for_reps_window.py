@@ -11,8 +11,10 @@ class UpdateLiftsForRepsWindow(QWidget):
   change_lifts_for_reps_signal = pyqtSignal(bool)
   history_signal = pyqtSignal(bool)
 
-  def __init__(self):
+  def __init__(self, sqlite_connection):
     super().__init__()
+    self.sqlite_connection = sqlite_connection
+    self.sqlite_cursor = sqlite_connection.cursor()
     self.setStyleSheet("""
     QWidget{
       background-color: #322d2d;
@@ -41,8 +43,8 @@ class UpdateLiftsForRepsWindow(QWidget):
     }
     """) 
     self.setWindowModality(Qt.ApplicationModal)
-    self.units = "kg" if fetch_units() == "metric" else "lb"
-    self.preferred_lifts = json.loads(fetch_preferred_lifts())
+    self.units = "kg" if fetch_units(self.sqlite_cursor) == "metric" else "lb"
+    self.preferred_lifts = json.loads(fetch_preferred_lifts(self.sqlite_cursor))
     self.setWindowTitle("Update Lifts For Reps")
     self.setLayout(self.create_panel())
     self.set_line_edit_values()
@@ -131,7 +133,7 @@ class UpdateLiftsForRepsWindow(QWidget):
 
   def save_lifts_for_reps(self):
     try:
-      exercises = list(json.loads(fetch_lifts_for_reps()).keys())
+      exercises = list(json.loads(fetch_lifts_for_reps(self.sqlite_cursor)).keys())
       horizontal_press_weight = str(int(self.horizontal_press_edit.text()))
       floor_pull_weight = str(int(self.floor_pull_edit.text()))
       squat_weight = str(int(self.squat_edit.text()))
@@ -146,10 +148,10 @@ class UpdateLiftsForRepsWindow(QWidget):
                             exercises[1]: [floor_pull_reps, floor_pull_weight],
                             exercises[2]: [squat_reps, squat_weight],
                             exercises[3]: [vertical_press_reps, vertical_press_weight]}
-      diff = lift_difference(new_lifts_for_reps, lifts_reps=True)
-      update_lift_history(diff)
+      diff = lift_difference(new_lifts_for_reps, self.sqlite_cursor, lifts_reps=True)
+      update_lift_history(diff, self.sqlite_connection)
       self.history_signal.emit(True)
-      update_lifts_for_reps(new_lifts_for_reps)
+      update_lifts_for_reps(new_lifts_for_reps, self.sqlite_connection)
       self.change_lifts_for_reps_signal.emit(True)
       self.set_line_edit_values()
       self.close()
@@ -161,7 +163,7 @@ class UpdateLiftsForRepsWindow(QWidget):
     self.set_line_edit_values()
 
   def set_line_edit_values(self):
-    lift_values = list(json.loads(fetch_lifts_for_reps()).values())
+    lift_values = list(json.loads(fetch_lifts_for_reps(self.sqlite_cursor)).values())
     reps = [lift[0] for lift in lift_values]
     weight = [lift[1] for lift in lift_values]
     

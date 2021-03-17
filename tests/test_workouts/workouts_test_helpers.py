@@ -11,10 +11,10 @@ test_user = {"email": "test@gmail.com",
              "weight": "100", "height": "190", "goal": "Weight gain",
              "goalparams": json.dumps(["Moderately active", 0.25]), "goalweight": "120"}
 
-def create_test_user(path):
+def create_test_user(sqlite_cursor):
   create_user(test_user["email"], "testpassword123")
-  create_user_table(test_user["email"], "testpassword123", path)
-  create_user_info_after_signup(test_user, test_user["email"], path)
+  create_user_table(test_user["email"], "testpassword123", sqlite_cursor)
+  create_user_info_after_signup(test_user, test_user["email"], sqlite_cursor)
 
 def delete_test_user(email):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -28,11 +28,9 @@ def delete_test_from_workouts_table(email):
     with conn.cursor() as cursor:
       cursor.execute("DELETE FROM workouts WHERE email=%s", (test_user["email"],))
 
-def fetch_workouts_table_columns():
-  with sqlite3.connect("test.db") as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM 'workouts' WHERE email=?", (test_user["email"],))
-    return tuple(description[0] for description in cursor.description if not description[0] == "id") 
+def fetch_workouts_table_columns(cursor):
+  cursor.execute("SELECT * FROM 'workouts' WHERE email=?", (test_user["email"],))
+  return tuple(description[0] for description in cursor.description if not description[0] == "id") 
 
 def fetch_workouts_data(email):
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -41,13 +39,11 @@ def fetch_workouts_data(email):
       cursor.execute("SELECT * FROM workouts WHERE email=%s", (test_user["email"],))
       return cursor.fetchall()
 
-def fetch_local_workouts_data(path):
-  with sqlite3.connect(path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM 'workouts' WHERE email=?", (test_user["email"],))
-    return cursor.fetchall()
+def fetch_local_workouts_data(sqlite_cursor):
+  sqlite_cursor.execute("SELECT * FROM 'workouts' WHERE email=?", (test_user["email"],))
+  return sqlite_cursor.fetchall()
 
-def fetch_test_workouts(path, email):
+def fetch_test_workouts(sqlite_cursor, email):
   workouts = []
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
@@ -55,13 +51,11 @@ def fetch_test_workouts(path, email):
       cursor.execute("SELECT workouts FROM workouts WHERE email=%s", (test_user["email"],))
       workouts.append(cursor.fetchone()[0])
 
-  with sqlite3.connect(path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT workouts FROM 'workouts' WHERE email=?", (test_user["email"],))
-    workouts.append(cursor.fetchone()[0])
+  sqlite_cursor.execute("SELECT workouts FROM 'workouts' WHERE email=?", (test_user["email"],))
+  workouts.append(sqlite_cursor.fetchone()[0])
   return workouts
  
-def fetch_test_current_workout(path, email):
+def fetch_test_current_workout(sqlite_cursor, email):
   workouts = []
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
                         user=db_info["user"], password=db_info["password"]) as conn:
@@ -69,8 +63,6 @@ def fetch_test_current_workout(path, email):
       cursor.execute("SELECT current_workout_plan FROM workouts WHERE email=%s", (test_user["email"],))
       workouts.append(cursor.fetchone()[0])
 
-  with sqlite3.connect(path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT current_workout_plan FROM 'workouts' WHERE email=?", (test_user["email"],))
-    workouts.append(cursor.fetchone()[0])
+  sqlite_cursor.execute("SELECT current_workout_plan FROM 'workouts' WHERE email=?", (test_user["email"],))
+  workouts.append(sqlite_cursor.fetchone()[0])
   return workouts

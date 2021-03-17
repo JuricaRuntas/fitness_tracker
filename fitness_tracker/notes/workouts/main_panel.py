@@ -1,4 +1,5 @@
 import os
+import sqlite3
 import json
 from functools import partial
 from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QLabel, QFrame, QCalendarWidget, QPushButton, QMessageBox
@@ -9,6 +10,7 @@ from .create_workout_window import CreateWorkoutWindow1, CreateWorkoutWindow2, E
 from .workouts_db import (create_workouts_table, insert_default_workouts_data,
                           table_is_empty, fetch_current_workout_plan, fetch_workouts,
                           delete_workout, update_current_workout)
+from fitness_tracker.config import db_path
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 muscle_groups_path = os.path.join(path, "muscle_groups")
@@ -30,12 +32,15 @@ class MainPanel(QWidget):
 
   def __init__(self, parent):
     super().__init__()
-    create_workouts_table()
-    if table_is_empty(): insert_default_workouts_data()
-    self.current_workout_plan = fetch_current_workout_plan()
+    with sqlite3.connect(db_path) as conn:
+      self.sqlite_connection = conn
+      self.sqlite_cursor = conn.cursor()
+    create_workouts_table(self.sqlite_connection)
+    if table_is_empty(self.sqlite_cursor): insert_default_workouts_data(self.sqlite_connection)
+    self.current_workout_plan = fetch_current_workout_plan(self.sqlite_cursor)
     if self.current_workout_plan == "":
       self.current_workout_plan = "None"
-    self.fetched_workouts = json.loads(fetch_workouts())
+    self.fetched_workouts = json.loads(fetch_workouts(self.sqlite_cursor))
     # {WorkoutName: {("CreateWorkoutWindow2", CreateWorkoutWindow2): {Day: EditWorkout object}}}
     self.workouts = self.generate_workouts_objects()
     self.create_panel()
@@ -53,7 +58,7 @@ class MainPanel(QWidget):
       for workout in self.fetched_workouts:
         workout_name = workout
         workout_days = list(self.fetched_workouts[workout].keys())
-        create_workout_window_2 = CreateWorkoutWindow2(workout_name, workout_days, empty_workout=False)
+        create_workout_window_2 = CreateWorkoutWindow2(self.sqlite_connection, workout_name, workout_days, empty_workout=False)
         create_workout_window_2.show_existing_workout_edit.connect(lambda s: self.show_existing_workout_edit(s))
         days = {}
         for workout_day in self.fetched_workouts[workout].keys():
@@ -75,7 +80,7 @@ class MainPanel(QWidget):
     workout_name = signal[0]
     workout_days = signal[1]
     current_workout = signal[2]
-    self.create_workout_window2 = CreateWorkoutWindow2(workout_name, workout_days, set_as_current_workout=current_workout, empty_workout=True)
+    self.create_workout_window2 = CreateWorkoutWindow2(self.sqlite_connection, workout_name, workout_days, set_as_current_workout=current_workout, empty_workout=True)
     self.create_workout_window2.show_edit_workout.connect(lambda s: self.show_edit_workout_window(s))
     self.create_workout_window2.refresh_layout_signal.connect(lambda s: self.refresh_layout(s)) 
     
@@ -111,16 +116,16 @@ class MainPanel(QWidget):
   @pyqtSlot(bool)
   def refresh_layout(self, signal):
     if signal:
-      self.fetched_workouts = json.loads(fetch_workouts())
+      self.fetched_workouts = json.loads(fetch_workouts(self.sqlite_cursor))
       self.workouts = self.generate_workouts_objects()
-      self.current_workout_plan = fetch_current_workout_plan()
+      self.current_workout_plan = fetch_current_workout_plan(self.sqlite_cursor)
       
       if self.current_workout_plan == "" or self.fetched_workouts == {}:
         self.current_workout_plan = ""
       elif not self.current_workout_plan in self.fetched_workouts:
         next_workout = list(self.workouts.keys())[0]
         self.current_workout_plan = next_workout
-      update_current_workout(self.current_workout_plan, True)
+      update_current_workout(self.current_workout_plan, True, self.sqlite_connection)
       self.current_workout_label2.setText(self.current_workout_plan)
        
       old_workouts_reference = self.grid.itemAt(1).widget()
@@ -139,7 +144,7 @@ class MainPanel(QWidget):
   
   def delete_existing_workout(self, answer, workout):
     if "OK" in answer:
-      delete_workout(workout)
+      delete_workout(workout, self.sqlite_connection)
       self.refresh_layout(True)
 
   def create_stats(self):

@@ -14,13 +14,13 @@ def check_password(email, password):
       if not hashlib.sha256(password.encode('UTF-8')).hexdigest() == database_password: status = False
   return status
 
-def logout_current_user():
-  current_user = logged_in_user_email()
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("UPDATE 'users' SET logged_in='NO' WHERE email=? AND logged_in='YES'", (current_user,))
+def logout_current_user(sqlite_connection):
+  sqlite_cursor = sqlite_connection.cursor()
+  current_user = logged_in_user_email(sqlite_cursor)
+  sqlite_cursor.execute("UPDATE 'users' SET logged_in='NO' WHERE email=? AND logged_in='YES'", (current_user,))
+  sqlite_connection.commit()
 
-def fetch_user_info(email, password, db_path=db_path):
+def fetch_user_info(email, password, sqlite_cursor):
   columns = None
   user_info = None
   with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
@@ -38,36 +38,34 @@ def fetch_user_info(email, password, db_path=db_path):
         cursor.execute(query)
         columns = tuple(value[0] for value in cursor.fetchall() if not value[0] == 'id')
   
-  with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name='users';")
-    insert_values = "INSERT INTO 'users' {columns} VALUES {values}"
-    if cursor.fetchone()[0] == 0: # table doesn't exist
-      create_table = """
-                     CREATE TABLE 'users' (
-                     email text NOT NULL,
-                     password text NOT NULL,
-                     name text,
-                     age text,
-                     gender text,
-                     units text,
-                     weight text,
-                     height text,
-                     goal text,
-                     goalparams text, 
-                     goalweight text,
-                     logged_in text,
-                     ID integer NOT NULL,
-                     PRIMARY KEY (ID));
-                     """
-      cursor.execute(create_table)
-      cursor.execute(insert_values.format(columns=columns, values=user_info))
-      cursor.execute("UPDATE 'users' SET logged_in='YES' WHERE email=?", (email,))
-    else:
-      current_user_email = logged_in_user_email()
-      if email != current_user_email:
-        cursor.execute("UPDATE 'users' SET logged_in='NO' WHERE email=? AND logged_in='YES'", (current_user_email,))
-        cursor.execute("SELECT email FROM 'users' WHERE email=?", (email,))
-        if cursor.fetchone() == None:
-          cursor.execute(insert_values.format(columns=columns, values=user_info)) 
-        cursor.execute("UPDATE 'users' SET logged_in='YES' WHERE email=?", (email,))
+  sqlite_cursor.execute("SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name='users';")
+  insert_values = "INSERT INTO 'users' {columns} VALUES {values}"
+  if sqlite_cursor.fetchone()[0] == 0: # table doesn't exist
+    create_table = """
+                   CREATE TABLE 'users' (
+                   email text NOT NULL,
+                   password text NOT NULL,
+                   name text,
+                   age text,
+                   gender text,
+                   units text,
+                   weight text,
+                   height text,
+                   goal text,
+                   goalparams text, 
+                   goalweight text,
+                   logged_in text,
+                   ID integer NOT NULL,
+                   PRIMARY KEY (ID));
+                   """
+    sqlite_cursor.execute(create_table)
+    sqlite_cursor.execute(insert_values.format(columns=columns, values=user_info))
+    sqlite_cursor.execute("UPDATE 'users' SET logged_in='YES' WHERE email=?", (email,))
+  else:
+    current_user_email = logged_in_user_email(sqlite_cursor)
+    if email != current_user_email:
+      sqlite_cursor.execute("UPDATE 'users' SET logged_in='NO' WHERE email=? AND logged_in='YES'", (current_user_email,))
+      sqlite_cursor.execute("SELECT email FROM 'users' WHERE email=?", (email,))
+      if sqlite_cursor.fetchone() == None:
+        sqlite_cursor.execute(insert_values.format(columns=columns, values=user_info)) 
+      sqlite_cursor.execute("UPDATE 'users' SET logged_in='YES' WHERE email=?", (email,))
