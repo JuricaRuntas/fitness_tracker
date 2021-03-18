@@ -11,10 +11,12 @@ class ChangeWeightDialog(QWidget):
   change_goal_weight_signal = pyqtSignal(str)
   change_calorie_goal_signal = pyqtSignal(str)
 
-  def __init__(self, sqlite_connection):
+  def __init__(self, sqlite_connection, pg_connection):
     super().__init__()
     self.sqlite_connection = sqlite_connection
     self.sqlite_cursor = sqlite_connection.cursor()
+    self.pg_connection = pg_connection
+    self.pg_cursor = self.pg_connection.cursor()
     self.user_data = fetch_local_user_data(self.sqlite_cursor)
     self.user_weight = self.user_data["Weight"]
     self.goal_weight = self.user_data["Weight Goal"]
@@ -100,12 +102,12 @@ class ChangeWeightDialog(QWidget):
 
     try:
       if not current_weight == self.user_weight:
-        update_user_info_parameter(self.sqlite_connection, "weight", str(float(current_weight)))
+        update_user_info_parameter(self.sqlite_connection, self.pg_connection, "weight", str(float(current_weight)))
         self.user_weight = current_weight
         self.change_current_weight_signal.emit(current_weight)
         self.current_weight_line_edit.setText(current_weight)
       if not goal == self.goal:
-        update_user_info_parameter(self.sqlite_connection, "goal", goal)
+        update_user_info_parameter(self.sqlite_connection, self.pg_connection, "goal", goal)
         self.goal = goal
         if goal == "Weight loss":
           self.weight_loss_button.setChecked(True)
@@ -114,18 +116,18 @@ class ChangeWeightDialog(QWidget):
         elif goal == "Weight gain":
           self.weight_gain_button.setChecked(True)
       if not goal_params[0] == self.activity_level or not goal_params[1] == self.weight_per_week:
-        update_user_info_parameters(self.sqlite_connection, "goalparams", goal_params)
+        update_user_info_parameters(self.sqlite_connection, self.pg_connection, "goalparams", goal_params)
         self.activity_level = goal_params[0]
         self.weight_per_week = goal_params[1]
       if not goal_weight == self.goal_weight:
-        update_user_info_parameters(self.sqlite_connection, "goalweight", goal_weight)
+        update_user_info_parameters(self.sqlite_connection, self.pg_connection, "goalweight", goal_weight)
         self.goal_weight = goal_weight
         self.change_goal_weight_signal.emit(goal_weight)
         self.goal_weight_line_edit.setText(goal_weight)
       
       calculator = CalorieGoalCalculator(int(self.age), self.gender, float(self.height), float(self.user_weight), goal_params[0], goal, goal_params[1])
       calorie_goal = calculator.calculate_calorie_goal()
-      update_calorie_goal(calorie_goal, self.sqlite_connection)
+      update_calorie_goal(calorie_goal, self.sqlite_connection, self.pg_connection)
       self.change_calorie_goal_signal.emit(str(calorie_goal))
       self.close()
     except ValueError:

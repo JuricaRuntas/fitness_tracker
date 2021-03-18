@@ -12,10 +12,10 @@ test_user = {"email": "test@gmail.com",
              "weight": "100", "height": "190", "goal": "Weight gain",
              "goalparams": json.dumps(["Moderately active", 0.25]), "goalweight": "120"}
 
-def create_test_user(cursor):
-  create_user(test_user["email"], "testpassword123")
-  create_user_table(test_user["email"], "testpassword123", cursor)
-  create_user_info_after_signup(test_user, test_user["email"], cursor)
+def create_test_user(sqlite_connection, pg_connection):
+  create_user(test_user["email"], "testpassword123", pg_connection)
+  create_user_table(test_user["email"], "testpassword123", sqlite_connection)
+  create_user_info_after_signup(test_user, test_user["email"], sqlite_connection, pg_connection)
 
 def delete_test_user():
   with psycopg2.connect(host=db_info["host"], port=db_info["port"],

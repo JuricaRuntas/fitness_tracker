@@ -7,10 +7,12 @@ from .compound_exercises_db import fetch_lift_history, delete_history_entry
 from fitness_tracker.user_profile.profile_db import fetch_units
 
 class LiftHistory(QScrollArea):
-  def __init__(self, sqlite_connection):
+  def __init__(self, sqlite_connection, pg_connection):
     super().__init__()
     self.sqlite_connection = sqlite_connection
     self.sqlite_cursor = sqlite_connection.cursor()
+    self.pg_connection = pg_connection
+    self.pg_cursor = self.pg_connection
     self.setStyleSheet("""
     QWidget{
       background-color: #322d2d;
@@ -86,4 +88,4 @@ class LiftHistory(QScrollArea):
   def delete_history_entry_from_layout(self, i, entry_index):
     self.labels[i].setParent(None)
     self.delete_buttons[i].setParent(None)
-    delete_history_entry(entry_index, self.sqlite_connection)
+    delete_history_entry(entry_index, self.sqlite_connection, self.pg_connection)

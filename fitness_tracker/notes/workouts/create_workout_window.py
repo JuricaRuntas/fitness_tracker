@@ -61,9 +61,10 @@ class CreateWorkoutWindow2(QWidget):
   refresh_layout_signal = pyqtSignal(bool)
   show_existing_workout_edit = pyqtSignal(object)
 
-  def __init__(self, sqlite_connection, workout_name, workout_days, set_as_current_workout=False, empty_workout=True):
+  def __init__(self, sqlite_connection, pg_connection, workout_name, workout_days, set_as_current_workout=False, empty_workout=True):
     super().__init__()
     self.sqlite_connection = sqlite_connection
+    self.pg_connection = pg_connection
     self.workout_name = workout_name
     self.empty_workout = empty_workout
     self.setWindowTitle(self.workout_name)
@@ -93,9 +94,9 @@ class CreateWorkoutWindow2(QWidget):
     self.workouts[workout_day[0]] = workout_day[1]
 
   def save_workout_plan(self):
-    update_workouts(self.workout_name, self.workouts, self.sqlite_connection)
+    update_workouts(self.workout_name, self.workouts, self.sqlite_connection, self.pg_connection)
     if self.set_as_current_workout:
-      update_current_workout(self.workout_name, self.set_as_current_workout, self.sqlite_connection)
+      update_current_workout(self.workout_name, self.set_as_current_workout, self.sqlite_connection, self.pg_connection)
     self.refresh_layout_signal.emit(True)
     self.close()
 

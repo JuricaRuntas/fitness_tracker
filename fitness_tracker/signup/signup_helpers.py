@@ -5,7 +5,6 @@ import hashlib
 import psycopg2
 from psycopg2 import sql
 from fitness_tracker.user_profile.profile_db import logged_in_user_email
-from fitness_tracker.config import db_path, db_info
 
 def check_valid_email(email):
   # basic validation, checks for example@gmail.com and similar format
@@ -24,27 +23,26 @@ def check_valid_password(password):
     print("Password contains invalid characters.")
   return valid
 
-def create_user(user_email, user_password):
+def create_user(user_email, user_password, pg_connection):
+  pg_cursor = pg_connection.cursor()
   status = True
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    try:
-      with conn.cursor() as cursor:
-        user_password = hashlib.sha256(user_password.encode('utf-8')).hexdigest()
-        cursor.execute("INSERT INTO users (email, password) VALUES (%s, %s)", (user_email, user_password,))
-    except psycopg2.errors.UniqueViolation: # user with given email already exists
-      status = False
+  try:
+    user_password = hashlib.sha256(user_password.encode('utf-8')).hexdigest()
+    pg_cursor.execute("INSERT INTO users (email, password) VALUES (%s, %s)", (user_email, user_password,))
+    pg_connection.commit()
+  except psycopg2.errors.UniqueViolation: # user with given email already exists
+    status = False
   return status
 
-def create_user_info_after_signup(user_info, email, sqlite_connection):
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      update_query = create_update_query("users", email, user_info)
-      cursor.execute(update_query)
-    
-  update_query = create_update_query("users",  email, user_info, sqlite=True)
+def create_user_info_after_signup(user_info, email, sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
+
+  update_query = create_update_query("users", email, user_info)
+  pg_cursor.execute(update_query)
+  pg_connection.commit()
+
+  update_query = create_update_query("users",  email, user_info, sqlite=True)
   sqlite_cursor.execute(update_query)
   sqlite_connection.commit()
 

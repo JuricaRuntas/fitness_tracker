@@ -1,8 +1,8 @@
 import unittest
 import json
 import os
-import sqlite3
 from fitness_tracker.login.login_helpers import check_password, fetch_user_info
+from fitness_tracker.config import db_info
 from login_test_helpers import *
 
 class TestLogin(unittest.TestCase):
@@ -10,8 +10,13 @@ class TestLogin(unittest.TestCase):
     with sqlite3.connect("test.db") as conn:
       self.sqlite_connection = conn
       self.sqlite_cursor = conn.cursor()
-    create_test_user(self.sqlite_connection)
-
+    with psycopg2.connect(**db_info) as pg_conn:
+      with pg_conn.cursor() as pg_cursor:
+        self.pg_connection = pg_conn
+        self.pg_cursor = pg_cursor 
+    
+    create_test_user(self.sqlite_connection, self.pg_connection)
+    
   def tearDown(self):
     delete_test_user()
     os.remove("test.db")
@@ -22,7 +27,7 @@ class TestLogin(unittest.TestCase):
    
   # case 1: local table doesn't exist
   def test_fetch_user_info_1(self):
-    fetch_user_info(test_user["email"], test_user["password"], self.sqlite_cursor)
+    fetch_user_info(test_user["email"], test_user["password"], self.sqlite_connection, self.pg_connection.cursor())
     
     table_exists_code = 1
     table_exists = test_table_exists(self.sqlite_cursor)
@@ -36,7 +41,7 @@ class TestLogin(unittest.TestCase):
   
   # case 2: local table exists
   def test_fetch_user_info_2(self):
-    fetch_user_info(test_user["email"], test_user["password"], self.sqlite_cursor)
+    fetch_user_info(test_user["email"], test_user["password"], self.sqlite_connection, self.pg_connection.cursor())
     
     table_exists_code = 1
     table_exists = test_table_exists(self.sqlite_cursor)

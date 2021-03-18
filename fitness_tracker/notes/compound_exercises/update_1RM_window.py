@@ -13,10 +13,12 @@ class Update1RMWindow(QWidget):
   history_signal = pyqtSignal(bool)
   update_graph_signal = pyqtSignal(bool)
 
-  def __init__(self, sqlite_connection):
+  def __init__(self, sqlite_connection, pg_connection):
     super().__init__()
     self.sqlite_connection = sqlite_connection
     self.sqlite_cursor = sqlite_connection.cursor()
+    self.pg_connection = pg_connection
+    self.pg_cursor = self.pg_connection
     self.setStyleSheet("""
     QWidget{
       background-color: #322d2d;
@@ -126,11 +128,11 @@ class Update1RMWindow(QWidget):
       
       diff = lift_difference(new_maxes, self.sqlite_cursor, one_RM=True)
       
-      update_lift_history(diff, self.sqlite_connection) 
+      update_lift_history(diff, self.sqlite_connection, self.pg_connection) 
       self.history_signal.emit(True)
       
-      update_1RM_lifts(diff, self.sqlite_connection)
-      update_one_rep_maxes_history(diff, self.current_year, self.sqlite_connection)
+      update_1RM_lifts(diff, self.sqlite_connection, self.pg_connection)
+      update_one_rep_maxes_history(diff, self.current_year, self.sqlite_connection, self.pg_connection)
       
       self.update_graph_signal.emit(True)
       self.change_1RM_lifts_signal.emit(True)

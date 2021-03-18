@@ -1,11 +1,7 @@
-import os
-import sys
 import json
-import psycopg2
 from psycopg2 import sql
 import sqlite3
 from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
-from fitness_tracker.config import db_info, db_path
 
 def logged_in_user_email(cursor):
   try:
@@ -50,37 +46,40 @@ def convert_weight(current_units, weight):
   elif current_units == "imperial":
     return pounds_to_kg(float(weight))
 
-def update_user_info_parameter(sqlite_connection, parameter, value):
-  sqlite_cursor = sqlite_connection.cursor()
-  email = logged_in_user_email(sqlite_cursor)
+def update_user_info_parameter(sqlite_connection, pg_connection, parameter, value):
   assert parameter in ("weight", "height", "gender", "age", "name", "goal", "goalparams", "goalweight") 
+  
+  sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
+  
+  email = logged_in_user_email(sqlite_cursor)
   
   if parameter == "goalparams": value = json.dumps(value)
 
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute(sql.SQL("UPDATE users SET {}=%s WHERE email=%s").format(sql.Identifier(parameter)), (value, email,))
-  
+  pg_cursor.execute(sql.SQL("UPDATE users SET {}=%s WHERE email=%s").format(sql.Identifier(parameter)), (value, email,))
+  pg_connection.commit()
+
   sqlite_cursor.execute("UPDATE 'users' SET %s=? WHERE email=?" % parameter, (value, email,))
   sqlite_connection.commit()
 
-def update_units(sqlite_connection):
+def update_units(sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
+
   email = logged_in_user_email(sqlite_cursor)
-  current_units = None
+  
+  sqlite_cursor.execute("SELECT units FROM 'users' WHERE email=?", (email,))
+  
   set_units_imperial = "UPDATE 'users' SET units='imperial' WHERE email=?"
   set_units_metric = "UPDATE 'users' SET units='metric' WHERE email=?"
-  sqlite_cursor.execute("SELECT units FROM 'users' WHERE email=?", (email,))
-  current_units = sqlite_cursor.fetchone()[0]
-  update_units = set_units_imperial if current_units == "metric" else set_units_metric
+
+  update_units = set_units_imperial if sqlite_cursor.fetchone()[0] == "metric" else set_units_metric
+  
   sqlite_cursor.execute(update_units, (email,))
   sqlite_connection.commit()
 
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      set_units_imperial = "UPDATE users SET units='imperial' WHERE email=%s"
-      set_units_metric = "UPDATE users SET units='metric' WHERE email=%s"
-      update_units = set_units_imperial if current_units == "metric" else set_units_metric
-      cursor.execute(update_units, (email,))
+  set_units_imperial = "UPDATE users SET units='imperial' WHERE email=%s"
+  set_units_metric = "UPDATE users SET units='metric' WHERE email=%s"
+  update_units = set_units_imperial if current_units == "metric" else set_units_metric
+  pg_cursor.execute(update_units, (email,))
+  pg_connection.commit()

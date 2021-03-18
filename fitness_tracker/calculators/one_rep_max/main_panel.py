@@ -5,14 +5,13 @@ from PyQt5.QtGui import QFont, QCursor, QIntValidator
 from PyQt5.QtCore import Qt
 from .one_rep_max_calculator import OneRepMaxCalculator
 from fitness_tracker.user_profile.profile_db import fetch_units
-from fitness_tracker.config import db_path
+from fitness_tracker.config import DBConnection
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__()
-    with sqlite3.connect(db_path) as conn:
-      self.sqlite_connection = conn
-      self.sqlite_cursor = conn.cursor()
+    self.sqlite_connection = DBConnection("sqlite").connect()
+    self.sqlite_cursor = self.sqlite_connection.cursor()
 
     self.setStyleSheet("""
     QWidget{

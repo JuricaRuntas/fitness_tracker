@@ -1,5 +1,4 @@
 import os
-import sqlite3
 import json
 from datetime import datetime
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
@@ -14,7 +13,7 @@ from .nutrition_db import (table_is_empty, create_nutrition_table, fetch_nutriti
 from .change_weight_dialog import ChangeWeightDialog
 from .spoonacular import FoodDatabase
 from fitness_tracker.user_profile.profile_db import fetch_local_user_data, fetch_units
-from fitness_tracker.config import db_path
+from fitness_tracker.config import DBConnection
 
 path = os.path.abspath(os.path.dirname(__file__))
 icons_path = os.path.join(path, "icons")
@@ -29,15 +28,16 @@ class NotesPanel(QWidget):
   change_layout_signal = pyqtSignal(str)
   def __init__(self, parent):
     super().__init__(parent)
-    with sqlite3.connect(db_path) as conn:
-      self.sqlite_connection = conn
-      self.sqlite_cursor = self.sqlite_connection.cursor()
+    self.sqlite_connection = DBConnection("sqlite").connect()
+    self.sqlite_cursor = self.sqlite_connection.cursor()
+    self.pg_connection = DBConnection("pg").connect()
+    self.pg_cursor = self.pg_connection.cursor()
     create_nutrition_table(self.sqlite_connection)
     global b
     b = FoodDBSearchPanel("e", "e")
     b.show()
-    if table_is_empty(self.sqlite_cursor): insert_default_meal_plans_values(self.sqlite_connection)
-    self.setStyleSheet(   
+    if table_is_empty(self.sqlite_cursor): insert_default_meal_plans_values(self.sqlite_connection, self.pg_connection)
+    self.setStyleSheet(
     """QWidget{
       color:#c7c7c7;
       font-weight: bold;
@@ -85,7 +85,7 @@ class NotesPanel(QWidget):
     }
       """)
     self.meal_plans = json.loads(fetch_meal_plans(self.sqlite_cursor))
-    if datetime.now().strftime("%V") != self.meal_plans["Current Week Number"]: rotate_meals(self.sqlite_connection)
+    if datetime.now().strftime("%V") != self.meal_plans["Current Week Number"]: rotate_meals(self.sqlite_connection, self.pg_connection)
     self.units = "kg" if fetch_units(self.sqlite_cursor) == "metric" else "lb"
     
     self.user_data = fetch_local_user_data(self.sqlite_cursor)
@@ -98,7 +98,7 @@ class NotesPanel(QWidget):
     self.user_age = self.user_data["Age"]
     self.loss_per_week = self.goal_parameters[1]
     self.user_activity = self.goal_parameters[0]
-    self.change_weight_dialog = ChangeWeightDialog(self.sqlite_connection)
+    self.change_weight_dialog = ChangeWeightDialog(self.sqlite_connection, self.pg_connection)
     self.change_weight_dialog.change_current_weight_signal.connect(lambda weight: self.change_current_weight(weight))
     self.change_weight_dialog.change_goal_weight_signal.connect(lambda weight: self.change_goal_weight(weight))
     self.change_weight_dialog.change_calorie_goal_signal.connect(lambda calorie_goal: self.change_calorie_goal(calorie_goal))
@@ -347,14 +347,16 @@ class NotesPanel(QWidget):
 
   def show_intake_entry(self):
     global entry
-    entry = EditDailyIntake(self.sqlite_connection)
+    entry = EditDailyIntake(self.sqlite_connection, self.pg_connection)
     entry.show()
 
 class EditDailyIntake(QWidget):
-  def __init__(self, sqlite_connection):
+  def __init__(self, sqlite_connection, pg_connection):
     super().__init__()
     self.sqlite_connection = sqlite_connection
     self.sqlite_cursor = sqlite_connection.cursor()
+    self.pg_connection = pg_connection
+    self.pg_cursor = self.pg_connection.cursor()
     self.setStyleSheet(   
     """QWidget{
       background-color: #232120;
@@ -425,7 +427,7 @@ class EditDailyIntake(QWidget):
 
   def confirm_button(self):
     if self.calorie_line_edit.text() != "":
-      update_calorie_goal(self.calorie_line_edit.text(), self.sqlite_cursor)
+      update_calorie_goal(self.calorie_line_edit.text(), self.sqlite_cursor, self.pg_connection)
       self.close()
 
 class FoodDBSearchPanel(QWidget):

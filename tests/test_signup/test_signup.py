@@ -1,7 +1,9 @@
 import unittest
 import sqlite3
+import psycopg2
 import os
 from fitness_tracker.signup.signup_helpers import create_user, create_user_info_after_signup, create_user_table
+from fitness_tracker.config import db_info
 from signup_test_helpers import *
 
 class TestSignup(unittest.TestCase):
@@ -9,7 +11,12 @@ class TestSignup(unittest.TestCase):
     with sqlite3.connect("test.db") as conn:
       self.sqlite_connection = conn
       self.sqlite_cursor = conn.cursor()
-    create_test_user(self.sqlite_connection)
+    with psycopg2.connect(**db_info) as pg_conn:
+      with pg_conn.cursor() as pg_cursor:
+        self.pg_connection = pg_conn
+        self.pg_cursor = pg_cursor
+
+    create_test_user(self.sqlite_connection, self.pg_connection)
 
   def tearDown(self):
     delete_test_user()
@@ -30,7 +37,7 @@ class TestSignup(unittest.TestCase):
   def test_create_user_info_after_signup(self):
     create_user_table(test_user["email"], "testpassword123", self.sqlite_connection)
     user_info = {key: value for key, value in test_user.items() if not key  == "email" and not key == "password"}
-    create_user_info_after_signup(test_user, test_user["email"], self.sqlite_connection)
+    create_user_info_after_signup(test_user, test_user["email"], self.sqlite_connection, self.pg_connection)
     fetch_info = fetch_user_info()[0][:-1]
     self.assertEqual(fetch_info, tuple(test_user.values()))
 

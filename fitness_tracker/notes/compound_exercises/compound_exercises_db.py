@@ -1,7 +1,6 @@
 import sys
-import sqlite3
-import psycopg2
 import json
+import psycopg2
 from datetime import datetime
 from psycopg2 import sql
 from fitness_tracker.user_profile.profile_db import fetch_units, logged_in_user_email
@@ -44,31 +43,25 @@ def fetch_rm_history(sqlite_cursor):
   sqlite_cursor.execute("SELECT rm_history FROM 'big_lifts' WHERE email=?", (email,))
   return sqlite_cursor.fetchone()[0]
 
-def fetch_user_rm_history(sqlite_connection):
+def fetch_user_rm_history(sqlite_connection, pg_cursor):
   sqlite_cursor = sqlite_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
-  rm_history = None
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("SELECT rm_history FROM big_lifts WHERE email=%s", (email,))
-      rm_history = cursor.fetchone()[0]
+  
+  pg_cursor.execute("SELECT rm_history FROM big_lifts WHERE email=%s", (email,))
+  rm_history = cursor.fetchone()[0]
 
   sqlite_cursor.execute("UPDATE 'big_lifts' SET rm_history=? WHERE email=?", (rm_history, email,))
   sqlite_connection.commit()
 
   return rm_history
 
-def fetch_user_big_lifts_table_data(sqlite_connection):
+def fetch_user_big_lifts_table_data(sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
-  big_lifts_data = None
 
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("SELECT * FROM big_lifts WHERE email=%s", (email,))
-      big_lifts_data = cursor.fetchall()[0][:-1]
+  pg_cursor.execute("SELECT * FROM big_lifts WHERE email=%s", (email,))
+  big_lifts_data = pg_cursor.fetchall()[0][:-1]
   
   one_rep_maxes = big_lifts_data[1]
   lifts_for_reps = big_lifts_data[2]
@@ -85,8 +78,9 @@ def fetch_user_big_lifts_table_data(sqlite_connection):
     sqlite_cursor.execute(insert_values, (email, one_rep_maxes, lifts_for_reps, preferred_lifts, lift_history, units, rm_history,))
     sqlite_connection.commit()
 
-def insert_default_values(sqlite_connection):
+def insert_default_values(sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   default_exercises = ["Bench Press", "Deadlift", "Back Squat", "Overhead Press"]
   secondary_exercises = {"Horizontal Press": "Incline Bench Press", "Floor Pull": "Sumo Deadlift",
@@ -116,18 +110,17 @@ def insert_default_values(sqlite_connection):
                   "email": email, "units": units}
 
   try:
-    with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                          user=db_info["user"], password=db_info["password"]) as conn:
-      with conn.cursor() as cursor:
-        insert_query = "INSERT INTO big_lifts ({columns}) VALUES %s"
-        columns = sql.SQL(", ").join(sql.Identifier(column) for column in tuple(default_dict.keys()))
-        values = tuple(value for value in default_dict.values())
-        cursor.execute(sql.SQL(insert_query).format(columns=columns), (values,))
-  
+    columns = sql.SQL(", ").join(sql.Identifier(column) for column in tuple(default_dict.keys()))
+    values = tuple(value for value in default_dict.values())
+    pg_cursor.execute(sql.SQL("INSERT INTO big_lifts ({columns}) VALUES %s").format(columns=columns), (values,))
+    pg_connection.commit()
+
     sqlite_cursor.execute("INSERT INTO 'big_lifts' {columns} VALUES {values}".format(columns=tuple(default_dict.keys()), values=tuple(default_dict.values())))
     sqlite_connection.commit()
   except psycopg2.errors.UniqueViolation: # user already has big_lifts table with data on server
-    fetch_user_big_lifts_table_data(sqlite_connection)
+    pg_cursor.execute("ROLLBACK")
+    pg_connection.commit()
+    fetch_user_big_lifts_table_data(sqlite_connection, pg_connection)
 
 def create_big_lifts_table(sqlite_connection):
   sqlite_cursor = sqlite_connection.cursor()
@@ -147,21 +140,22 @@ def create_big_lifts_table(sqlite_connection):
   sqlite_cursor.execute(create_table)
   sqlite_connection.commit()
 
-def update_preferred_lifts(new_preferred_lifts, sqlite_connection):
+def update_preferred_lifts(new_preferred_lifts, sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   new_preferred_lifts = json.dumps(new_preferred_lifts)
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE big_lifts SET preferred_lifts=%s WHERE email=%s", (new_preferred_lifts, email,))
+  
+  pg_cursor.execute("UPDATE big_lifts SET preferred_lifts=%s WHERE email=%s", (new_preferred_lifts, email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'big_lifts' SET preferred_lifts=? WHERE email=?", (new_preferred_lifts, email,))
   sqlite_connection.commit()
 
 # updates exercises
-def update_1RM_and_lifts_for_reps(sqlite_connection):
+def update_1RM_and_lifts_for_reps(sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   preferred_lifts = list(json.loads(fetch_preferred_lifts(sqlite_cursor)).values())
   one_rep_maxes = json.loads(fetch_one_rep_maxes(sqlite_cursor))
@@ -170,19 +164,18 @@ def update_1RM_and_lifts_for_reps(sqlite_connection):
   new_one_rep_maxes = json.dumps({preferred_lifts[i]:value for i, value in enumerate(one_rep_maxes.values())})
   new_lifts_for_reps = json.dumps({preferred_lifts[i]:value for i, value in enumerate(lifts_for_reps.values())})
       
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE big_lifts SET one_rep_maxes=%s WHERE email=%s", (new_one_rep_maxes, email,))
-      cursor.execute("UPDATE big_lifts SET lifts_for_reps=%s WHERE email=%s", (new_lifts_for_reps, email,))
+  pg_cursor.execute("UPDATE big_lifts SET one_rep_maxes=%s WHERE email=%s", (new_one_rep_maxes, email,))
+  pg_cursor.execute("UPDATE big_lifts SET lifts_for_reps=%s WHERE email=%s", (new_lifts_for_reps, email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'big_lifts' SET one_rep_maxes=? WHERE email=?", (new_one_rep_maxes, email,))
   sqlite_cursor.execute("UPDATE 'big_lifts' SET lifts_for_reps=? WHERE email=?", (new_lifts_for_reps, email,))
   sqlite_connection.commit()
 
 # updates weight
-def update_1RM_lifts(new_lifts, sqlite_connection):
+def update_1RM_lifts(new_lifts, sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   one_rep_max_lifts = json.loads(fetch_one_rep_maxes(sqlite_cursor))
   for i, lift in enumerate(one_rep_max_lifts.keys()):
@@ -191,17 +184,16 @@ def update_1RM_lifts(new_lifts, sqlite_connection):
 
   one_rep_max_lifts = json.dumps(one_rep_max_lifts)
  
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE big_lifts SET one_rep_maxes=%s WHERE email=%s", (one_rep_max_lifts, email,))
+  pg_cursor.execute("UPDATE big_lifts SET one_rep_maxes=%s WHERE email=%s", (one_rep_max_lifts, email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'big_lifts' SET one_rep_maxes=? WHERE email=?", (one_rep_max_lifts, email,))
   sqlite_connection.commit()
 
 # updates reps and weight
-def update_lifts_for_reps(new_lifts_for_reps, sqlite_connection):
+def update_lifts_for_reps(new_lifts_for_reps, sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   lifts_for_reps = json.loads(fetch_lifts_for_reps(sqlite_cursor))
   new_lifts_for_reps = list(new_lifts_for_reps.values())
@@ -211,16 +203,15 @@ def update_lifts_for_reps(new_lifts_for_reps, sqlite_connection):
 
   lifts_for_reps = json.dumps(lifts_for_reps)
 
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE big_lifts SET lifts_for_reps=%s WHERE email=%s", (lifts_for_reps, email,))
+  pg_cursor.execute("UPDATE big_lifts SET lifts_for_reps=%s WHERE email=%s", (lifts_for_reps, email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'big_lifts' SET lifts_for_reps=? WHERE email=?", (lifts_for_reps, email,))
   sqlite_connection.commit()
 
-def update_lift_history(lift_history, sqlite_connection):
+def update_lift_history(lift_history, sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   current_lift_history = fetch_lift_history(sqlite_cursor)
   lift_history = [[exercise, value] for exercise, value in lift_history.items()]
@@ -239,28 +230,27 @@ def update_lift_history(lift_history, sqlite_connection):
       last_index += 1
     new_lift_history = json.dumps(list(reversed(current_lift_history)))
   
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE big_lifts SET lift_history=%s WHERE email=%s", (new_lift_history, email,))
+  pg_cursor.execute("UPDATE big_lifts SET lift_history=%s WHERE email=%s", (new_lift_history, email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'big_lifts' SET lift_history=? WHERE email=?", (new_lift_history, email,))
   sqlite_connection.commit()
 
-def update_big_lifts_units(sqlite_connection):
+def update_big_lifts_units(sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   units = fetch_units(sqlite_cursor)
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE big_lifts SET units=%s WHERE email=%s", (units, email,))
+  
+  pg_cursor.execute("UPDATE big_lifts SET units=%s WHERE email=%s", (units, email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'big_lifts' SET units=? WHERE email=?", (units, email,))
   sqlite_connection.commit()
 
-def update_one_rep_maxes_history(new_values, year, sqlite_connection):
+def update_one_rep_maxes_history(new_values, year, sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   rm_history = json.loads(fetch_rm_history(sqlite_cursor))
   preferred_lifts = json.loads(fetch_preferred_lifts(sqlite_cursor))
@@ -290,16 +280,15 @@ def update_one_rep_maxes_history(new_values, year, sqlite_connection):
   
   rm_history = json.dumps(rm_history)
 
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE big_lifts SET rm_history=%s WHERE email=%s", (rm_history, email,))
+  pg_cursor.execute("UPDATE big_lifts SET rm_history=%s WHERE email=%s", (rm_history, email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'big_lifts' SET rm_history=? WHERE email=?", (rm_history, email,))
   sqlite_connection.commit()
 
-def add_year_to_rm_history(sqlite_connection):
+def add_year_to_rm_history(year, sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   rm_history = json.loads(fetch_rm_history(sqlite_cursor))
   preferred_lifts = json.loads(fetch_preferred_lifts(sqlite_cursor))
@@ -314,16 +303,15 @@ def add_year_to_rm_history(sqlite_connection):
 
   rm_history[str(year)] = new_year
 
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      sqlite_cursor.execute("UPDATE big_lifts SET rm_history=%s WHERE email=%s", (json.dumps(rm_history), email,))
+  pg_cursor.execute("UPDATE big_lifts SET rm_history=%s WHERE email=%s", (json.dumps(rm_history), email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'big_lifts' SET rm_history=? WHERE email=?", (json.dumps(rm_history), email,))
   sqlite_connection.commit()
 
-def clear_one_rep_maxes(sqlite_connection):
+def clear_one_rep_maxes(sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   one_rep_maxes = json.loads(fetch_one_rep_maxes(sqlite_cursor))
   for exercise, value in one_rep_maxes.items():
@@ -331,16 +319,15 @@ def clear_one_rep_maxes(sqlite_connection):
 
   one_rep_maxes = json.dumps(one_rep_maxes)
   
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE big_lifts SET one_rep_maxes=%s WHERE email=%s", (one_rep_maxes, email,))
+  pg_cursor.execute("UPDATE big_lifts SET one_rep_maxes=%s WHERE email=%s", (one_rep_maxes, email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'big_lifts' SET one_rep_maxes=? WHERE email=?", (one_rep_maxes, email,))
   sqlite_connection.commit()
 
-def clear_lifts_for_reps(sqlite_connection):
+def clear_lifts_for_reps(sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   lifts_for_reps = json.loads(fetch_lifts_for_reps(sqlite_cursor))
   for exercise, values in lifts_for_reps.items():
@@ -348,10 +335,8 @@ def clear_lifts_for_reps(sqlite_connection):
 
   lifts_for_reps = json.dumps(lifts_for_reps)
 
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE big_lifts SET lifts_for_reps=%s WHERE email=%s", (lifts_for_reps, email,))
+  pg_cursor.execute("UPDATE big_lifts SET lifts_for_reps=%s WHERE email=%s", (lifts_for_reps, email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'big_lifts' SET lifts_for_reps=? WHERE email=?", (lifts_for_reps, email,))
   sqlite_connection.commit()
@@ -377,19 +362,18 @@ def lift_difference(new_lifts, sqlite_cursor, one_RM=False, lifts_reps=False):
     difference = {exercise.split(":")[0]:exercise.split(":")[1].split("x") for exercise in diff}
   return {key: value for key, value in sorted(difference.items(), key=lambda exercise: sort_exercises(exercise[0]))}
 
-def delete_history_entry(entry_index, sqlite_connection):
+def delete_history_entry(entry_index, sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   lift_history = json.loads(fetch_lift_history(sqlite_cursor))
   lift_history = [lift for lift in lift_history if not lift[-1] == entry_index]
   
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      if not len(lift_history) == 0:
-        cursor.execute("UPDATE big_lifts SET lift_history=%s WHERE email=%s", (json.dumps(lift_history), email,))
-      else:
-        cursor.execute("UPDATE big_lifts SET lift_history=NULL WHERE email=%s", (email,))
+  if not len(lift_history) == 0:
+    pg_cursor.execute("UPDATE big_lifts SET lift_history=%s WHERE email=%s", (json.dumps(lift_history), email,))
+  else:
+    pg_cursor.execute("UPDATE big_lifts SET lift_history=NULL WHERE email=%s", (email,))
+  pg_connection.commit()
 
   if not len(lift_history) == 0:
     sqlite_cursor.execute("UPDATE 'big_lifts' SET lift_history=? WHERE email=?", (json.dumps(lift_history), email,))
@@ -397,8 +381,9 @@ def delete_history_entry(entry_index, sqlite_connection):
     sqlite_cursor.execute("UPDATE 'big_lifts' SET lift_history=NULL WHERE email=?", (email,))
   sqlite_connection.commit()
 
-def convert_lift_history_weight(convert_to_units, sqlite_connection):
+def convert_lift_history_weight(convert_to_units, sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   try:
     lift_history = json.loads(fetch_lift_history(sqlite_cursor))
@@ -417,10 +402,8 @@ def convert_lift_history_weight(convert_to_units, sqlite_connection):
       else:
         lift[1] = str(kg_to_pounds(float(lift[1])))
   
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE big_lifts SET lift_history=%s WHERE email=%s", (json.dumps(lift_history), email,))
+  pg_cursor.execute("UPDATE big_lifts SET lift_history=%s WHERE email=%s", (json.dumps(lift_history), email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'big_lifts' SET lift_history=? WHERE email=?", (json.dumps(lift_history), email,))
   sqlite_connection.commit()

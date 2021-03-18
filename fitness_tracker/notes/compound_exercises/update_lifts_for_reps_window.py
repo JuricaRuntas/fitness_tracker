@@ -11,10 +11,12 @@ class UpdateLiftsForRepsWindow(QWidget):
   change_lifts_for_reps_signal = pyqtSignal(bool)
   history_signal = pyqtSignal(bool)
 
-  def __init__(self, sqlite_connection):
+  def __init__(self, sqlite_connection, pg_connection):
     super().__init__()
     self.sqlite_connection = sqlite_connection
     self.sqlite_cursor = sqlite_connection.cursor()
+    self.pg_connection = pg_connection
+    self.pg_cursor = self.pg_connection.cursor()
     self.setStyleSheet("""
     QWidget{
       background-color: #322d2d;
@@ -149,9 +151,9 @@ class UpdateLiftsForRepsWindow(QWidget):
                             exercises[2]: [squat_reps, squat_weight],
                             exercises[3]: [vertical_press_reps, vertical_press_weight]}
       diff = lift_difference(new_lifts_for_reps, self.sqlite_cursor, lifts_reps=True)
-      update_lift_history(diff, self.sqlite_connection)
+      update_lift_history(diff, self.sqlite_connection, self.pg_connection)
       self.history_signal.emit(True)
-      update_lifts_for_reps(new_lifts_for_reps, self.sqlite_connection)
+      update_lifts_for_reps(new_lifts_for_reps, self.sqlite_connection, self.pg_connection)
       self.change_lifts_for_reps_signal.emit(True)
       self.set_line_edit_values()
       self.close()

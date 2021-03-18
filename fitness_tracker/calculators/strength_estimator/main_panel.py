@@ -7,15 +7,13 @@ from PyQt5.QtCore import Qt
 from .estimator import StrengthLevelEstimator
 from .exercise_standards import LiftStandards
 from fitness_tracker.user_profile.profile_db import fetch_units
-from fitness_tracker.config import db_path
+from fitness_tracker.config import DBConnection
 
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    with sqlite3.connect(db_path) as conn:
-      self.sqlite_connection = conn
-      self.sqlite_cursor = conn.cursor()
-    
+    self.sqlite_connection = DBConnection("sqlite").connect()
+    self.sqlite_cursor = self.sqlite_connection.cursor()
     self.units = fetch_units(self.sqlite_cursor)
     self.setStyleSheet("""
     QWidget{

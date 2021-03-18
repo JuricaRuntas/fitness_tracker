@@ -1,10 +1,12 @@
 import unittest
 import json
 import sqlite3
+import psycopg2
 import os
 from fitness_tracker.notes.workouts.workouts_db import (create_workouts_table, fetch_workouts_table_data,
                                                         insert_default_workouts_data, update_workouts,
                                                         update_current_workout, delete_workout)
+from fitness_tracker.config import db_info
 from workouts_test_helpers import *
 
 class TestWorkouts(unittest.TestCase):
@@ -12,9 +14,11 @@ class TestWorkouts(unittest.TestCase):
     with sqlite3.connect("test.db") as conn:
       self.sqlite_connection = conn
       self.sqlite_cursor = conn.cursor()
-    create_test_user(self.sqlite_connection)
+    with psycopg2.connect(**db_info) as pg_conn:
+      self.pg_connection = pg_conn 
+    create_test_user(self.sqlite_connection, self.pg_connection)
     create_workouts_table(self.sqlite_connection)
-    insert_default_workouts_data(self.sqlite_connection)
+    insert_default_workouts_data(self.sqlite_connection, self.pg_connection)
 
   def tearDown(self):
     delete_test_user(test_user["email"])
@@ -28,7 +32,7 @@ class TestWorkouts(unittest.TestCase):
     self.assertEqual(workouts_columns, fetched_columns)
   
   def test_insert_default_workouts_data(self):
-    insert_default_workouts_data(self.sqlite_connection)
+    insert_default_workouts_data(self.sqlite_connection, self.pg_connection)
     default_data = {"email": test_user["email"],
                     "workouts": "{}",
                     "current_workout_plan": ""}
@@ -45,7 +49,7 @@ class TestWorkouts(unittest.TestCase):
     self.assertDictEqual(fetched_default_data, default_data)
   
   def test_fetch_workouts_table_data(self):
-    fetch_workouts_table_data(self.sqlite_connection)
+    fetch_workouts_table_data(self.sqlite_connection, self.pg_connection)
     server_workouts_data = fetch_workouts_data(test_user["email"])[0][:-1]
     local_workouts_data = fetch_local_workouts_data(self.sqlite_cursor)[0][:-1]
     self.assertEqual(server_workouts_data, local_workouts_data)
@@ -55,7 +59,7 @@ class TestWorkouts(unittest.TestCase):
                                "Exercise 2": {"Sets": "6", "Reps": "2", "Rest": "45 min", "Duration (optional)": ""}},
                    "Friday": {"Exercise 1": {"Sets": "1", "Reps": "1", "Rest": "5 min", "Duration (optional)": "10 min"}}}
     workout = {"My Workout1": new_workout}
-    update_workouts("My Workout1", new_workout, self.sqlite_connection)
+    update_workouts("My Workout1", new_workout, self.sqlite_connection, self.pg_connection)
     
     workouts = fetch_test_workouts(self.sqlite_cursor, email=test_user["email"])
     server_workouts = json.loads(workouts[0])
@@ -66,7 +70,7 @@ class TestWorkouts(unittest.TestCase):
   
   def test_update_current_workout(self):
     new_current_workout = "My Workout1"
-    update_current_workout("My Workout1", True, self.sqlite_connection)
+    update_current_workout("My Workout1", True, self.sqlite_connection, self.pg_connection)
     test_current_workout = fetch_test_current_workout(self.sqlite_cursor, test_user["email"])
 
     server_current_workout = test_current_workout[0]
@@ -80,8 +84,8 @@ class TestWorkouts(unittest.TestCase):
                                "Exercise 2": {"Sets": "6", "Reps": "2", "Rest": "45 min", "Duration (optional)": ""}},
                    "Friday": {"Exercise 1": {"Sets": "1", "Reps": "1", "Rest": "5 min", "Duration (optional)": "10 min"}}}
     workout = {"My Workout1": new_workout}
-    update_workouts("My Workout1", new_workout, self.sqlite_connection)
-    delete_workout("My Workout1", self.sqlite_connection)
+    update_workouts("My Workout1", new_workout, self.sqlite_connection, self.pg_connection)
+    delete_workout("My Workout1", self.sqlite_connection, self.pg_connection)
     fetched_workouts = fetch_test_workouts(self.sqlite_cursor, email=test_user["email"])
 
     server_workouts = json.loads(fetched_workouts[0])

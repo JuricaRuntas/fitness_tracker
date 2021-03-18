@@ -1,10 +1,8 @@
-import sqlite3
-import psycopg2
 import json
+import psycopg2
 from datetime import datetime
 from psycopg2 import sql
 from fitness_tracker.user_profile.profile_db import logged_in_user_email
-from fitness_tracker.config import db_path, db_info
 
 def table_exists(sqlite_cursor):
   sqlite_cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='nutrition'")
@@ -27,17 +25,14 @@ def fetch_meal_plans(sqlite_cursor):
   sqlite_cursor.execute("SELECT meal_plans FROM 'nutrition' WHERE email=?", (email,))
   return sqlite_cursor.fetchone()[0]
 
-def fetch_nutrition_data(sqlite_connection):
+def fetch_nutrition_data(sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor) 
-  nutrition_data = None
   
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("SELECT * FROM nutrition WHERE email=%s", (email,))
-      nutrition_data = cursor.fetchall()[0][:-1]
- 
+  pg_cursor.execute("SELECT * FROM nutrition WHERE email=%s", (email,))
+  nutrition_data = pg_cursor.fetchall()[0][:-1]
+
   calorie_goal = nutrition_data[1]
   meal_plans = nutrition_data[2]
   manage_meals = nutrition_data[3]
@@ -47,16 +42,14 @@ def fetch_nutrition_data(sqlite_connection):
     sqlite_cursor.execute(insert_query, (email, calorie_goal, meal_plans, manage_meals,))
     sqlite_connection.commit()
 
-def update_calorie_goal(calorie_goal, sqlite_connection):
+def update_calorie_goal(calorie_goal, sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor) 
-  sqlite_cursor.execute("UPDATE 'nutrition' SET calorie_goal=?", (calorie_goal,))
   
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE nutrition SET calorie_goal=%s WHERE email=%s", (calorie_goal, email,))
-      
+  pg_cursor.execute("UPDATE nutrition SET calorie_goal=%s WHERE email=%s", (calorie_goal, email,))
+  pg_connection.commit()
+
   sqlite_cursor.execute("UPDATE 'nutrition' SET calorie_goal=? WHERE email=?", (calorie_goal, email,))
   sqlite_connection.commit()
    
@@ -75,8 +68,9 @@ def create_nutrition_table(sqlite_connection):
   sqlite_cursor.execute(create_table)
   sqlite_connection.commit()
 
-def insert_default_meal_plans_values(sqlite_connection, calorie_goal=None):
+def insert_default_meal_plans_values(sqlite_connection, pg_connection, calorie_goal=None):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   days_in_a_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
   default_meal_names = ["Breakfast", "Lunch", "Snack", "Dinner"]
@@ -98,18 +92,17 @@ def insert_default_meal_plans_values(sqlite_connection, calorie_goal=None):
   values = tuple(value for value in default_values.values())
   
   try:
-    with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                          user=db_info["user"], password=db_info["password"]) as conn:
-      with conn.cursor() as cursor:
-        cursor.execute(sql.SQL("INSERT INTO nutrition ({columns}) VALUES %s").format(columns=columns), (values,))
-    
+    pg_cursor.execute(sql.SQL("INSERT INTO nutrition ({columns}) VALUES %s").format(columns=columns), (values,))
+    pg_connection.commit()
     if not table_exists(sqlite_cursor): create_nutrition_table(sqlite_connection)
     sqlite_cursor.execute("INSERT INTO 'nutrition' {columns} VALUES {values}".format(columns=tuple(default_values.keys()), values=tuple(default_values.values())))
     sqlite_connection.commit()
   except psycopg2.errors.UniqueViolation:
-    fetch_nutrition_data(sqlite_connection)
+    pg_cursor.execute("ROLLBACK")
+    pg_connection.commit()
+    fetch_nutrition_data(sqlite_connection, pg_connection)
 
-def modify_meal(action, meal_to_modify, sqlite_connection, day=None, modify_to=None, this_week=False, next_week=False):
+def modify_meal(action, meal_to_modify, sqlite_connection, pg_connection, day=None, modify_to=None, this_week=False, next_week=False):
   assert action in ("Add", "Delete", "Rename")
   assert this_week != False or next_week != False
   assert day != None
@@ -117,6 +110,7 @@ def modify_meal(action, meal_to_modify, sqlite_connection, day=None, modify_to=N
   elif action == "Add": assert modify_to == None
    
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   fetched_meal_plans = json.loads(fetch_meal_plans(sqlite_cursor))
   when = [("Present" if this_week == True else None), ("Future" if next_week == True else None)]
@@ -138,19 +132,18 @@ def modify_meal(action, meal_to_modify, sqlite_connection, day=None, modify_to=N
   
   new_meal_plans = json.dumps(fetched_meal_plans)
   
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE nutrition SET meal_plans=%s WHERE email=%s", (new_meal_plans, email,))
+  pg_cursor.execute("UPDATE nutrition SET meal_plans=%s WHERE email=%s", (new_meal_plans, email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'nutrition' SET meal_plans=? WHERE email=?", (new_meal_plans, email,))
   sqlite_connection.commit()
 
-def update_meal(meal_name, food_info, day, sqlite_connection, this_week=False, next_week=False):
+def update_meal(meal_name, food_info, day, sqlite_connection, pg_connection, this_week=False, next_week=False):
   assert this_week != False or next_week != False
   assert not (this_week == True and next_week == True)
   
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   time = "Present" if this_week == True else "Future"
   email = logged_in_user_email(sqlite_cursor)
   fetched_meal_plans = json.loads(fetch_meal_plans(sqlite_cursor))
@@ -159,16 +152,15 @@ def update_meal(meal_name, food_info, day, sqlite_connection, this_week=False, n
 
   new_meal_plans = json.dumps(fetched_meal_plans)
 
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE nutrition SET meal_plans=%s WHERE email=%s", (new_meal_plans, email,))
+  pg_cursor.execute("UPDATE nutrition SET meal_plans=%s WHERE email=%s", (new_meal_plans, email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'nutrition' SET meal_plans=? WHERE email=?", (new_meal_plans, email,))
   sqlite_connection.commit()
 
-def rotate_meals(sqlite_connection):
+def rotate_meals(sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
   fetched_meal_plans = json.loads(fetch_meal_plans(sqlite_cursor))
   fetched_meal_plans["Current Week Number"] = int(datetime.now().strftime("%V"))
@@ -191,10 +183,8 @@ def rotate_meals(sqlite_connection):
   
   new_meal_plans = json.dumps(fetched_meal_plans)
 
-  with psycopg2.connect(host=db_info["host"], port=db_info["port"], database=db_info["database"],
-                        user=db_info["user"], password=db_info["password"]) as conn:
-    with conn.cursor() as cursor:
-      cursor.execute("UPDATE nutrition SET meal_plans=%s WHERE email=%s", (new_meal_plans, email,))
+  pg_cursor.execute("UPDATE nutrition SET meal_plans=%s WHERE email=%s", (new_meal_plans, email,))
+  pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'nutrition' SET meal_plans=? WHERE email=?", (new_meal_plans, email,))
   sqlite_connection.commit()

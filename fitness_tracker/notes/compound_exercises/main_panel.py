@@ -17,7 +17,7 @@ from .compound_exercises_db import (create_big_lifts_table, insert_default_value
 from fitness_tracker.user_profile.profile_db import fetch_units
 from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
 from fitness_tracker.notes.compound_exercises.one_rm_graphs import OneRMGraphCanvas
-from fitness_tracker.config import db_path
+from fitness_tracker.config import DBConnection
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 matplotlib.use("Qt5Agg")
@@ -25,10 +25,10 @@ matplotlib.use("Qt5Agg")
 class MainPanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
-    with sqlite3.connect(db_path) as conn:
-      self.sqlite_connection = conn
-      self.sqlite_cursor = conn.cursor()
-
+    self.sqlite_connection = DBConnection("sqlite").connect()
+    self.sqlite_cursor = self.sqlite_connection.cursor()
+    self.pg_connection = DBConnection("pg").connect()
+    self.pg_cursor = self.pg_connection.cursor()
     self.setStyleSheet("""
     QWidget{
       color:#c7c7c7;
@@ -87,7 +87,7 @@ class MainPanel(QWidget):
     """)
     self.current_year = str(datetime.now().year)
     create_big_lifts_table(self.sqlite_connection)
-    if table_is_empty(self.sqlite_cursor): insert_default_values(self.sqlite_connection)
+    if table_is_empty(self.sqlite_cursor): insert_default_values(self.sqlite_connection, self.pg_connection)
     
     self.units = "kg" if fetch_units(self.sqlite_cursor) == "metric" else "lb"
     big_lifts_units = "kg" if fetch_units_from_big_lifts(self.sqlite_cursor) == "metric" else "lb"
@@ -99,7 +99,7 @@ class MainPanel(QWidget):
     self.lifts_reps = [[lift, " ".join(["x".join(weight), self.units])] for lift, weight in lifts_for_reps.items()]
     
     if not self.units == big_lifts_units:
-      update_big_lifts_units(self.sqlite_connection)
+      update_big_lifts_units(self.sqlite_connection, self.pg_connection)
       if self.units == "kg":
         self.one_RM = [[lift[0], " ".join([str(pounds_to_kg(float(lift[1].split(" ")[0]))), self.units])] for lift in self.one_RM]
         self.lifts_reps = [[lift[0], " ".join(["x".join([lift[1].split("x")[0],
@@ -114,22 +114,22 @@ class MainPanel(QWidget):
       new_one_RM_lifts = {lift[0]:lift[1].split(" ")[0] for lift in self.one_RM}
       new_lifts_for_reps = {lift[0]: [lift[1].split("x")[0], lift[1].split("x")[1].split(" ")[0]] for lift in self.lifts_reps}
       
-      update_1RM_lifts(new_one_RM_lifts, self.sqlite_connection)
-      update_lifts_for_reps(new_lifts_for_reps, self.sqlite_connection)
-      convert_lift_history_weight(self.units, self.sqlite_connection)
+      update_1RM_lifts(new_one_RM_lifts, self.sqlite_connection, self.pg_connection)
+      update_lifts_for_reps(new_lifts_for_reps, self.sqlite_connection, self.pg_connection)
+      convert_lift_history_weight(self.units, self.sqlite_connection, self.pg_connection)
 
-    self.lift_history_window = LiftHistory(self.sqlite_connection)
+    self.lift_history_window = LiftHistory(self.sqlite_connection, self.pg_connection)
     self.lift_history_window.setGeometry(100, 200, 300, 300) 
     
-    self.plists_window = PreferredLifts(self.sqlite_connection)
+    self.plists_window = PreferredLifts(self.sqlite_connection, self.pg_connection)
     self.plists_window.change_lifts_signal.connect(self.changed_preferred_lifts)
     
-    self.update_1RM_window = Update1RMWindow(self.sqlite_connection)
+    self.update_1RM_window = Update1RMWindow(self.sqlite_connection, self.pg_connection)
     self.update_1RM_window.change_1RM_lifts_signal.connect(self.changed_1RM_lifts)
     self.update_1RM_window.history_signal.connect(lambda signal: self.lift_history_window.create_history(signal))
     self.update_1RM_window.update_graph_signal.connect(lambda signal: self.refresh_graph(signal))
 
-    self.lifts_for_reps = UpdateLiftsForRepsWindow(self.sqlite_connection)
+    self.lifts_for_reps = UpdateLiftsForRepsWindow(self.sqlite_connection, self.pg_connection)
     self.lifts_for_reps.change_lifts_for_reps_signal.connect(self.changed_lifts_for_reps)
     self.lifts_for_reps.history_signal.connect(lambda signal: self.lift_history_window.create_history(signal))
      
@@ -137,7 +137,7 @@ class MainPanel(QWidget):
     self.rm_history = json.loads(fetch_rm_history(self.sqlite_cursor))
     
     if not self.current_year in self.rm_history:
-      add_year_to_rm_history(self.current_year)
+      add_year_to_rm_history(self.current_year, self.sqlite_connection, self.pg_connection)
       self.rm_history = json.loads(fetch_rm_history(self.sqlite_cursor))
 
     self.create_panel()
@@ -347,13 +347,13 @@ class MainPanel(QWidget):
       label.setText(": ".join(label_text))
 
   def clear_one_rep_maxes(self):
-    clear_one_rep_maxes(self.sqlite_connection)
+    clear_one_rep_maxes(self.sqlite_connection, self.pg_connection)
     fetch_weight = list(json.loads(fetch_one_rep_maxes(self.sqlite_cursor)).values())
     self.set_1RM_labels_text(fetch_weight)
     self.update_1RM_window.set_line_edit_values()
    
   def clear_lifts_for_reps(self):
-    clear_lifts_for_reps(self.sqlite_connection)
+    clear_lifts_for_reps(self.sqlite_connection, self.pg_connection)
     fetch_reps_and_weight = list(json.loads(fetch_lifts_for_reps(self.sqlite_cursor)).values())
     self.set_lifts_for_reps_labels_text(fetch_reps_and_weight)
     self.lifts_for_reps.set_line_edit_values()

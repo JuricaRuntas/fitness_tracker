@@ -7,10 +7,12 @@ from .compound_exercises_db import fetch_preferred_lifts, update_preferred_lifts
 class PreferredLifts(QWidget):
   change_lifts_signal = pyqtSignal(bool)
 
-  def __init__(self, sqlite_connection):
+  def __init__(self, sqlite_connection, pg_connection):
     super().__init__()
     self.sqlite_connection = sqlite_connection
     self.sqlite_cursor = sqlite_connection.cursor()
+    self.pg_connection = pg_connection
+    self.pg_cursor = self.pg_connection.cursor()
     self.setStyleSheet("""
     QWidget{
       background-color: #322d2d;
@@ -130,7 +132,7 @@ class PreferredLifts(QWidget):
     vertical_press = str(self.vertical_press_dropdown.currentText())
     new_preferred_lifts = {"Horizontal Press": horizontal_press, "Floor Pull":floor_pull,
                            "Squat": squat, "Vertical Press": vertical_press}
-    update_preferred_lifts(new_preferred_lifts, self.sqlite_connection)
-    update_1RM_and_lifts_for_reps(self.sqlite_connection)
+    update_preferred_lifts(new_preferred_lifts, self.sqlite_connection, self.pg_connection)
+    update_1RM_and_lifts_for_reps(self.sqlite_connection, self.pg_connection)
     self.change_lifts_signal.emit(True)
     self.close()
