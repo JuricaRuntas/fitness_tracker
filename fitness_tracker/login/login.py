@@ -6,9 +6,9 @@ from fitness_tracker.titlebar import TitleBar
 class Login(QWidget):
   display_layout_signal = pyqtSignal(str)
 
-  def __init__(self):
+  def __init__(self, sqlite_connection, pg_connection):
     super().__init__()
-    self.main_panel = MainPanel()
+    self.main_panel = MainPanel(sqlite_connection, pg_connection)
     self.main_panel.emit_layout_name.connect(lambda layout_name: self.emit_display_layout_signal(layout_name))
     self.create_grid()
 

@@ -7,7 +7,7 @@ from .main_panel import MainPanel
 class Homepage(QWidget):
   display_layout_signal = pyqtSignal(str)
 
-  def __init__(self):
+  def __init__(self, sqlite_connection, pg_connection):
      super().__init__()
      #self.header = Header(self, "Fitness Tracker  ")
      self.side_panel = SidePanel(self)

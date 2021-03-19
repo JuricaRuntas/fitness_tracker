@@ -13,7 +13,6 @@ from .nutrition_db import (table_is_empty, create_nutrition_table, fetch_nutriti
 from .change_weight_dialog import ChangeWeightDialog
 from .spoonacular import FoodDatabase
 from fitness_tracker.user_profile.profile_db import fetch_local_user_data, fetch_units
-from fitness_tracker.config import DBConnection
 
 path = os.path.abspath(os.path.dirname(__file__))
 icons_path = os.path.join(path, "icons")
@@ -26,11 +25,11 @@ icons = {"pencil": os.path.join(icons_path, "pencil.png"),
 
 class NotesPanel(QWidget):
   change_layout_signal = pyqtSignal(str)
-  def __init__(self, parent):
+  def __init__(self, parent, sqlite_connection, pg_connection):
     super().__init__(parent)
-    self.sqlite_connection = DBConnection("sqlite").connect()
+    self.sqlite_connection = sqlite_connection
     self.sqlite_cursor = self.sqlite_connection.cursor()
-    self.pg_connection = DBConnection("pg").connect()
+    self.pg_connection = pg_connection
     self.pg_cursor = self.pg_connection.cursor()
     create_nutrition_table(self.sqlite_connection)
     global b

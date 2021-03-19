@@ -8,10 +8,10 @@ from .main_panel import MainPanel
 class OneRepMaxCalculator(QWidget):
   display_layout_signal = pyqtSignal(str)
 
-  def __init__(self):
+  def __init__(self, sqlite_connection, pg_connection):
     super().__init__()
     self.header = Header(self, "1 Rep Max         ") # space hacks
-    self.main_panel = MainPanel(self)
+    self.main_panel = MainPanel(self, sqlite_connection, pg_connection)
     self.side_panel = SidePanel(self)
     self.side_panel.emit_layout_name.connect(lambda layout_name: self.emit_display_layout_signal(layout_name))
     self.create_grid()

@@ -19,7 +19,7 @@ from fitness_tracker.login.login import Login
 from fitness_tracker.signup.signup import Signup
 from fitness_tracker.signup.signup_questions_panel import SignupQuestions
 from fitness_tracker.titlebar import TitleBar
-from fitness_tracker.config import db_path
+from fitness_tracker.config import DBConnection
 from configparser import ConfigParser
 config_path = os.path.join(os.path.dirname(__file__), "config", "settings.ini")
 config = ConfigParser()
@@ -30,9 +30,14 @@ class FitnessTracker(QMainWindow):
     super().__init__()
     QFontDatabase.addApplicationFont(os.path.join(os.path.dirname(__file__), "font", "Montserrat-Regular.ttf"))
     QFontDatabase.addApplicationFont(os.path.join(os.path.dirname(__file__), "font", "Ubuntu-Regular.ttf"))
+    self.sqlite_connection = DBConnection("sqlite").connect()
+    self.pg_connection = DBConnection("pg").connect()
     self.create_window()
     self.create_db_file()
-    self.cw = Homepage() if self.users_table_exists() else Login()
+    if self.users_table_exists():
+      self.cw = Homepage(self.sqlite_connection, self.pg_connection)
+    else:
+      self.cw = Login(self.sqlite_connection, self.pg_connection)
     self.cw.display_layout_signal.connect(lambda layout: self.display_layout(layout))
     self.layouts = {"Login": Login, "Signup": Signup, "Continue": SignupQuestions,
                     "Home": Homepage, "Profile": Profile, "Logout": Login,
@@ -101,21 +106,20 @@ class FitnessTracker(QMainWindow):
   
   @pyqtSlot(str)
   def display_layout(self, layout_name):
-      self.cw = self.layouts[layout_name]()
+      self.cw = self.layouts[layout_name](self.sqlite_connection, self.pg_connection)
       self.cw.display_layout_signal.connect(lambda layout_name: self.display_layout(layout_name))
       self.layout = QWidget()
       self.layout = self.setup_main_layout()
       self.setCentralWidget(self.layout)
 
   def users_table_exists(self):
-    with sqlite3.connect(db_path) as conn:
-      cursor = conn.cursor()
-      cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'")
-      if cursor.fetchone()[0] == 0: return False
-      else:
-        cursor.execute("SELECT COUNT(*) from 'users' WHERE logged_in='YES'")
-        if cursor.fetchone()[0] != 1: return False
-      return True
+    sqlite_cursor = self.sqlite_connection.cursor()
+    sqlite_cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'")
+    if sqlite_cursor.fetchone()[0] == 0: return False
+    else:
+      sqlite_cursor.execute("SELECT COUNT(*) from 'users' WHERE logged_in='YES'")
+      if sqlite_cursor.fetchone()[0] != 1: return False
+    return True
 
   def create_db_file(self):
     db_file = os.path.join(os.path.dirname(importlib.util.find_spec("fitness_tracker").origin), "fitness_tracker.db")

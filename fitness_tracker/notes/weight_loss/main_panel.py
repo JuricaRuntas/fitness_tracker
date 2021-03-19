@@ -2,8 +2,12 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QLab
 from PyQt5.QtCore import Qt
 
 class MainPanel(QWidget):
-  def __init__(self, parent):
+  def __init__(self, parent, sqlite_connection, pg_connection):
     super().__init__(parent)
+    self.sqlite_connection = sqlite_connection
+    self.sqlite_cursor = self.sqlite_connection.cursor()
+    self.pg_connection = pg_connection
+    self.pg_cursor = self.pg_connection.cursor()
     self.create_panel()
 
   def create_panel(self):

@@ -8,11 +8,12 @@ from fitness_tracker.user_profile.profile_db import fetch_units
 from fitness_tracker.config import DBConnection
 
 class MainPanel(QWidget):
-  def __init__(self, parent):
+  def __init__(self, parent, sqlite_connection, pg_connection):
     super().__init__()
-    self.sqlite_connection = DBConnection("sqlite").connect()
+    self.sqlite_connection = sqlite_connection
     self.sqlite_cursor = self.sqlite_connection.cursor()
-
+    self.pg_connection = pg_connection
+    self.pg_cursor = self.pg_connection.cursor()
     self.setStyleSheet("""
     QWidget{
       font-family: Montserrat;

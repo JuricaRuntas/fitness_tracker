@@ -17,17 +17,16 @@ from .compound_exercises_db import (create_big_lifts_table, insert_default_value
 from fitness_tracker.user_profile.profile_db import fetch_units
 from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
 from fitness_tracker.notes.compound_exercises.one_rm_graphs import OneRMGraphCanvas
-from fitness_tracker.config import DBConnection
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 matplotlib.use("Qt5Agg")
 
 class MainPanel(QWidget):
-  def __init__(self, parent):
+  def __init__(self, parent, sqlite_connection, pg_connection):
     super().__init__(parent)
-    self.sqlite_connection = DBConnection("sqlite").connect()
+    self.sqlite_connection = sqlite_connection
     self.sqlite_cursor = self.sqlite_connection.cursor()
-    self.pg_connection = DBConnection("pg").connect()
+    self.pg_connection = pg_connection
     self.pg_cursor = self.pg_connection.cursor()
     self.setStyleSheet("""
     QWidget{

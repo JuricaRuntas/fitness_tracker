@@ -1,14 +1,18 @@
+import os
 from PyQt5.QtWidgets import QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit, QLabel, QPushButton
 from PyQt5.QtGui import QFont, QCursor, QFontDatabase
 from PyQt5.QtCore import Qt, pyqtSignal
 from .signup_helpers import check_valid_password, check_valid_email, create_user, create_user_table
-import os
 
 class MainPanel(QWidget):
   emit_layout_name = pyqtSignal(str)
 
-  def __init__(self, parent):
+  def __init__(self, parent, sqlite_connection, pg_connection):
     super().__init__(parent)
+    self.sqlite_connection = sqlite_connection
+    self.sqlite_cursor = self.sqlite_connection.cursor()
+    self.pg_connection = pg_connection
+    self.pg_cursor = self.pg_connection.cursor()
     self.setStyleSheet("""
     QWidget{
       background-position: center;

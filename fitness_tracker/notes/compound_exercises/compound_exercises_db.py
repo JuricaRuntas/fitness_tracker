@@ -5,7 +5,6 @@ from datetime import datetime
 from psycopg2 import sql
 from fitness_tracker.user_profile.profile_db import fetch_units, logged_in_user_email
 from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
-from fitness_tracker.config import db_path, db_info
 
 def table_is_empty(sqlite_cursor):
   email = logged_in_user_email(sqlite_cursor)

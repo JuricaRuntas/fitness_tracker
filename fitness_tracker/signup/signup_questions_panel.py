@@ -12,8 +12,12 @@ from fitness_tracker.notes.nutrition.calorie_goal_calculator import CalorieGoalC
 class SignupQuestions(QWidget):
   display_layout_signal = pyqtSignal(str)
 
-  def __init__(self):
+  def __init__(self, sqlite_connection, pg_connection):
     super().__init__()
+    self.sqlite_connection = sqlite_connection
+    self.sqlite_cursor = self.sqlite_connection.cursor()
+    self.pg_connection = pg_connection
+    self.pg_cursor = self.pg_connection.cursor()
     self.create_panel()
 
   def create_panel(self):
@@ -225,9 +229,9 @@ class SignupQuestions(QWidget):
         goal_params = json.loads(goal_params)
         calorie_goal_calculator = CalorieGoalCalculator(int(age), gender, float(height), float(weight), goal_params[0], goal, goal_params[1])
         calorie_goal = calorie_goal_calculator.calculate_calorie_goal()
-        email = logged_in_user_email()
-        create_user_info_after_signup(user_info, email)
-        insert_default_meal_plans_values(calorie_goal=calorie_goal)
+        email = logged_in_user_email(self.sqlite_cursor)
+        create_user_info_after_signup(user_info, email, self.sqlite_connection, self.pg_connection)
+        insert_default_meal_plans_values(self.sqlite_connection, self.pg_connection, calorie_goal=calorie_goal)
         self.display_layout_signal.emit("Home")
     except ValueError:
       pass

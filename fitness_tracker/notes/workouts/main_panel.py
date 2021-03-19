@@ -9,7 +9,6 @@ from .create_workout_window import CreateWorkoutWindow1, CreateWorkoutWindow2, E
 from .workouts_db import (create_workouts_table, insert_default_workouts_data,
                           table_is_empty, fetch_current_workout_plan, fetch_workouts,
                           delete_workout, update_current_workout)
-from fitness_tracker.config import DBConnection
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 muscle_groups_path = os.path.join(path, "muscle_groups")
@@ -29,11 +28,11 @@ muscle_groups = {"Chest": os.path.join(muscle_groups_path, "chest.svg"),
 class MainPanel(QWidget):
   show_muscle_group_signal = pyqtSignal(str)
 
-  def __init__(self, parent):
+  def __init__(self, parent, sqlite_connection, pg_connection):
     super().__init__()
-    self.sqlite_connection = DBConnection("sqlite").connect()
+    self.sqlite_connection = sqlite_connection
     self.sqlite_cursor = self.sqlite_connection.cursor()
-    self.pg_connection = DBConnection("pg").connect()
+    self.pg_connection = pg_connection
     self.pg_cursor = self.pg_connection.cursor()
     create_workouts_table(self.sqlite_connection)
     if table_is_empty(self.sqlite_cursor): insert_default_workouts_data(self.sqlite_connection, self.pg_connection)

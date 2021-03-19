@@ -3,18 +3,16 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLay
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt, pyqtSignal
 from .login_helpers import check_password, fetch_user_info
-from fitness_tracker.config import DBConnection
 
 class MainPanel(QWidget):
   emit_layout_name = pyqtSignal(str)
 
-  def __init__(self):
+  def __init__(self, sqlite_connection, pg_connection):
     super().__init__()
-    self.sqlite_connection = DBConnection("sqlite").connect() 
+    self.sqlite_connection = sqlite_connection
     self.sqlite_cursor = self.sqlite_connection.cursor()
-    self.pg_connection = DBConnection("pg").connect()
+    self.pg_connection = pg_connection
     self.pg_cursor = self.pg_connection.cursor()
-
     self.setStyleSheet("""
     QWidget{
       background-position: center;
