@@ -1,6 +1,11 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QVBoxLayout, QLabel, QHBoxLayout, QComboBox, QFrame, QPushButton
 from PyQt5.QtGui import QFont
-
+from PyQt5.QtCore import pyqtSlot
+from fitness_tracker.user_profile.profile_db import fetch_local_user_data, fetch_units
+from fitness_tracker.notes.nutrition.nutrition_db import fetch_calorie_goal
+from .weight_loss_edit_dialog import WeightLossEditDialog
+from .weight_loss_db import (table_is_empty, create_weight_loss_table, insert_default_weight_loss_values,
+                             fetch_preferred_activity)
 
 class MainPanel(QWidget):
   def __init__(self, parent, sqlite_connection, pg_connection):
@@ -65,7 +70,15 @@ class MainPanel(QWidget):
       background-color: #551812;
     }
     """) 
-
+    
+    create_weight_loss_table(self.sqlite_connection)
+    
+    if table_is_empty(self.sqlite_cursor): insert_default_weight_loss_values(self.sqlite_connection, self.pg_connection)
+    
+    self.fetch_user_data()
+    self.calorie_goal = fetch_calorie_goal(self.sqlite_cursor)
+    self.units = "kg" if fetch_units(self.sqlite_cursor) == "metric" else "lb"
+    self.preferred_activity = fetch_preferred_activity(self.sqlite_cursor)
     self.create_panel()
 
   def create_panel(self):
@@ -122,25 +135,28 @@ class MainPanel(QWidget):
     main_label.setFont(QFont("Ariel", 18, weight=QFont.Bold))
 
     current_weight_layout = QHBoxLayout()
-    current_weight_label = QLabel("Current Weight 70 kg")
+    self.current_weight_label = QLabel(" ".join(["Current Weight:", self.current_weight, self.units]))
     update_current_weight_button = QPushButton("Update")
-    current_weight_layout.addWidget(current_weight_label)
+    update_current_weight_button.clicked.connect(lambda: self.update_value("Current Weight", self.current_weight))
+    current_weight_layout.addWidget(self.current_weight_label)
     current_weight_layout.addWidget(update_current_weight_button)
 
     weight_goal_layout = QHBoxLayout()
-    weight_goal_label = QLabel("Weight Goal 65 kg")
+    self.weight_goal_label = QLabel(" ".join(["Weight Goal:",  self.goal_weight, self.units]))
     update_weight_goal_label = QPushButton("Update")
-    weight_goal_layout.addWidget(weight_goal_label)
+    update_weight_goal_label.clicked.connect(lambda: self.update_value("Weight Goal", self.goal_weight))
+    weight_goal_layout.addWidget(self.weight_goal_label)
     weight_goal_layout.addWidget(update_weight_goal_label)
    
     loss_per_week_layout = QHBoxLayout()
-    loss_per_week_label = QLabel("Loss Per Week 0.5") 
-    update_loss_per_week_label = QPushButton("update")
-    loss_per_week_layout.addWidget(loss_per_week_label)
+    self.loss_per_week_label = QLabel(" ".join(["Loss Per Week:", str(self.loss_per_week), self.units])) 
+    update_loss_per_week_label = QPushButton("Update")
+    update_loss_per_week_label.clicked.connect(lambda: self.update_value("Loss Per Week", self.loss_per_week))
+    loss_per_week_layout.addWidget(self.loss_per_week_label)
     loss_per_week_layout.addWidget(update_loss_per_week_label)
 
     calorie_intake_layout = QHBoxLayout()
-    calorie_intake_label = QLabel("Calorie Intake 2300 kcal")
+    calorie_intake_label = QLabel(" ".join(["Calorie Intake:", str(self.calorie_goal), "kcal"]))
     calorie_intake_layout.addWidget(calorie_intake_label)
     
     history_layout = QHBoxLayout()
@@ -171,7 +187,7 @@ class MainPanel(QWidget):
     main_label.setFont(QFont("Ariel", 18, weight=QFont.Bold))
     
     preferred_activity_layout = QHBoxLayout()
-    preferred_activity_label = QLabel("Preferred Activity: Running")
+    preferred_activity_label = QLabel(" ".join(["Preferred Activity:", self.preferred_activity]))
     update_preferred_activity_label = QPushButton("Update")
     preferred_activity_layout.addWidget(preferred_activity_label)
     preferred_activity_layout.addWidget(update_preferred_activity_label)
@@ -215,3 +231,24 @@ class MainPanel(QWidget):
     framed_layout.setLayout(cardio_notes)
     
     return framed_layout
+
+  def update_value(self, to_edit, old_value):
+    fitness_goal = None
+    if to_edit == "Loss Per Week": fitness_goal = self.user_data["Goal Params"][0]
+    dialog = WeightLossEditDialog(to_edit, old_value, self.sqlite_connection, self.pg_connection, fitness_goal)
+    dialog.update_label_signal.connect(lambda label_to_update: self.update_weight_loss_label(label_to_update))
+    dialog.show()
+  
+  @pyqtSlot(bool)
+  def update_weight_loss_label(self, signal):
+    if signal:
+      self.fetch_user_data()
+      self.current_weight_label.setText(" ".join(["Current Weight:", str(self.current_weight), self.units]))
+      self.weight_goal_label.setText(" ".join(["Weight Goal:", str(self.goal_weight), self.units]))
+      self.loss_per_week_label.setText(" ".join(["Loss Per Week:", str(self.loss_per_week), self.units]))
+
+  def fetch_user_data(self):
+    self.user_data = fetch_local_user_data(self.sqlite_cursor)
+    self.current_weight = self.user_data["Weight"]
+    self.goal_weight = self.user_data["Weight Goal"]
+    self.loss_per_week = self.user_data["Goal Params"][1]

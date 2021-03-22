@@ -65,3 +65,19 @@ def insert_default_weight_loss_values(sqlite_connection, pg_connection):
     pg_cursor.execute("ROLLBACK")
     pg_connection.commit()
     fetch_user_weight_loss_table_data(sqlite_connection, pg_connection)
+
+def fetch_preferred_activity(sqlite_cursor):
+  email = logged_in_user_email(sqlite_cursor)
+  sqlite_cursor.execute("SELECT preferred_activity FROM 'weight_loss' WHERE email=?", (email,))
+  return sqlite_cursor.fetchone()[0]
+
+def update_preferred_activity(new_activity, sqlite_connection, pg_connection):
+  sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
+  email = logged_in_user_email(sqlite_cursor)
+
+  pg_cursor.execute("UPDATE weight_loss SET preferred_activity=%s WHERE email=%s", (new_activity, email,))
+  pg_connection.commit()
+
+  sqlite_cursor.execute("UPDATE 'weight_loss' SET preferred_activity=? WHERE email=?", (new_activity, email,))
+  sqlite_connection.commit()

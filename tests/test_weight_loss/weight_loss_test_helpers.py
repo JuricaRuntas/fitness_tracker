@@ -30,3 +30,11 @@ def fetch_weight_loss_columns(cursor):
 def fetch_weight_loss_data(pg_cursor):
   pg_cursor.execute("SELECT * FROM weight_loss WHERE email=%s", (test_user["email"],))
   return pg_cursor.fetchall()
+
+def fetch_weight_loss_data(pg_cursor):
+  pg_cursor.execute("SELECT * FROM weight_loss WHERE email=%s", (test_user["email"],))
+  return pg_cursor.fetchall()
+
+def fetch_local_weight_loss_data(sqlite_cursor):
+  sqlite_cursor.execute("SELECT * FROM 'weight_loss' WHERE email=?", (test_user["email"],))
+  return sqlite_cursor.fetchall()

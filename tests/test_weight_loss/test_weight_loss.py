@@ -2,7 +2,8 @@ import unittest
 import sqlite3
 import psycopg2
 import os
-from fitness_tracker.notes.weight_loss.weight_loss_db import create_weight_loss_table, insert_default_weight_loss_values
+from fitness_tracker.notes.weight_loss.weight_loss_db import (create_weight_loss_table, insert_default_weight_loss_values,
+                                                              fetch_user_weight_loss_table_data)
 from fitness_tracker.config import db_info
 from weight_loss_test_helpers import *
 
@@ -49,6 +50,12 @@ class TestWeightLoss(unittest.TestCase):
                     "cardio_history": fetched_cardio_history} 
     
     self.assertDictEqual(default_dict, fetched_dict)
+
+  def test_fetch_user_weight_loss_table_data(self):
+    fetch_user_weight_loss_table_data(self.sqlite_connection, self.pg_connection)
+    weight_loss_data = fetch_weight_loss_data(self.pg_cursor)[0][:-1]
+    local_weight_loss_data = fetch_local_weight_loss_data(self.sqlite_cursor)[0][:-1]
+    self.assertEqual(local_weight_loss_data, weight_loss_data)
 
 if __name__ == "__main__":
   unittest.main()
