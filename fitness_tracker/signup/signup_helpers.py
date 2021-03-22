@@ -31,6 +31,8 @@ def create_user(user_email, user_password, pg_connection):
     pg_cursor.execute("INSERT INTO users (email, password) VALUES (%s, %s)", (user_email, user_password,))
     pg_connection.commit()
   except psycopg2.errors.UniqueViolation: # user with given email already exists
+    pg_cursor.execute("ROLLBACK")
+    pg_connection.commit()
     status = False
   return status
 
