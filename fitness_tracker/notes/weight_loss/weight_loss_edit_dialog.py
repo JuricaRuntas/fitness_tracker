@@ -8,10 +8,11 @@ from .weight_loss_db import update_weight_history
 class WeightLossEditDialog(QWidget):
   update_label_signal = pyqtSignal(bool)
   update_weight_signal = pyqtSignal(bool)
-  
+  update_cardio_notes_signal = pyqtSignal(str)
+
   def __init__(self, to_edit, old_value, sqlite_connection, pg_connection, fitness_goal=None, date=None):
     super().__init__()
-    assert to_edit in ("Current Weight", "Weight Goal", "Loss Per Week")
+    assert to_edit in ("Current Weight", "Weight Goal", "Loss Per Week", "Time Spent", "Distance Travelled")
     if to_edit == "Loss Per Week":
       assert fitness_goal != None
       self.fitness_goal = fitness_goal
@@ -77,7 +78,7 @@ class WeightLossEditDialog(QWidget):
     buttons_layout.addWidget(save_button)
     buttons_layout.addWidget(cancel_button)
     
-    if self.to_edit in ("Current Weight", "Weight Goal"): 
+    if self.to_edit in ("Current Weight", "Weight Goal", "Time Spent", "Distance Travelled"): 
       self.line_edit.setValidator(QIntValidator())
     elif self.to_edit == "Loss Per Week":
       self.line_edit.setValidator(QDoubleValidator())
@@ -99,5 +100,7 @@ class WeightLossEditDialog(QWidget):
       update_user_info_parameter(self.sqlite_connection, self.pg_connection, mappings[self.to_edit], self.line_edit.text())
     elif self.to_edit == "Loss Per Week":
       update_user_info_parameter(self.sqlite_connection, self.pg_connection, mappings[self.to_edit], [self.fitness_goal, self.line_edit.text()])
+    else:
+      self.update_cardio_notes_signal.emit(self.line_edit.text())
     self.update_label_signal.emit(True)
     self.close()

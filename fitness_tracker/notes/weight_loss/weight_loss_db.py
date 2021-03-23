@@ -1,5 +1,6 @@
 import json
 import psycopg2
+from datetime import datetime
 from psycopg2 import sql
 from fitness_tracker.user_profile.profile_db import logged_in_user_email
 
@@ -45,10 +46,15 @@ def insert_default_weight_loss_values(sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
   pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
-
-  default_weight_history, default_cardio_history = {}, []
+  current_date = datetime.today().strftime("%d/%m/%Y")
+  default_weight_history, default_cardio_history = {}, {}
+  default_activities = ["Running", "Walking", "Cycling", "Swimming"]
   default_preferred_activity = "Running"
   
+  default_cardio_history[current_date] = {}
+  for activity in default_activities:
+    default_cardio_history[current_date][activity] = []
+
   default_dict = {"email": email, "weight_history": json.dumps(default_weight_history),
                   "preferred_activity": default_preferred_activity,
                   "cardio_history": json.dumps(default_cardio_history)}
@@ -113,5 +119,28 @@ def delete_weight_history_entry(date, sqlite_connection, pg_connection):
   pg_cursor.execute("UPDATE weight_loss SET weight_history=%s WHERE email=%s", (json.dumps(weight_history), email,))
   pg_connection.commit()
 
-  sqlite_cursor.execute("UPDATE weight_loss SET weight_history=? WHERE email=?", (json.dumps(weight_history), email,))
+  sqlite_cursor.execute("UPDATE 'weight_loss' SET weight_history=? WHERE email=?", (json.dumps(weight_history), email,))
+  sqlite_connection.commit()
+
+def fetch_cardio_history(sqlite_cursor):
+  email = logged_in_user_email(sqlite_cursor)
+  sqlite_cursor.execute("SELECT cardio_history FROM 'weight_loss' WHERE email=?", (email,))
+  return sqlite_cursor.fetchone()[0]
+
+def add_date_to_cardio_history(date, sqlite_connection, pg_connection):
+  sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
+  activities = ["Running", "Walking", "Cycling", "Swimming"]
+  cardio_history = json.loads(fetch_cardio_history(sqlite_cursor))
+  
+  cardio_history[date] = {}
+  for activity in activities:
+    cardio_history[date][activity] = []
+  
+  cardio_history = json.dumps(cardio_history)
+
+  pg_cursor.execute("UPDATE weight_loss SET cardio_history=%s WHERE email=%s", (cardio_history, email,))
+  pg_connection.commit()
+
+  sqlite_cursor.execute("UPDATE 'weight_loss' SET cardio_history=? WHERE email=?", (cardio_history, email,))
   sqlite_connection.commit()

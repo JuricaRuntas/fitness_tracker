@@ -2,6 +2,7 @@ import unittest
 import sqlite3
 import psycopg2
 import os
+from datetime import datetime
 from fitness_tracker.notes.weight_loss.weight_loss_db import (create_weight_loss_table, insert_default_weight_loss_values,
                                                               fetch_user_weight_loss_table_data)
 from fitness_tracker.config import db_info
@@ -31,9 +32,16 @@ class TestWeightLoss(unittest.TestCase):
     self.assertEqual(big_lifts_columns, columns)
 
   def test_insert_default_weight_loss_values(self):
-    default_weight_history, default_cardio_history = {}, []
+    current_date = datetime.today().strftime("%d/%m/%Y")
+    default_weight_history, default_cardio_history = {}, {}
+    default_preferred_activity = "Running"
+    default_activities = ["Running", "Walking", "Cycling", "Swimming"]
     default_preferred_activity = "Running"
   
+    default_cardio_history[current_date] = {}
+    for activity in default_activities:
+      default_cardio_history[current_date][activity] = [] 
+    
     default_dict = {"email": test_user["email"], "weight_history": json.dumps(default_weight_history),
                     "preferred_activity": default_preferred_activity,
                     "cardio_history": json.dumps(default_cardio_history)}
