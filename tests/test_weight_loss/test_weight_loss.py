@@ -31,7 +31,7 @@ class TestWeightLoss(unittest.TestCase):
     self.assertEqual(big_lifts_columns, columns)
 
   def test_insert_default_weight_loss_values(self):
-    default_weight_history, default_cardio_history = [], []
+    default_weight_history, default_cardio_history = {}, []
     default_preferred_activity = "Running"
   
     default_dict = {"email": test_user["email"], "weight_history": json.dumps(default_weight_history),

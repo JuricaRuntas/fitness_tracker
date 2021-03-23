@@ -46,7 +46,7 @@ def insert_default_weight_loss_values(sqlite_connection, pg_connection):
   pg_cursor = pg_connection.cursor()
   email = logged_in_user_email(sqlite_cursor)
 
-  default_weight_history, default_cardio_history = [], []
+  default_weight_history, default_cardio_history = {}, []
   default_preferred_activity = "Running"
   
   default_dict = {"email": email, "weight_history": json.dumps(default_weight_history),
@@ -80,4 +80,38 @@ def update_preferred_activity(new_activity, sqlite_connection, pg_connection):
   pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'weight_loss' SET preferred_activity=? WHERE email=?", (new_activity, email,))
+  sqlite_connection.commit()
+
+def fetch_weight_history(sqlite_cursor):
+  email = logged_in_user_email(sqlite_cursor)
+  sqlite_cursor.execute("SELECT weight_history FROM 'weight_loss' WHERE email=?", (email,))
+  return sqlite_cursor.fetchone()[0]
+
+def update_weight_history(date, weight, sqlite_connection, pg_connection):
+  sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
+  email = logged_in_user_email(sqlite_cursor)
+  
+  current_weight_history = json.loads(fetch_weight_history(sqlite_cursor))
+  current_weight_history[date] = weight
+  current_weight_history = json.dumps(current_weight_history)
+  
+  pg_cursor.execute("UPDATE weight_loss SET weight_history=%s WHERE email=%s", (current_weight_history, email,))
+  pg_connection.commit()
+
+  sqlite_cursor.execute("UPDATE 'weight_loss' SET weight_history=? WHERE email=?", (current_weight_history, email,))
+  sqlite_connection.commit()
+
+def delete_weight_history_entry(date, sqlite_connection, pg_connection):
+  sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
+  email = logged_in_user_email(sqlite_cursor)
+  weight_history = json.loads(fetch_weight_history(sqlite_cursor))
+
+  if date in weight_history: del weight_history[date]
+
+  pg_cursor.execute("UPDATE weight_loss SET weight_history=%s WHERE email=%s", (json.dumps(weight_history), email,))
+  pg_connection.commit()
+
+  sqlite_cursor.execute("UPDATE weight_loss SET weight_history=? WHERE email=?", (json.dumps(weight_history), email,))
   sqlite_connection.commit()

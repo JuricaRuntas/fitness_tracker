@@ -1,9 +1,11 @@
+from datetime import datetime
 from PyQt5.QtWidgets import QWidget, QGridLayout, QVBoxLayout, QLabel, QHBoxLayout, QComboBox, QFrame, QPushButton
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot
 from fitness_tracker.user_profile.profile_db import fetch_local_user_data, fetch_units
 from fitness_tracker.notes.nutrition.nutrition_db import fetch_calorie_goal
 from .weight_loss_edit_dialog import WeightLossEditDialog
+from .weight_loss_history import WeightLossHistory
 from .weight_loss_db import (table_is_empty, create_weight_loss_table, insert_default_weight_loss_values,
                              fetch_preferred_activity)
 
@@ -76,6 +78,7 @@ class MainPanel(QWidget):
     if table_is_empty(self.sqlite_cursor): insert_default_weight_loss_values(self.sqlite_connection, self.pg_connection)
     
     self.fetch_user_data()
+    self.date = datetime.today().strftime("%d/%m/%Y")
     self.calorie_goal = fetch_calorie_goal(self.sqlite_cursor)
     self.units = "kg" if fetch_units(self.sqlite_cursor) == "metric" else "lb"
     self.preferred_activity = fetch_preferred_activity(self.sqlite_cursor)
@@ -161,6 +164,7 @@ class MainPanel(QWidget):
     
     history_layout = QHBoxLayout()
     weight_loss_history_button = QPushButton("History")
+    weight_loss_history_button.clicked.connect(lambda: self.show_weight_history())
     history_layout.addWidget(weight_loss_history_button)   
     
     weight_loss.addWidget(main_label)
@@ -234,8 +238,10 @@ class MainPanel(QWidget):
 
   def update_value(self, to_edit, old_value):
     fitness_goal = None
+    date = None
     if to_edit == "Loss Per Week": fitness_goal = self.user_data["Goal Params"][0]
-    dialog = WeightLossEditDialog(to_edit, old_value, self.sqlite_connection, self.pg_connection, fitness_goal)
+    elif to_edit == "Current Weight": date = self.date
+    dialog = WeightLossEditDialog(to_edit, old_value, self.sqlite_connection, self.pg_connection, fitness_goal, date)
     dialog.update_label_signal.connect(lambda label_to_update: self.update_weight_loss_label(label_to_update))
     dialog.show()
   
@@ -252,3 +258,9 @@ class MainPanel(QWidget):
     self.current_weight = self.user_data["Weight"]
     self.goal_weight = self.user_data["Weight Goal"]
     self.loss_per_week = self.user_data["Goal Params"][1]
+
+  def show_weight_history(self):
+    self.history = WeightLossHistory(self.sqlite_connection, self.pg_connection)
+    self.history.update_weight_loss_label_signal.connect(lambda signal: self.update_weight_loss_label(signal))
+    self.history.setGeometry(100, 200, 300, 300) 
+    self.history.show()
