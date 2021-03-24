@@ -8,10 +8,10 @@ from fitness_tracker.signup.signup_helpers import create_user_table, create_user
 class TestClass:
   def __init__(self, table_name, db_path="test.db"):
     self.test_user = {"email": "test@gmail.com",
-										  "password": hashlib.sha256("testpassword123".encode('UTF-8')).hexdigest(),
-											"name": "Test", "age": "18", "gender": "male", "units": "metric",
-											"weight": "100", "height": "190", "goal": "Weight gain",
-											"goalparams": json.dumps(["Moderately active", 0.25]), "goalweight": "120"}
+                      "password": hashlib.sha256("testpassword123".encode('UTF-8')).hexdigest(),
+                      "name": "Test", "age": "18", "gender": "male", "units": "metric",
+                      "weight": "100", "height": "190", "goal": "Weight gain",
+                      "goalparams": json.dumps(["Moderately active", 0.25]), "goalweight": "120"}
 	  
     self.test_password = "testpassword123"
     self.db_path = db_path
