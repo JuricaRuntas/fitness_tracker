@@ -4,14 +4,15 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QVBoxLayout, QLabel, QHBoxLayo
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot
 from fitness_tracker.user_profile.profile_db import fetch_local_user_data, fetch_units
-from fitness_tracker.notes.nutrition.nutrition_db import fetch_calorie_goal
+from fitness_tracker.notes.nutrition.nutrition_db import (fetch_calorie_goal, table_is_empty, create_nutrition_table,
+                                                          insert_default_meal_plans_values)
 from .weight_loss_edit_dialog import WeightLossEditDialog
 from .weight_loss_history import WeightLossHistory
 from .calories_burnt_dialog import CaloriesBurntDialog
-from .weight_loss_db import (table_is_empty, create_weight_loss_table, insert_default_weight_loss_values,
+from .weight_loss_db import (weight_loss_table_is_empty, create_weight_loss_table, insert_default_weight_loss_values,
                              fetch_preferred_activity, update_preferred_activity, fetch_cardio_history,
                              add_date_to_cardio_history, add_cardio_entry_to_cardio_history)
-
+from .cardio_history import CardioHistory
 
 class MainPanel(QWidget):
   def __init__(self, parent, sqlite_connection, pg_connection):
@@ -78,8 +79,9 @@ class MainPanel(QWidget):
     """) 
     
     create_weight_loss_table(self.sqlite_connection)
-    
-    if table_is_empty(self.sqlite_cursor): insert_default_weight_loss_values(self.sqlite_connection, self.pg_connection)
+    create_nutrition_table(self.sqlite_connection)
+    if table_is_empty(self.sqlite_cursor): insert_default_meal_plans_values(self.sqlite_connection, self.pg_connection) 
+    if weight_loss_table_is_empty(self.sqlite_cursor): insert_default_weight_loss_values(self.sqlite_connection, self.pg_connection)
     
     self.fetch_user_data()
     self.date = datetime.today().strftime("%d/%m/%Y")
@@ -232,6 +234,7 @@ class MainPanel(QWidget):
     
     history_layout = QHBoxLayout()
     cardio_history_button = QPushButton("History")
+    cardio_history_button.clicked.connect(lambda: self.show_cardio_history())
     self.save_changes_cardio_button = QPushButton("Save Changes")
     self.save_changes_cardio_button.clicked.connect(lambda: self.save_cardio_history_entry())
     history_layout.addWidget(cardio_history_button)
@@ -300,6 +303,21 @@ class MainPanel(QWidget):
     self.history.update_weight_loss_label_signal.connect(lambda signal: self.update_weight_loss_label(signal))
     self.history.setGeometry(100, 200, 300, 300) 
     self.history.show()
+  
+  def show_cardio_history(self):
+    self.cardio_history_dialog = CardioHistory(self.sqlite_connection, self.pg_connection)
+    self.cardio_history_dialog.refresh_cardio_labels_signal.connect(lambda signal: self.refresh_cardio_notes(signal))
+    self.cardio_history_dialog.setGeometry(100, 200, 300, 300)
+    self.cardio_history_dialog.show()
+  
+  @pyqtSlot(bool)
+  def refresh_cardio_notes(self, signal):
+    if signal:
+      self.cardio_history = json.loads(fetch_cardio_history(self.sqlite_cursor))
+      self.init_cardio_labels()
+      self.time_spent_label.setText(" ".join(["Time Spent:", self.time_spent, "min"]))
+      self.distance_travelled_label.setText(" ".join(["Distance Travelled:", self.distance_travelled, "m"]))
+      self.calories_burnt_label.setText(" ".join(["Calories Burnt:", self.calories_burnt, "kcal"]))
 
   def set_new_preferred_activity(self, activity):
     self.preferred_activity = activity
@@ -310,7 +328,6 @@ class MainPanel(QWidget):
     self.time_spent_label.setText(" ".join(["Time Spent:", self.time_spent, "min"]))
     self.distance_travelled_label.setText(" ".join(["Distance Travelled:", self.distance_travelled, "m"]))
     self.calories_burnt_label.setText(" ".join(["Calories Burnt:", self.calories_burnt, "kcal"]))
-    
 
   def save_cardio_history_entry(self):
     add_cardio_entry_to_cardio_history(self.preferred_activity, self.time_spent, self.distance_travelled, self.calories_burnt,

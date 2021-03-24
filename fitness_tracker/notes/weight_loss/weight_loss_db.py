@@ -4,7 +4,7 @@ from datetime import datetime
 from psycopg2 import sql
 from fitness_tracker.user_profile.profile_db import logged_in_user_email
 
-def table_is_empty(sqlite_cursor):
+def weight_loss_table_is_empty(sqlite_cursor):
   email = logged_in_user_email(sqlite_cursor)
   sqlite_cursor.execute("SELECT COUNT (*) FROM 'weight_loss' WHERE email=?", (email,))
   if sqlite_cursor.fetchone()[0] == 0: return True
@@ -37,7 +37,7 @@ def fetch_user_weight_loss_table_data(sqlite_connection, pg_connection):
   preferred_activity = weight_loss_data[2]
   cardio_history = weight_loss_data[3]
 
-  if table_is_empty(sqlite_cursor):
+  if weight_loss_table_is_empty(sqlite_cursor):
     insert = "INSERT INTO 'weight_loss' (email, weight_history, preferred_activity, cardio_history) VALUES (?, ?, ?, ?)"
     sqlite_cursor.execute(insert, (email, weight_history, preferred_activity, cardio_history,))
     sqlite_connection.commit()
@@ -158,6 +158,36 @@ def add_cardio_entry_to_cardio_history(activity, duration, distance, calories_bu
   current_cardio_history[date][activity].append(new_entry)
   current_cardio_history = json.dumps(current_cardio_history)
 
+  pg_cursor.execute("UPDATE weight_loss SET cardio_history=%s WHERE email=%s", (current_cardio_history, email,))
+  pg_connection.commit()
+
+  sqlite_cursor.execute("UPDATE 'weight_loss' SET cardio_history=? WHERE email=?", (current_cardio_history, email,))
+  sqlite_connection.commit()
+
+def update_cardio_entry(date, activity, new_activity_entry, entry_index, sqlite_connection, pg_connection):
+  sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
+  current_cardio_history = json.loads(fetch_cardio_history(sqlite_cursor))
+  email = logged_in_user_email(sqlite_cursor)
+  
+  current_cardio_history[date][activity][entry_index] = new_activity_entry 
+  current_cardio_history = json.dumps(current_cardio_history)
+
+  pg_cursor.execute("UPDATE weight_loss SET cardio_history=%s WHERE email=%s", (current_cardio_history, email,))
+  pg_connection.commit()
+
+  sqlite_cursor.execute("UPDATE 'weight_loss' SET cardio_history=? WHERE email=?", (current_cardio_history, email,))
+  sqlite_connection.commit()
+
+def delete_cardio_entry(date, activity, index, sqlite_connection, pg_connection):
+  sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
+  current_cardio_history = json.loads(fetch_cardio_history(sqlite_cursor))
+  email = logged_in_user_email(sqlite_cursor)
+  
+  del current_cardio_history[date][activity][index]
+  current_cardio_history = json.dumps(current_cardio_history)
+  
   pg_cursor.execute("UPDATE weight_loss SET cardio_history=%s WHERE email=%s", (current_cardio_history, email,))
   pg_connection.commit()
 
