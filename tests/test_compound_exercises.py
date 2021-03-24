@@ -1,6 +1,4 @@
 import unittest
-import sqlite3
-import psycopg2
 import json
 import os
 from datetime import datetime
@@ -11,30 +9,30 @@ from fitness_tracker.notes.compound_exercises.compound_exercises_db import (crea
                                                                             delete_history_entry, update_preferred_lifts,
                                                                             update_1RM_and_lifts_for_reps,
                                                                             update_one_rep_maxes_history)
-from fitness_tracker.config import db_info
-from compound_exercises_test_helpers import *
+from fitness_tracker.user_profile.profile_db import update_units
+from test_class import TestClass
 
 class TestBigLifts(unittest.TestCase):
-  def setUp(self):  
-    with sqlite3.connect("test.db") as conn:
-      self.sqlite_connection = conn
-      self.sqlite_cursor = conn.cursor()
-    with psycopg2.connect(**db_info) as pg_conn:
-      self.pg_connection = pg_conn
-    create_test_user(self.sqlite_connection, self.pg_connection)
+  def setUp(self):
+    self.test_class = TestClass("big_lifts", "test.db")
+    self.sqlite_connection = self.test_class.sqlite_connection
+    self.sqlite_cursor = self.sqlite_connection.cursor()
+    self.pg_connection = self.test_class.pg_connection
+    self.pg_cursor = self.pg_connection.cursor()
+    
+    self.test_class.create_test_user()
     create_big_lifts_table(self.sqlite_connection)
     insert_default_values(self.sqlite_connection, self.pg_connection)
   
   def tearDown(self):
-    delete_test_user(test_user["email"])
-    delete_test_from_big_lifts(test_user["email"])
+    self.test_class.delete_test_user()
     os.remove("test.db")
   
   def test_create_big_lifts_table(self):
     big_lifts_columns = ("email", "one_rep_maxes", "lifts_for_reps",
                          "preferred_lifts", "lift_history",
                          "units", "rm_history")
-    columns = fetch_big_lifts_columns(self.sqlite_cursor)
+    columns = self.test_class.fetch_column_names()
     self.assertEqual(big_lifts_columns, columns)
   
   def test_insert_default_values(self):
@@ -61,9 +59,9 @@ class TestBigLifts(unittest.TestCase):
 
     default_values = {"one_rep_maxes": one_RM, "lifts_for_reps": lifts_for_reps,
                       "preferred_lifts": json.dumps(preferred_lifts), "rm_history": json.dumps(rm_history),
-                      "email": test_user["email"], "units": test_user["units"]} 
+                      "email": self.test_class.test_user["email"], "units": self.test_class.test_user["units"]} 
     
-    big_lifts_data = fetch_big_lifts_data(test_user["email"])[0]
+    big_lifts_data = self.test_class.fetch_all_remote_columns()[0]
     
     # big_lifts_data[4] == lift_history
     fetched_email = big_lifts_data[0]
@@ -81,39 +79,37 @@ class TestBigLifts(unittest.TestCase):
   
   def test_fetch_user_big_lifts_data(self):
     fetch_user_big_lifts_table_data(self.sqlite_connection, self.pg_connection)
-    big_lifts_data = fetch_big_lifts_data(test_user["email"])[0][:-1]
-    local_big_lifts_data = fetch_local_big_lifts_data(self.sqlite_cursor)[0][:-1]
+    big_lifts_data = self.test_class.fetch_all_remote_columns()[0][:-1]
+    local_big_lifts_data = self.test_class.fetch_all_local_columns()[0][:-1]
     self.assertEqual(local_big_lifts_data, big_lifts_data)
   
   def test_update_units(self):
     new_units = "imperial"
-    update_test_user_table_units(new_units, self.sqlite_connection)
+    update_units(self.sqlite_connection, self.pg_connection)
     update_big_lifts_units(self.sqlite_connection, self.pg_connection)
-    units = fetch_local_big_lifts_units(self.sqlite_cursor)
+    units = self.test_class.fetch_column_from_local_table("units")
     self.assertEqual(new_units, units)
   
   def test_update_1RM_lifts(self):
     new_values = {"Bench Press": "100", "Deadlift": "200",
                   "Back Squat": "300", "Overhead Press": "400"}
     update_1RM_lifts(new_values, self.sqlite_connection, self.pg_connection)
-    one_rep_maxes = fetch_1RM_lifts(self.sqlite_cursor, test_user["email"])
     
-    server_1RM = json.loads(one_rep_maxes[0])
+    server_1RM = json.loads(self.test_class.fetch_column_from_remote_table("one_rep_maxes"))
     self.assertEqual(new_values, server_1RM)
 
-    local_1RM = json.loads(one_rep_maxes[1])
+    local_1RM = json.loads(self.test_class.fetch_column_from_local_table("one_rep_maxes"))
     self.assertEqual(new_values, local_1RM)
   
   def test_update_lifts_for_reps(self):
     new_values = {"Bench Press": ["10", "100"], "Deadlift": ["3", "250"],
                   "Back Squat": ["5", "200"], "Overhead Press": ["1", "100"]}
     update_lifts_for_reps(new_values, self.sqlite_connection, self.pg_connection)
-    lifts_for_reps = fetch_lifts_for_reps(self.sqlite_cursor, test_user["email"])
     
-    server_lifts_for_reps = json.loads(lifts_for_reps[0])
+    server_lifts_for_reps = json.loads(self.test_class.fetch_column_from_remote_table("lifts_for_reps"))
     self.assertEqual(new_values, server_lifts_for_reps)
     
-    local_lifts_for_reps = json.loads(lifts_for_reps[1])
+    local_lifts_for_reps = json.loads(self.test_class.fetch_column_from_local_table("lifts_for_reps"))
     self.assertEqual(new_values, local_lifts_for_reps)
   
   def test_lift_difference(self):
@@ -153,7 +149,7 @@ class TestBigLifts(unittest.TestCase):
                         "Back Squat": "500",
                         "Push Press": ["100", "30"]}
     update_lift_history(new_lift_history, self.sqlite_connection, self.pg_connection)
-    local_lift_history = json.loads(fetch_local_lift_history(self.sqlite_cursor))
+    local_lift_history = json.loads(self.test_class.fetch_column_from_local_table("lift_history"))
     correct_lift_history = [["Bench Press", ["10", "300"], 3],
                             ["Deadlift", "100", 2],
                             ["Back Squat", "500", 1],
@@ -170,7 +166,7 @@ class TestBigLifts(unittest.TestCase):
     new_lift_history = {"Incline Bench Press": "300",
                         "Deadlift": ["3", "180"]}
     update_lift_history(new_lift_history, self.sqlite_connection, self.pg_connection)
-    local_lift_history = json.loads(fetch_local_lift_history(self.sqlite_cursor))
+    local_lift_history = json.loads(self.test_class.fetch_column_from_local_table("lift_history"))
     correct_lift_history = [["Incline Bench Press", "300", 5],
                             ["Deadlift", ["3", "180"], 4],
                             ["Bench Press", ["10", "300"], 3],
@@ -190,7 +186,7 @@ class TestBigLifts(unittest.TestCase):
                                       ["Deadlift", "220.46", 2],
                                       ["Back Squat", "1102.3", 1],
                                       ["Push Press", ["100", "66.14"], 0]]
-    local_lift_history = json.loads(fetch_local_lift_history(self.sqlite_cursor))
+    local_lift_history = json.loads(self.test_class.fetch_column_from_local_table("lift_history"))
     self.assertEqual(correct_converted_lift_history, local_lift_history)
   
   def test_convert_lift_history_weight2(self):
@@ -204,7 +200,7 @@ class TestBigLifts(unittest.TestCase):
                                       ["Deadlift", "65.77", 2],
                                       ["Back Squat", "136.08", 1],
                                       ["Push Press", ["100", "45.36"], 0]]
-    local_lift_history = json.loads(fetch_local_lift_history(self.sqlite_cursor))
+    local_lift_history = json.loads(self.test_class.fetch_column_from_local_table("lift_history"))
     self.assertEqual(correct_converted_lift_history, local_lift_history)
   
   def test_delete_history_entry(self): 
@@ -214,7 +210,7 @@ class TestBigLifts(unittest.TestCase):
                     "Push Press": ["100", "100"]}
     update_lift_history(lift_history, self.sqlite_connection, self.pg_connection)
     delete_history_entry(2, self.sqlite_connection, self.pg_connection)
-    local_lift_history = json.loads(fetch_local_lift_history(self.sqlite_cursor))
+    local_lift_history = json.loads(self.test_class.fetch_column_from_local_table("lift_history"))
     correct_lift_history = [["Bench Press", ["10", "225"], 3],
                             ["Back Squat", "300", 1],
                             ["Push Press", ["100", "100"], 0]]
@@ -225,7 +221,7 @@ class TestBigLifts(unittest.TestCase):
                                       "Squat": "Front Squat", "Vertical Press": "Overhead Press"}
 
     update_preferred_lifts(new_preferred_lifts, self.sqlite_connection, self.pg_connection)
-    local_preferred_lifts = json.loads(fetch_local_preferred_lifts(self.sqlite_cursor))
+    local_preferred_lifts = json.loads(self.test_class.fetch_column_from_local_table("preferred_lifts"))
     self.assertDictEqual(new_preferred_lifts, local_preferred_lifts)
   
   def test_update_1RM_and_lifts_for_reps(self):
@@ -233,8 +229,8 @@ class TestBigLifts(unittest.TestCase):
                                       "Squat": "Front Squat", "Vertical Press": "Overhead Press"}
     update_preferred_lifts(new_preferred_lifts, self.sqlite_connection, self.pg_connection)
     update_1RM_and_lifts_for_reps(self.sqlite_connection, self.pg_connection)
-    local_1RM = json.loads(fetch_local_one_rep_maxes(self.sqlite_cursor))
-    local_lifts_for_reps = json.loads(fetch_local_lifts_for_reps(self.sqlite_cursor))
+    local_1RM = json.loads(self.test_class.fetch_column_from_local_table("one_rep_maxes"))
+    local_lifts_for_reps = json.loads(self.test_class.fetch_column_from_local_table("lifts_for_reps"))
     correct_1RM = {"Incline Bench Press": "0",
                    "Deadlift": "0",
                    "Front Squat": "0",
@@ -276,7 +272,7 @@ class TestBigLifts(unittest.TestCase):
     
     # test 1: history doesn't exist
     update_one_rep_maxes_history(new_RM_lifts, current_year, self.sqlite_connection, self.pg_connection)
-    fetched_RM_history = json.loads(fetch_local_one_rm_history(self.sqlite_cursor))
+    fetched_RM_history = json.loads(self.test_class.fetch_column_from_local_table("rm_history"))
     self.assertDictEqual(RM_dict, fetched_RM_history)
 
     # test 2: history exists, add exercise that doesn't exist yet
@@ -288,7 +284,7 @@ class TestBigLifts(unittest.TestCase):
       current_lift_type[lift].append(weight)
 
     update_one_rep_maxes_history(new_RM_lifts, current_year, self.sqlite_connection, self.pg_connection)
-    fetched_RM_history = json.loads(fetch_local_one_rm_history(self.sqlite_cursor))
+    fetched_RM_history = json.loads(self.test_class.fetch_column_from_local_table("rm_history"))
     self.assertDictEqual(RM_dict, fetched_RM_history)
 
     # test 3: add another year
@@ -309,7 +305,7 @@ class TestBigLifts(unittest.TestCase):
       current_lift_type[lift].append(weight)
     
     update_one_rep_maxes_history(new_RM_lifts_2020, "2020", self.sqlite_connection, self.pg_connection)
-    fetched_RM_history_2020 = json.loads(fetch_local_one_rm_history(self.sqlite_cursor))
+    fetched_RM_history_2020 = json.loads(self.test_class.fetch_column_from_local_table("rm_history"))
     self.assertDictEqual(RM_dict, fetched_RM_history_2020)
 
 if __name__ == "__main__":

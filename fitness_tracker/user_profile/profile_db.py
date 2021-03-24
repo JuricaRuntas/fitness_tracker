@@ -67,19 +67,21 @@ def update_units(sqlite_connection, pg_connection):
   pg_cursor = pg_connection.cursor()
 
   email = logged_in_user_email(sqlite_cursor)
+
+  units = sqlite_cursor.execute("SELECT units FROM 'users' WHERE email=?", (email,)).fetchone()[0]
   
   sqlite_cursor.execute("SELECT units FROM 'users' WHERE email=?", (email,))
   
   set_units_imperial = "UPDATE 'users' SET units='imperial' WHERE email=?"
   set_units_metric = "UPDATE 'users' SET units='metric' WHERE email=?"
+  update_units = set_units_imperial if units == "metric" else set_units_metric
 
-  update_units = set_units_imperial if sqlite_cursor.fetchone()[0] == "metric" else set_units_metric
-  
   sqlite_cursor.execute(update_units, (email,))
   sqlite_connection.commit()
 
   set_units_imperial = "UPDATE users SET units='imperial' WHERE email=%s"
   set_units_metric = "UPDATE users SET units='metric' WHERE email=%s"
-  update_units = set_units_imperial if current_units == "metric" else set_units_metric
+  update_units = set_units_imperial if units == "metric" else set_units_metric
+
   pg_cursor.execute(update_units, (email,))
   pg_connection.commit()
