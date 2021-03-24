@@ -1,8 +1,10 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QRadioButton, QHBoxLayout, QLineEdit, QPushButton, QLabel
 from PyQt5.QtGui import QIntValidator
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 
 class CaloriesBurntDialog(QWidget):
+  update_calories_label_signal = pyqtSignal(str)
+
   def __init__(self, to_edit, old_value, time_spent, distance, exercise, user_weight):
     super().__init__()
     self.to_edit = to_edit
@@ -88,6 +90,7 @@ class CaloriesBurntDialog(QWidget):
     
     buttons_layout = QHBoxLayout()
     save_button = QPushButton("Save")
+    save_button.clicked.connect(lambda: self.save_calories())
     cancel_button = QPushButton("Cancel")
     cancel_button.clicked.connect(lambda: self.close())
     buttons_layout.addWidget(save_button)
@@ -109,5 +112,12 @@ class CaloriesBurntDialog(QWidget):
 
   def calculate_calories(self):
     MET = {"Running": 9.8, "Cycling": 9.5, "Walking": 3.8, "Swimming": 8}
-    result = self.time_spent*60*MET[self.exercise]*3.5*self.user_weight/(200*60)
-    self.calculate_label.setText(" ".join(["Estimated Calories Burnt:", str(result)]))
+    self.result = str(int(int(self.time_spent)*60*MET[self.exercise]*3.5*int(self.user_weight)/(200*60)))
+    self.calculate_label.setText(" ".join(["Estimated Calories Burnt:", self.result]))
+
+  def save_calories(self):
+    if self.update_button.isChecked():
+      self.update_calories_label_signal.emit(self.update_line_edit.text())
+    elif self.calculate_radio_button.isChecked():
+      self.update_calories_label_signal.emit(self.result)
+    self.close()

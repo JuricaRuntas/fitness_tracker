@@ -9,7 +9,8 @@ from .weight_loss_edit_dialog import WeightLossEditDialog
 from .weight_loss_history import WeightLossHistory
 from .calories_burnt_dialog import CaloriesBurntDialog
 from .weight_loss_db import (table_is_empty, create_weight_loss_table, insert_default_weight_loss_values,
-                             fetch_preferred_activity, update_preferred_activity, fetch_cardio_history)
+                             fetch_preferred_activity, update_preferred_activity, fetch_cardio_history,
+                             add_date_to_cardio_history, add_cardio_entry_to_cardio_history)
 
 
 class MainPanel(QWidget):
@@ -86,20 +87,10 @@ class MainPanel(QWidget):
     self.units = "kg" if fetch_units(self.sqlite_cursor) == "metric" else "lb"
     self.preferred_activity = fetch_preferred_activity(self.sqlite_cursor)
     self.cardio_history = json.loads(fetch_cardio_history(self.sqlite_cursor))
-    if not self.date in self.cardio_history: add_date_to_cardio_history(date, self.sqlite_connection, self.pg_connection)
+    if not self.date in self.cardio_history: add_date_to_cardio_history(self.date, self.sqlite_connection, self.pg_connection)
     self.cardio_history = json.loads(fetch_cardio_history(self.sqlite_cursor))
     
-    if len(self.cardio_history[self.date][self.preferred_activity]) > 0:
-      self.today_exercise = self.cardio_history[self.date][self.preferred_activity][-1]
-      self.time_spent = self.today_exercise["Time Spent"]
-      self.distance_travelled = self.today_exercise["Distance Travelled"]
-      self.calories_burnt = self.today_exercise["Calories Burnt"]
-
-    else:
-      self.time_spent = "0"
-      self.distance_travelled = "0"
-      self.calories_burnt = "0"
-
+    self.init_cardio_labels()
     self.create_panel()
 
   def create_panel(self):
@@ -226,10 +217,10 @@ class MainPanel(QWidget):
     time_spent_layout.addWidget(update_time_spent_label)
 
     calories_burnt_layout = QHBoxLayout()
-    calories_burnt_label = QLabel(" ".join(["Calories Burnt:", self.calories_burnt, "kcal"]))
+    self.calories_burnt_label = QLabel(" ".join(["Calories Burnt:", self.calories_burnt, "kcal"]))
     update_calories_burnt_label = QPushButton("Update")
     update_calories_burnt_label.clicked.connect(lambda: self.update_value("Calories Burnt", self.calories_burnt))
-    calories_burnt_layout.addWidget(calories_burnt_label)
+    calories_burnt_layout.addWidget(self.calories_burnt_label)
     calories_burnt_layout.addWidget(update_calories_burnt_label)
 
     distance_travelled_layout = QHBoxLayout()
@@ -241,9 +232,10 @@ class MainPanel(QWidget):
     
     history_layout = QHBoxLayout()
     cardio_history_button = QPushButton("History")
-    save_changes_button = QPushButton("Save Changes")
+    self.save_changes_cardio_button = QPushButton("Save Changes")
+    self.save_changes_cardio_button.clicked.connect(lambda: self.save_cardio_history_entry())
     history_layout.addWidget(cardio_history_button)
-    history_layout.addWidget(save_changes_button)
+    history_layout.addWidget(self.save_changes_cardio_button)
     
     cardio_notes.addWidget(main_label)
     cardio_notes.addLayout(preferred_activity_layout)
@@ -274,6 +266,7 @@ class MainPanel(QWidget):
       self.dialog.update_cardio_notes_signal.connect(lambda value_to_update: self.update_cardio_notes_label(to_edit, value_to_update))
     else:
       self.dialog = CaloriesBurntDialog(to_edit, old_value, self.time_spent, self.distance_travelled, self.preferred_activity, self.current_weight)
+      self.dialog.update_calories_label_signal.connect(lambda value_to_update: self.update_cardio_notes_label(to_edit, value_to_update))
     self.dialog.show()
   
   @pyqtSlot(bool)
@@ -292,6 +285,9 @@ class MainPanel(QWidget):
     elif to_edit == "Distance Travelled":
       self.distance_travelled = value_to_update
       self.distance_travelled_label.setText(" ".join(["Distance Travelled:", str(value_to_update), "m"]))
+    elif to_edit == "Calories Burnt":
+      self.calories_burnt = value_to_update
+      self.calories_burnt_label.setText(" ".join(["Calories Burnt", str(value_to_update), "kcal"]))
 
   def fetch_user_data(self):
     self.user_data = fetch_local_user_data(self.sqlite_cursor)
@@ -306,5 +302,28 @@ class MainPanel(QWidget):
     self.history.show()
 
   def set_new_preferred_activity(self, activity):
+    self.preferred_activity = activity
     self.preferred_activity_label.setText(" ".join(["Preferred Activity:", activity]))
     self.preferred_activity_dropdown.setCurrentText(activity)
+    update_preferred_activity(self.preferred_activity, self.sqlite_connection, self.pg_connection)
+    self.init_cardio_labels()
+    self.time_spent_label.setText(" ".join(["Time Spent:", self.time_spent, "min"]))
+    self.distance_travelled_label.setText(" ".join(["Distance Travelled:", self.distance_travelled, "m"]))
+    self.calories_burnt_label.setText(" ".join(["Calories Burnt:", self.calories_burnt, "kcal"]))
+    
+
+  def save_cardio_history_entry(self):
+    add_cardio_entry_to_cardio_history(self.preferred_activity, self.time_spent, self.distance_travelled, self.calories_burnt,
+                                       self.sqlite_connection, self.pg_connection)
+    self.cardio_history = json.loads(fetch_cardio_history(self.sqlite_cursor))
+
+  def init_cardio_labels(self):
+    if len(self.cardio_history[self.date][self.preferred_activity]) > 0:
+      self.today_exercise = self.cardio_history[self.date][self.preferred_activity][-1]
+      self.time_spent = self.today_exercise["Time Spent"]
+      self.distance_travelled = self.today_exercise["Distance Travelled"]
+      self.calories_burnt = self.today_exercise["Calories Burnt"]
+    else:
+      self.time_spent = "0"
+      self.distance_travelled = "0"
+      self.calories_burnt = "0"

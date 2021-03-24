@@ -130,6 +130,7 @@ def fetch_cardio_history(sqlite_cursor):
 def add_date_to_cardio_history(date, sqlite_connection, pg_connection):
   sqlite_cursor = sqlite_connection.cursor()
   pg_cursor = pg_connection.cursor()
+  email = logged_in_user_email(sqlite_cursor)
   activities = ["Running", "Walking", "Cycling", "Swimming"]
   cardio_history = json.loads(fetch_cardio_history(sqlite_cursor))
   
@@ -143,4 +144,22 @@ def add_date_to_cardio_history(date, sqlite_connection, pg_connection):
   pg_connection.commit()
 
   sqlite_cursor.execute("UPDATE 'weight_loss' SET cardio_history=? WHERE email=?", (cardio_history, email,))
+  sqlite_connection.commit()
+
+def add_cardio_entry_to_cardio_history(activity, duration, distance, calories_burnt, sqlite_connection, pg_connection):
+  assert activity in ("Running", "Walking", "Cycling", "Swimming")
+  sqlite_cursor = sqlite_connection.cursor()
+  pg_cursor = pg_connection.cursor()
+  current_cardio_history = json.loads(fetch_cardio_history(sqlite_cursor))
+  email = logged_in_user_email(sqlite_cursor)
+  date = datetime.today().strftime("%d/%m/%Y")
+
+  new_entry = {"Time Spent": str(duration), "Distance Travelled": str(distance), "Calories Burnt": str(calories_burnt)}
+  current_cardio_history[date][activity].append(new_entry)
+  current_cardio_history = json.dumps(current_cardio_history)
+
+  pg_cursor.execute("UPDATE weight_loss SET cardio_history=%s WHERE email=%s", (current_cardio_history, email,))
+  pg_connection.commit()
+
+  sqlite_cursor.execute("UPDATE 'weight_loss' SET cardio_history=? WHERE email=?", (current_cardio_history, email,))
   sqlite_connection.commit()
