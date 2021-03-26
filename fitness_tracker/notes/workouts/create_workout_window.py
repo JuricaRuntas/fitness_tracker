@@ -1,7 +1,8 @@
+import json
 from functools import partial
 from PyQt5.QtWidgets import QWidget, QLabel, QLineEdit, QRadioButton, QFormLayout, QHBoxLayout, QPushButton, QVBoxLayout, QGridLayout
 from PyQt5.QtCore import pyqtSignal, Qt, pyqtSlot
-from .workouts_db import update_workouts, update_current_workout
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class CreateWorkoutWindow1(QWidget):
   continue_signal = pyqtSignal(object)
@@ -61,10 +62,10 @@ class CreateWorkoutWindow2(QWidget):
   refresh_layout_signal = pyqtSignal(bool)
   show_existing_workout_edit = pyqtSignal(object)
 
-  def __init__(self, sqlite_connection, pg_connection, workout_name, workout_days, set_as_current_workout=False, empty_workout=True):
+  def __init__(self, workout_name, workout_days, set_as_current_workout=False, empty_workout=True):
     super().__init__()
-    self.sqlite_connection = sqlite_connection
-    self.pg_connection = pg_connection
+    self.db_wrapper = DatabaseWrapper()
+    self.table_name = "Workouts"
     self.workout_name = workout_name
     self.empty_workout = empty_workout
     self.setWindowTitle(self.workout_name)
@@ -94,9 +95,11 @@ class CreateWorkoutWindow2(QWidget):
     self.workouts[workout_day[0]] = workout_day[1]
 
   def save_workout_plan(self):
-    update_workouts(self.workout_name, self.workouts, self.sqlite_connection, self.pg_connection)
+    workouts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "workouts"))
+    workouts[self.workout_name] = self.workouts
+    self.db_wrapper.update_table_column(self.table_name, "workouts", json.dumps(workouts))
     if self.set_as_current_workout:
-      update_current_workout(self.workout_name, self.set_as_current_workout, self.sqlite_connection, self.pg_connection)
+      self.db_wrapper.update_table_column(self.table_name, "current_workout_plan", self.workout_name)
     self.refresh_layout_signal.emit(True)
     self.close()
 

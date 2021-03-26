@@ -3,9 +3,8 @@ import sqlite3
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QSpacerItem, QSizePolicy, QSizeGrip
 from PyQt5.QtGui import QFont, QIcon, QPainter, QBrush, QColor
 from PyQt5.QtCore import QPoint, Qt, QSize
-from fitness_tracker.user_profile.profile_db import fetch_username
 from fitness_tracker.settings import SettingsWindow
-from fitness_tracker.config import db_path
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
 
@@ -21,12 +20,14 @@ class TitleBar(QWidget):
     def __init__(self, parent):
         super(TitleBar, self).__init__()
         self.parent = parent
-        with sqlite3.connect(db_path) as conn:
-          cursor = conn.cursor()
+        self.db_wrapper = DatabaseWrapper()
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.title = QLabel("Fitness Tracker")
-        self.username = fetch_username(cursor)
+        try:
+          self.username = self.db_wrapper.fetch_local_column("Users", "name")
+        except:
+          self.username = None
         if self.username == None:
             self.version = QLabel()
         else:

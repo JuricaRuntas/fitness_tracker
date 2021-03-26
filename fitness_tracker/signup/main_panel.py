@@ -1,18 +1,17 @@
+import string
+import re
 import os
 from PyQt5.QtWidgets import QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit, QLabel, QPushButton
 from PyQt5.QtGui import QFont, QCursor, QFontDatabase
 from PyQt5.QtCore import Qt, pyqtSignal
-from .signup_helpers import check_valid_password, check_valid_email, create_user, create_user_table
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class MainPanel(QWidget):
   emit_layout_name = pyqtSignal(str)
 
-  def __init__(self, parent, sqlite_connection, pg_connection):
+  def __init__(self, parent):
     super().__init__(parent)
-    self.sqlite_connection = sqlite_connection
-    self.sqlite_cursor = self.sqlite_connection.cursor()
-    self.pg_connection = pg_connection
-    self.pg_cursor = self.pg_connection.cursor()
+    self.db_wrapper = DatabaseWrapper()
     self.setStyleSheet("""
     QWidget{
       background-position: center;
@@ -107,11 +106,28 @@ class MainPanel(QWidget):
     form_layout.addRow(self.continue_button)
     return form_layout
 
+  def check_valid_email(self, email):
+    # basic validation, checks for example@gmail.com and similar format
+    # for real validation, email confirmation is needed
+    email_regex = re.compile(r"^[\w\.\+\-]+\@[\w]+\.[a-z]{2,6}$")
+    return not re.match(email_regex, email) == None
+ 
+  def check_valid_password(self, password):
+    valid = True
+    valid_characters = set(string.ascii_letters + string.digits + '@#$%^&+=')
+    if (len(password) < 8):
+      valid = False
+      print("Password is too short.")
+    elif any(char not in valid_characters for char in password):
+      valid = False
+      print("Password contains invalid characters.")
+    return valid
+  
   def continue_signup(self):
     email = self.email_entry.text()
     password = self.password_entry.text()
     confirmed_password = self.confirm_password_entry.text()
-    if password == confirmed_password and check_valid_password(password) and check_valid_email(email):
-      if create_user(email, password):
-        create_user_table(email, password)
+    if password == confirmed_password and self.check_valid_password(password) and self.check_valid_email(email):
+      if self.db_wrapper.create_user(email, password):
+        self.db_wrapper.create_user_table(email, password)
         self.emit_layout_name.emit("Continue")

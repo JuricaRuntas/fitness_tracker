@@ -6,16 +6,13 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 from .estimator import StrengthLevelEstimator
 from .exercise_standards import LiftStandards
-from fitness_tracker.user_profile.profile_db import fetch_units
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class MainPanel(QWidget):
-  def __init__(self, parent, sqlite_connection, pg_connection):
+  def __init__(self, parent):
     super().__init__(parent)
-    self.sqlite_connection = sqlite_connection
-    self.sqlite_cursor = self.sqlite_connection.cursor()
-    self.pg_connection = pg_connection
-    self.pg_cursor = self.pg_connection.cursor()
-    self.units = fetch_units(self.sqlite_cursor)
+    self.db_wrapper = DatabaseWrapper()
+    self.units = self.db_wrapper.fetch_local_column("Users", "units")
     self.setStyleSheet("""
     QWidget{
       font-family: Montserrat;

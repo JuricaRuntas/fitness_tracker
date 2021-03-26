@@ -5,9 +5,9 @@ from .main_panel import MainPanel
 class Signup(QWidget):
   display_layout_signal = pyqtSignal(str)
 
-  def __init__(self, sqlite_connection, pg_connection):
+  def __init__(self):
     super().__init__()
-    self.main_panel = MainPanel(self, sqlite_connection, pg_connection)
+    self.main_panel = MainPanel(self)
     self.main_panel.emit_layout_name.connect(lambda layout_name: self.emit_display_layout_signal(layout_name)) 
     self.create_grid()
 

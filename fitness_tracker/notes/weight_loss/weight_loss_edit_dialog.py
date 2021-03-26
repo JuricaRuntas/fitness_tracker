@@ -1,16 +1,16 @@
+import json
 from datetime import datetime
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
 from PyQt5.QtCore import Qt, pyqtSignal
-from fitness_tracker.user_profile.profile_db import update_user_info_parameter
-from .weight_loss_db import update_weight_history
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class WeightLossEditDialog(QWidget):
   update_label_signal = pyqtSignal(bool)
   update_weight_signal = pyqtSignal(bool)
   update_cardio_notes_signal = pyqtSignal(str)
 
-  def __init__(self, to_edit, old_value, sqlite_connection, pg_connection, fitness_goal=None, date=None):
+  def __init__(self, to_edit, old_value, fitness_goal=None, date=None):
     super().__init__()
     assert to_edit in ("Current Weight", "Weight Goal", "Loss Per Week", "Time Spent", "Distance Travelled")
     if to_edit == "Loss Per Week":
@@ -20,11 +20,11 @@ class WeightLossEditDialog(QWidget):
       assert date != None
       self.date = date
 
+    self.db_wrapper = DatabaseWrapper()
+    self.table_name = "Weight Loss"
     self.to_edit = to_edit
     self.old_value = old_value
     self.current_date = datetime.today().strftime("%d/%m/%Y") 
-    self.sqlite_connection = sqlite_connection
-    self.pg_connection = pg_connection
     self.setStyleSheet(
     """QWidget{
       background-color: #232120;
@@ -92,14 +92,16 @@ class WeightLossEditDialog(QWidget):
   def update_to_edit(self):
     mappings = {"Current Weight": "weight", "Weight Goal": "goalweight", "Loss Per Week": "goalparams"}
     if self.to_edit == "Current Weight":
-      update_weight_history(self.date, self.line_edit.text(), self.sqlite_connection, self.pg_connection) 
+      weight_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "weight_history"))
+      weight_history[self.date] = self.line_edit.text()
+      self.db_wrapper.update_table_column(self.table_name, "weight_history", json.dumps(weight_history))
       if self.current_date == self.date:
-        update_user_info_parameter(self.sqlite_connection, self.pg_connection, mappings[self.to_edit], self.line_edit.text())
+        self.db_wrapper.update_table_column("Users", "weight", self.line_edit.text())
       self.update_weight_signal.emit(True)
     elif self.to_edit == "Weight Goal":
-      update_user_info_parameter(self.sqlite_connection, self.pg_connection, mappings[self.to_edit], self.line_edit.text())
+      self.db_wrapper.update_table_column("Users", "goalweight", self.line_edit.text())
     elif self.to_edit == "Loss Per Week":
-      update_user_info_parameter(self.sqlite_connection, self.pg_connection, mappings[self.to_edit], [self.fitness_goal, self.line_edit.text()])
+      self.db_wrapper.update_table_column("Users", "goalparams", json.dumps([self.fitness_goal, self.line_edit.text()]))
     else:
       self.update_cardio_notes_signal.emit(self.line_edit.text())
     self.update_label_signal.emit(True)

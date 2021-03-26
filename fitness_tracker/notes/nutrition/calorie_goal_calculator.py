@@ -1,9 +1,10 @@
 from fitness_tracker.common.units_conversion import pounds_to_kg, imperial_to_metric_height
-from fitness_tracker.user_profile.profile_db import fetch_units
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class CalorieGoalCalculator:
   def __init__(self, age, gender, height, weight, activity_level, goal, weight_per_week):
-    self.units = fetch_units()
+    self.db_wrapper = DatabaseWrapper()
+    self.units = self.db_wrapper.fetch_local_column("Users", "units")
     self.age = age
     self.gender = gender
     activity_factors = {"Maintain": 1, "Sedentary": 1.2, "Lightly active": 1.375,

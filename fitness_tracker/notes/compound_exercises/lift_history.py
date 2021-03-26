@@ -3,16 +3,13 @@ import json
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QFormLayout, QScrollArea
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot, Qt
-from .compound_exercises_db import fetch_lift_history, delete_history_entry
-from fitness_tracker.user_profile.profile_db import fetch_units
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class LiftHistory(QScrollArea):
-  def __init__(self, sqlite_connection, pg_connection):
+  def __init__(self):
     super().__init__()
-    self.sqlite_connection = sqlite_connection
-    self.sqlite_cursor = sqlite_connection.cursor()
-    self.pg_connection = pg_connection
-    self.pg_cursor = self.pg_connection
+    self.db_wrapper = DatabaseWrapper()
+    self.table_name = "Compound Exercises"
     self.setStyleSheet("""
     QWidget{
       background-color: #322d2d;
@@ -42,27 +39,29 @@ class LiftHistory(QScrollArea):
     """)
     self.setWindowModality(Qt.ApplicationModal)
     self.setWindowFlags(Qt.Tool)
-    self.units = "kg" if fetch_units(self.sqlite_cursor) == "metric" else "lb"
+    self.units = "kg" if self.db_wrapper.fetch_local_column("Users", "units") == "metric" else "lb"
     self.setWindowTitle("Lift History")
     
     widget = QWidget()
     self.layout = QFormLayout(widget)
-    exercise_label = QLabel("Exercise")
-    exercise_label.setAlignment(Qt.AlignCenter)
-    delete_label = QLabel("Delete")
-    delete_label.setAlignment(Qt.AlignCenter)
-    self.layout.addRow(exercise_label, delete_label)
+    
     self.setWidget(widget)
     self.setWidgetResizable(True)
     self.create_history(True, True)
 
   @pyqtSlot(bool)
   def create_history(self, create, init_layout=False):
-    lift_history = fetch_lift_history(self.sqlite_cursor)
-    if create and not lift_history == None:
+    exercise_label = QLabel("Exercise")
+    exercise_label.setAlignment(Qt.AlignCenter)
+    delete_label = QLabel("Delete")
+    delete_label.setAlignment(Qt.AlignCenter)
+    self.layout.addRow(exercise_label, delete_label)
+    
+    self.lift_history = self.db_wrapper.fetch_local_column(self.table_name, "lift_history")
+    if create and not self.lift_history == None:
       if not init_layout: 
         self.delete_history()
-      lift_history = json.loads(lift_history)
+      lift_history = json.loads(self.lift_history)
       self.labels = [None] * len(lift_history)
       self.delete_buttons = [None] * len(lift_history)
 
@@ -88,4 +87,8 @@ class LiftHistory(QScrollArea):
   def delete_history_entry_from_layout(self, i, entry_index):
     self.labels[i].setParent(None)
     self.delete_buttons[i].setParent(None)
-    delete_history_entry(entry_index, self.sqlite_connection, self.pg_connection)
+    history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "lift_history"))
+    lift_history = [lift for lift in history if not lift[-1] == entry_index]
+    if len(lift_history) == 0: lift_history = None
+    else: lift_history = json.dumps(lift_history)
+    self.db_wrapper.update_table_column(self.table_name, "lift_history", lift_history, True)

@@ -3,17 +3,13 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QVBoxLayout, QLabel, QFrame, 
                              QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QHBoxLayout)
 from PyQt5.QtGui import QFont, QCursor, QIntValidator
 from PyQt5.QtCore import Qt
+from fitness_tracker.database_wrapper import DatabaseWrapper
 from .one_rep_max_calculator import OneRepMaxCalculator
-from fitness_tracker.user_profile.profile_db import fetch_units
-from fitness_tracker.config import DBConnection
 
 class MainPanel(QWidget):
-  def __init__(self, parent, sqlite_connection, pg_connection):
+  def __init__(self, parent):
     super().__init__()
-    self.sqlite_connection = sqlite_connection
-    self.sqlite_cursor = self.sqlite_connection.cursor()
-    self.pg_connection = pg_connection
-    self.pg_cursor = self.pg_connection.cursor()
+    self.db_wrapper = DatabaseWrapper()
     self.setStyleSheet("""
     QWidget{
       font-family: Montserrat;
@@ -172,7 +168,7 @@ class MainPanel(QWidget):
 
   def calculate(self):
     try:
-      units = fetch_units(self.sqlite_cursor)
+      units = self.db_wrapper.fetch_local_column("Users", "units")
       weight = self.weight_entry.text()
       repetitions = self.reps_entry.text()
       units = "kg" if units == "metric" else "lb"

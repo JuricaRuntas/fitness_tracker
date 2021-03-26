@@ -3,20 +3,16 @@ import os
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QLineEdit, QHBoxLayout, QVBoxLayout
 from PyQt5.QtGui import QIntValidator
 from PyQt5.QtCore import pyqtSignal, Qt
-from .compound_exercises_db import (fetch_preferred_lifts, fetch_lifts_for_reps, lift_difference,
-                                    update_lift_history, update_lifts_for_reps)
-from fitness_tracker.user_profile.profile_db import fetch_units
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class UpdateLiftsForRepsWindow(QWidget):
   change_lifts_for_reps_signal = pyqtSignal(bool)
   history_signal = pyqtSignal(bool)
 
-  def __init__(self, sqlite_connection, pg_connection):
+  def __init__(self):
     super().__init__()
-    self.sqlite_connection = sqlite_connection
-    self.sqlite_cursor = sqlite_connection.cursor()
-    self.pg_connection = pg_connection
-    self.pg_cursor = self.pg_connection.cursor()
+    self.db_wrapper = DatabaseWrapper()
+    self.table_name = "Compound Exercises"
     self.setStyleSheet("""
     QWidget{
       background-color: #322d2d;
@@ -45,8 +41,8 @@ class UpdateLiftsForRepsWindow(QWidget):
     }
     """) 
     self.setWindowModality(Qt.ApplicationModal)
-    self.units = "kg" if fetch_units(self.sqlite_cursor) == "metric" else "lb"
-    self.preferred_lifts = json.loads(fetch_preferred_lifts(self.sqlite_cursor))
+    self.units = "kg" if self.db_wrapper.fetch_local_column("Users", "units") == "metric" else "lb"
+    self.preferred_lifts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "preferred_lifts"))
     self.setWindowTitle("Update Lifts For Reps")
     self.setLayout(self.create_panel())
     self.set_line_edit_values()
@@ -135,13 +131,14 @@ class UpdateLiftsForRepsWindow(QWidget):
 
   def save_lifts_for_reps(self):
     try:
-      exercises = list(json.loads(fetch_lifts_for_reps(self.sqlite_cursor)).keys())
+      fetched_lifts_for_reps = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "lifts_for_reps"))
+      exercises = list(fetched_lifts_for_reps.keys())
       horizontal_press_weight = str(int(self.horizontal_press_edit.text()))
       floor_pull_weight = str(int(self.floor_pull_edit.text()))
       squat_weight = str(int(self.squat_edit.text()))
       vertical_press_weight = str(int(self.vertical_press_edit.text()))
 
-      horizontal_press_reps = str(int(self.horizontal_press_reps_edit.text()))      
+      horizontal_press_reps = str(int(self.horizontal_press_reps_edit.text())) 
       floor_pull_reps = str(int(self.floor_pull_reps_edit.text()))
       squat_reps = str(int(self.squat_reps_edit.text()))
       vertical_press_reps = str(int(self.vertical_press_reps_edit.text()))
@@ -150,10 +147,10 @@ class UpdateLiftsForRepsWindow(QWidget):
                             exercises[1]: [floor_pull_reps, floor_pull_weight],
                             exercises[2]: [squat_reps, squat_weight],
                             exercises[3]: [vertical_press_reps, vertical_press_weight]}
-      diff = lift_difference(new_lifts_for_reps, self.sqlite_cursor, lifts_reps=True)
-      update_lift_history(diff, self.sqlite_connection, self.pg_connection)
+      diff = self.lift_difference(new_lifts_for_reps, fetched_lifts_for_reps, lifts_reps=True)
+      self.db_wrapper.update_table_column(self.table_name, "lift_history", diff)
       self.history_signal.emit(True)
-      update_lifts_for_reps(new_lifts_for_reps, self.sqlite_connection, self.pg_connection)
+      self.db_wrapper.update_table_column(self.table_name, "lifts_for_reps", new_lifts_for_reps) 
       self.change_lifts_for_reps_signal.emit(True)
       self.set_line_edit_values()
       self.close()
@@ -165,7 +162,7 @@ class UpdateLiftsForRepsWindow(QWidget):
     self.set_line_edit_values()
 
   def set_line_edit_values(self):
-    lift_values = list(json.loads(fetch_lifts_for_reps(self.sqlite_cursor)).values())
+    lift_values = list(json.loads(self.db_wrapper.fetch_local_column(self.table_name, "lifts_for_reps")).values())
     reps = [lift[0] for lift in lift_values]
     weight = [lift[1] for lift in lift_values]
     
@@ -184,3 +181,24 @@ class UpdateLiftsForRepsWindow(QWidget):
 
     for i, line_edit in enumerate(weight_line_edit):
       line_edit.setText(weight[i])
+
+  def sort_exercises(self, exercise):
+    if exercise in ["Bench Press", "Incline Bench Press"]: return 4
+    elif exercise in ["Deadlift", "Sumo Deadlift"]: return 3
+    elif exercise in ["Back Squat", "Front Squat"]: return 2
+    elif exercise in ["Overhead Press", "Push Press"]: return 1 
+
+  # returns sorted dictionary containing updated lifts
+  def lift_difference(self, new_lifts, old_lifts, one_RM=False, lifts_reps=False):
+    difference = None
+    if one_RM:
+      db_lifts = set(": ".join([exercise, weight]) for exercise, weight in old_lifts.items())
+      new_lifts = set(": ".join([exercise, weight]) for exercise, weight in new_lifts.items() if not weight == '0.0')
+      diff = list(new_lifts.difference(db_lifts)) # local lifts that are not in db
+      difference = {exercise.split(": ")[0]:exercise.split(": ")[1] for exercise in diff}
+    elif lifts_reps:
+      db_lifts = set(":".join([exercise, "x".join(values)]) for exercise, values in old_lifts.items())
+      new_lifts = set(":".join([exercise, "x".join(values)]) for exercise, values in new_lifts.items() if not values[1] == '0.0')
+      diff = list(new_lifts.difference(db_lifts))
+      difference = {exercise.split(":")[0]:exercise.split(":")[1].split("x") for exercise in diff}
+    return {key: value for key, value in sorted(difference.items(), key=lambda exercise: self.sort_exercises(exercise[0]))}

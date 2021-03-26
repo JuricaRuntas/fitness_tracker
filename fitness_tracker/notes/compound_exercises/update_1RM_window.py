@@ -1,24 +1,21 @@
 import json
+from datetime import datetime
 import os
 from datetime import datetime
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QLineEdit, QHBoxLayout, QVBoxLayout
 from PyQt5.QtGui import QIntValidator
 from PyQt5.QtCore import pyqtSignal, Qt
-from .compound_exercises_db import (fetch_preferred_lifts, fetch_one_rep_maxes, lift_difference,
-                                    update_lift_history, update_1RM_lifts, update_one_rep_maxes_history)
-from fitness_tracker.user_profile.profile_db import fetch_units
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class Update1RMWindow(QWidget):
   change_1RM_lifts_signal = pyqtSignal(bool)
   history_signal = pyqtSignal(bool)
   update_graph_signal = pyqtSignal(bool)
 
-  def __init__(self, sqlite_connection, pg_connection):
+  def __init__(self):
     super().__init__()
-    self.sqlite_connection = sqlite_connection
-    self.sqlite_cursor = sqlite_connection.cursor()
-    self.pg_connection = pg_connection
-    self.pg_cursor = self.pg_connection
+    self.db_wrapper = DatabaseWrapper()
+    self.table_name = "Compound Exercises"
     self.setStyleSheet("""
     QWidget{
       background-color: #322d2d;
@@ -48,8 +45,8 @@ class Update1RMWindow(QWidget):
     """)
     self.setWindowModality(Qt.ApplicationModal)
     self.current_year = str(datetime.now().year)
-    self.units = "kg" if fetch_units(self.sqlite_cursor) == "metric" else "lb"
-    self.preferred_lifts = json.loads(fetch_preferred_lifts(self.sqlite_cursor))
+    self.units = "kg" if self.db_wrapper.fetch_local_column("Users", "units") == "metric" else "lb"
+    self.preferred_lifts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "preferred_lifts"))
     self.setWindowTitle("Update One Rep Max Lifts")
     self.setLayout(self.create_panel())
     self.set_line_edit_values()
@@ -118,7 +115,8 @@ class Update1RMWindow(QWidget):
   
   def save_1RM_lifts(self):
     try:
-      exercises = list(json.loads(fetch_one_rep_maxes(self.sqlite_cursor)).keys())
+      fetched_rep_maxes = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "one_rep_maxes"))
+      exercises = list(fetched_rep_maxes.keys())
       horizontal_press_max = str(int(self.horizontal_press_edit.text()))
       floor_pull_max = str(int(self.floor_pull_edit.text()))
       squat_max = str(int(self.squat_edit.text()))
@@ -126,13 +124,13 @@ class Update1RMWindow(QWidget):
       new_maxes = {exercises[0]:horizontal_press_max, exercises[1]:floor_pull_max,
                    exercises[2]:squat_max, exercises[3]:vertical_press_max}
       
-      diff = lift_difference(new_maxes, self.sqlite_cursor, one_RM=True)
+      diff = self.lift_difference(new_maxes, fetched_rep_maxes, one_RM=True)
       
-      update_lift_history(diff, self.sqlite_connection, self.pg_connection) 
+      self.db_wrapper.update_table_column(self.table_name, "lift_history", diff) 
       self.history_signal.emit(True)
       
-      update_1RM_lifts(diff, self.sqlite_connection, self.pg_connection)
-      update_one_rep_maxes_history(diff, self.current_year, self.sqlite_connection, self.pg_connection)
+      self.db_wrapper.update_table_column(self.table_name, "one_rep_maxes", new_maxes) 
+      self.update_one_rep_maxes_history(diff, self.current_year)
       
       self.update_graph_signal.emit(True)
       self.change_1RM_lifts_signal.emit(True)
@@ -147,8 +145,54 @@ class Update1RMWindow(QWidget):
     self.set_line_edit_values()
 
   def set_line_edit_values(self):
-    one_rep_maxes = list(json.loads(fetch_one_rep_maxes(self.sqlite_cursor)).values())
+    one_rep_maxes = list(json.loads(self.db_wrapper.fetch_local_column(self.table_name, "one_rep_maxes")).values())
     self.horizontal_press_edit.setText(one_rep_maxes[0])
     self.floor_pull_edit.setText(one_rep_maxes[1])
     self.squat_edit.setText(one_rep_maxes[2])
     self.vertical_press_edit.setText(one_rep_maxes[3])
+
+  def sort_exercises(self, exercise):
+    if exercise in ["Bench Press", "Incline Bench Press"]: return 4
+    elif exercise in ["Deadlift", "Sumo Deadlift"]: return 3
+    elif exercise in ["Back Squat", "Front Squat"]: return 2
+    elif exercise in ["Overhead Press", "Push Press"]: return 1 
+
+  # returns sorted dictionary containing updated lifts
+  def lift_difference(self, new_lifts, old_lifts, one_RM=False, lifts_reps=False):
+    difference = None
+    if one_RM:
+      db_lifts = set(": ".join([exercise, weight]) for exercise, weight in old_lifts.items())
+      new_lifts = set(": ".join([exercise, weight]) for exercise, weight in new_lifts.items() if not weight == '0.0')
+      diff = list(new_lifts.difference(db_lifts)) # local lifts that are not in db
+      difference = {exercise.split(": ")[0]:exercise.split(": ")[1] for exercise in diff}
+    elif lifts_reps:
+      db_lifts = set(":".join([exercise, "x".join(values)]) for exercise, values in old_lifts.items())
+      new_lifts = set(":".join([exercise, "x".join(values)]) for exercise, values in new_lifts.items() if not values[1] == '0.0')
+      diff = list(new_lifts.difference(db_lifts))
+      difference = {exercise.split(":")[0]:exercise.split(":")[1].split("x") for exercise in diff}
+    return {key: value for key, value in sorted(difference.items(), key=lambda exercise: self.sort_exercises(exercise[0]))}
+
+  def update_one_rep_maxes_history(self, diff, year):
+    rm_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "rm_history"))
+    default_exercises = {"Horizontal Press": "Bench Press", "Floor Pull": "Deadlift",
+                         "Squat": "Back Squat", "Vertical Press": "Overhead Press"}
+    secondary_exercises = {"Horizontal Press": "Incline Bench Press", "Floor Pull": "Sumo Deadlift",
+                           "Squat": "Front Squat", "Vertical Press": "Push Press"} 
+    now = datetime.now()
+    if year not in rm_history:
+      rm_history[year] = {}
+      for month in self.db_wrapper.months:
+        exercises_dict = {}
+        for lift_type in default_exercises:
+          exercises_dict[lift_type] = {default_exercises[lift_type]:[]}
+        for lift_type in secondary_exercises:
+          exercises_dict[lift_type][secondary_exercises[lift_type]] = []
+        rm_history[year][month] = exercises_dict 
+    
+    for i, (lift, weight) in enumerate(diff.items()):
+      current_lift_type = rm_history[year][self.db_wrapper.months[now.month-1]][list(self.preferred_lifts.keys())[i]]
+      if lift not in current_lift_type: current_lift_type[lift] = []
+      current_lift_type[lift].append(weight) 
+    
+    rm_history = json.dumps(rm_history)
+    self.db_wrapper.update_table_column(self.table_name, "rm_history", rm_history)

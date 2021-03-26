@@ -2,17 +2,14 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLay
                              QLabel, QPushButton, QSpacerItem, QSizePolicy)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt, pyqtSignal
-from .login_helpers import check_password, fetch_user_info
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class MainPanel(QWidget):
   emit_layout_name = pyqtSignal(str)
 
-  def __init__(self, sqlite_connection, pg_connection):
+  def __init__(self):
     super().__init__()
-    self.sqlite_connection = sqlite_connection
-    self.sqlite_cursor = self.sqlite_connection.cursor()
-    self.pg_connection = pg_connection
-    self.pg_cursor = self.pg_connection.cursor()
+    self.db_wrapper = DatabaseWrapper()
     self.setStyleSheet("""
     QWidget{
       background-position: center;
@@ -121,6 +118,4 @@ class MainPanel(QWidget):
   def login(self):
     email = self.email_entry.text()
     password = self.password_entry.text()
-    if check_password(email, password):
-      fetch_user_info(email, password, self.sqlite_connection, self.pg_cursor)
-      self.emit_layout_name.emit("Home")
+    if self.db_wrapper.login_user(email, password): self.emit_layout_name.emit("Home")

@@ -2,17 +2,15 @@ import json
 from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QFormLayout, QComboBox, QHBoxLayout, QVBoxLayout
 from PyQt5.QtGui import  QFont
 from PyQt5.QtCore import pyqtSignal, Qt
-from .compound_exercises_db import fetch_preferred_lifts, update_preferred_lifts, update_1RM_and_lifts_for_reps
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class PreferredLifts(QWidget):
   change_lifts_signal = pyqtSignal(bool)
 
-  def __init__(self, sqlite_connection, pg_connection):
+  def __init__(self):
     super().__init__()
-    self.sqlite_connection = sqlite_connection
-    self.sqlite_cursor = sqlite_connection.cursor()
-    self.pg_connection = pg_connection
-    self.pg_cursor = self.pg_connection.cursor()
+    self.db_wrapper = DatabaseWrapper()
+    self.table_name = "Compound Exercises"
     self.setStyleSheet("""
     QWidget{
       background-color: #322d2d;
@@ -72,7 +70,7 @@ class PreferredLifts(QWidget):
     """) 
     self.setWindowModality(Qt.ApplicationModal)
     self.setWindowTitle("Edit Preferred Lifts")
-    self.preferred_lifts = json.loads(fetch_preferred_lifts(self.sqlite_cursor))
+    self.preferred_lifts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "preferred_lifts"))
     self.setLayout(self.create_panel())
     self.set_preferred_lifts()
   
@@ -132,7 +130,17 @@ class PreferredLifts(QWidget):
     vertical_press = str(self.vertical_press_dropdown.currentText())
     new_preferred_lifts = {"Horizontal Press": horizontal_press, "Floor Pull":floor_pull,
                            "Squat": squat, "Vertical Press": vertical_press}
-    update_preferred_lifts(new_preferred_lifts, self.sqlite_connection, self.pg_connection)
-    update_1RM_and_lifts_for_reps(self.sqlite_connection, self.pg_connection)
+    self.db_wrapper.update_table_column(self.table_name, "preferred_lifts", new_preferred_lifts)
+
+    new_preferred_lifts = list(new_preferred_lifts.values())
+    one_rep_maxes = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "one_rep_maxes"))
+    lifts_for_reps = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "lifts_for_reps"))
+
+    new_one_rep_maxes = {new_preferred_lifts[i]:value for i, value in enumerate(one_rep_maxes.values())}
+    new_lifts_for_reps = {new_preferred_lifts[i]:value for i, value in enumerate(lifts_for_reps.values())}
+    
+    self.db_wrapper.update_table_column(self.table_name, "one_rep_maxes", new_one_rep_maxes)
+    self.db_wrapper.update_table_column(self.table_name, "lifts_for_reps", new_lifts_for_reps)
+    
     self.change_lifts_signal.emit(True)
     self.close()

@@ -4,20 +4,15 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLay
                              QLabel, QPushButton, QGroupBox, QRadioButton, QHBoxLayout, QComboBox)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt, pyqtSignal
-from .signup_helpers import create_user_info_after_signup
-from fitness_tracker.user_profile.profile_db import logged_in_user_email
-from fitness_tracker.notes.nutrition.nutrition_db import insert_default_meal_plans_values
 from fitness_tracker.notes.nutrition.calorie_goal_calculator import CalorieGoalCalculator
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class SignupQuestions(QWidget):
   display_layout_signal = pyqtSignal(str)
 
-  def __init__(self, sqlite_connection, pg_connection):
+  def __init__(self):
     super().__init__()
-    self.sqlite_connection = sqlite_connection
-    self.sqlite_cursor = self.sqlite_connection.cursor()
-    self.pg_connection = pg_connection
-    self.pg_cursor = self.pg_connection.cursor()
+    self.db_wrapper = DatabaseWrapper()
     self.create_panel()
 
   def create_panel(self):
@@ -227,11 +222,11 @@ class SignupQuestions(QWidget):
                    "goalweight": goal_weight}
       if not gender == "" and not units == "" and not self.name_entry.text() == "" and not self.weight_entry.text() == "":
         goal_params = json.loads(goal_params)
-        calorie_goal_calculator = CalorieGoalCalculator(int(age), gender, float(height), float(weight), goal_params[0], goal, goal_params[1])
+        self.db_wrapper.create_user_info_after_signup(user_info)
+        calorie_goal_calculator = CalorieGoalCalculator(int(age), gender, float(height),
+                                                        float(weight), goal_params[0], goal, goal_params[1])
         calorie_goal = calorie_goal_calculator.calculate_calorie_goal()
-        email = logged_in_user_email(self.sqlite_cursor)
-        create_user_info_after_signup(user_info, email, self.sqlite_connection, self.pg_connection)
-        insert_default_meal_plans_values(self.sqlite_connection, self.pg_connection, calorie_goal=calorie_goal)
+        self.db_wrapper.insert_default_values("Nutrition", calorie_goal=calorie_goal)
         self.display_layout_signal.emit("Home")
     except ValueError:
       pass

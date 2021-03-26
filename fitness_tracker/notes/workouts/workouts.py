@@ -10,10 +10,10 @@ from .main_panel import MainPanel
 class WorkoutsNotes(QWidget):
   display_layout_signal = pyqtSignal(str)
 
-  def __init__(self, sqlite_connection, pg_connection):
+  def __init__(self):
     super().__init__()
     self.header = Header(self, "Workout Notes")
-    self.main_panel = MainPanel(self, sqlite_connection, pg_connection)
+    self.main_panel = MainPanel(self)
     self.main_panel.show_muscle_group_signal.connect(lambda muscle_group: self.show_muscle_group_layout(muscle_group))
     self.side_panel = SidePanel(self)
     self.side_panel.emit_layout_name.connect(lambda layout_name: self.emit_display_layout_signal(layout_name))

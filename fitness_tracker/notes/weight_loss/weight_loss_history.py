@@ -2,19 +2,16 @@ from functools import partial
 import json
 from PyQt5.QtWidgets import QWidget, QScrollArea, QFormLayout, QLabel, QPushButton, QHBoxLayout, QGridLayout
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
-from fitness_tracker.user_profile.profile_db import fetch_units
-from .weight_loss_db import fetch_weight_history, delete_weight_history_entry
+from fitness_tracker.database_wrapper import DatabaseWrapper
 from .weight_loss_edit_dialog import WeightLossEditDialog
 
 class WeightLossHistory(QScrollArea):
   update_weight_loss_label_signal = pyqtSignal(bool)
 
-  def __init__(self, sqlite_connection, pg_connection):
+  def __init__(self):
     super().__init__()
-    self.sqlite_connection = sqlite_connection
-    self.sqlite_cursor = sqlite_connection.cursor()
-    self.pg_connection = pg_connection
-    self.pg_cursor = self.pg_connection
+    self.db_wrapper = DatabaseWrapper()
+    self.table_name = "Weight Loss"
     self.setStyleSheet("""
     QWidget{
       background-color: #322d2d;
@@ -42,8 +39,8 @@ class WeightLossHistory(QScrollArea):
       background-color: #323232;
     }
     """)
-    self.units = "kg" if fetch_units(self.sqlite_cursor) == "metric" else "lb"
-    self.weight_history = json.loads(fetch_weight_history(self.sqlite_cursor))
+    self.units = "kg" if self.db_wrapper.fetch_local_column("Users", "units") == "metric" else "lb"
+    self.weight_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "weight_history"))
     self.setWindowModality(Qt.ApplicationModal)
     self.setWindowFlags(Qt.Tool)
     self.setWindowTitle("Weight History")
@@ -105,12 +102,12 @@ class WeightLossHistory(QScrollArea):
         row += 1
 
   def edit_weight_dialog(self, to_edit, value, date):
-    self.edit_weight_dialog_window = WeightLossEditDialog(to_edit, value, self.sqlite_connection, self.pg_connection, date=date)
+    self.edit_weight_dialog_window = WeightLossEditDialog(to_edit, value, date=date)
     self.edit_weight_dialog_window.update_weight_signal.connect(lambda signal: self.create_history(signal))
     self.edit_weight_dialog_window.show()
 
   def delete_history(self):
-    self.weight_history = json.loads(fetch_weight_history(self.sqlite_cursor))
+    self.weight_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "weight_history"))
     for i in reversed(range(self.layout.count())):
       self.layout.itemAt(i).widget().setParent(None)
 
@@ -119,4 +116,5 @@ class WeightLossHistory(QScrollArea):
     self.weight_labels[i].setParent(None)
     self.edit_buttons[i].setParent(None)
     self.delete_buttons[i].setParent(None)
-    delete_weight_history_entry(date, self.sqlite_connection, self.pg_connection)
+    if date in self.weight_history: del self.weight_history[date]
+    self.db_wrapper.update_table_column(self.table_name, "weight_history", json.dumps(self.weight_history))

@@ -8,7 +8,7 @@ from .food_database_panel import FoodDatabasePanel
 class FoodDB(QWidget):
   display_layout_signal = pyqtSignal(str)
 
-  def __init__(self, sqlite_connection, pg_connection):
+  def __init__(self):
     super().__init__()
     self.header = Header(self)
     self.main_panel = FoodDatabasePanel(self)

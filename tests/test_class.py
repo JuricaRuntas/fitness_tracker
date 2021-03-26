@@ -2,8 +2,8 @@ import json
 import sqlite3
 import psycopg2
 import hashlib
-from fitness_tracker.config import DBConnection
-from fitness_tracker.signup.signup_helpers import create_user_table, create_user_info_after_signup, create_user
+import copy
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class TestClass:
   def __init__(self, table_name, db_path="test.db"):
@@ -16,16 +16,20 @@ class TestClass:
     self.test_password = "testpassword123"
     self.db_path = db_path
     self.table_name = table_name
-
-    self.sqlite_connection = DBConnection("sqlite", self.db_path).connect() 
-    self.pg_connection = DBConnection("pg", self.db_path).connect()
-    self.sqlite_cursor = self.sqlite_connection.cursor()
-    self.pg_cursor = self.pg_connection.cursor()
     
+    self.db_wrapper = DatabaseWrapper(self.db_path)
+    self.sqlite_connection = self.db_wrapper.sqlite_connection
+    self.sqlite_cursor = self.sqlite_connection.cursor()
+    self.pg_connection = self.db_wrapper.pg_connection
+    self.pg_cursor = self.pg_connection.cursor()
+
   def create_test_user(self):
-    create_user(self.test_user["email"], self.test_password, self.pg_connection)
-    create_user_table(self.test_user["email"], self.test_password, self.sqlite_connection)
-    create_user_info_after_signup(self.test_user, self.test_user["email"], self.sqlite_connection, self.pg_connection)
+    self.db_wrapper.create_user(self.test_user["email"], self.test_password)
+    self.db_wrapper.create_user_table(self.test_user["email"], self.test_user["password"])
+    info = copy.deepcopy(self.test_user)
+    del info["email"]
+    del info["password"]
+    self.db_wrapper.create_user_info_after_signup(info)
 
   def delete_test_user(self):
     self.pg_cursor.execute("DELETE FROM users WHERE email=%s", (self.test_user["email"],))

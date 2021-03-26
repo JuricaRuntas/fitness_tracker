@@ -9,6 +9,5 @@ dist/
 fitness_tracker.egg-info/
 food_images/
 exercise_images/
-!bob.ipynb
 python.exe.lnk
 fitness_tracker.db
