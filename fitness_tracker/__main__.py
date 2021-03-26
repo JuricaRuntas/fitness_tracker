@@ -108,25 +108,11 @@ class FitnessTracker(QMainWindow):
   
   @pyqtSlot(str)
   def display_layout(self, layout_name):
-      #self.cw = self.layouts[layout_name](self.sqlite_connection, self.pg_connection)
       self.cw = self.layouts[layout_name]()
       self.cw.display_layout_signal.connect(lambda layout_name: self.display_layout(layout_name))
       self.layout = QWidget()
       self.layout = self.setup_main_layout()
       self.setCentralWidget(self.layout)
-
- # def users_table_exists(self):
- #   sqlite_cursor = self.sqlite_connection.cursor()
- #   sqlite_cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'")
- #   if sqlite_cursor.fetchone()[0] == 0: return False
- #   else:
- #     sqlite_cursor.execute("SELECT COUNT(*) from 'users' WHERE logged_in='YES'")
- #     if sqlite_cursor.fetchone()[0] != 1: return False
- #   return True
-
-  #def create_db_file(self):
-  #  db_file = os.path.join(os.path.dirname(importlib.util.find_spec("fitness_tracker").origin), "fitness_tracker.db")
-  #  if not os.path.isfile(db_file): open(db_file, "w")
 
 if __name__ == "__main__":
   app = QApplication(sys.argv)
