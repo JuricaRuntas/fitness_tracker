@@ -334,7 +334,7 @@ class MainPanel(QWidget):
   
   def set_1RM_labels_text(self, text):
     one_RM_labels = [self.horizontal_press_label_ORM, self.floor_pull_label_ORM,
-                       self.squat_label_ORM, self.vertical_press_label_ORM]
+                     self.squat_label_ORM, self.vertical_press_label_ORM]
     for i, label in enumerate(one_RM_labels):
       label_text = label.text().split(": ")
       label_text[1] = " ".join([text[i], self.units])
@@ -388,7 +388,7 @@ class MainPanel(QWidget):
         if exercise == str(self.lifts_combobox.currentText()): lift_type = l_type
       self.replace_graph(lift_type)
 
-  def convert_lift_history_weight(convert_to_units):
+  def convert_lift_history_weight(self, convert_to_units):
     try:
       lift_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "lift_history"))
     except TypeError: # lift history is empty

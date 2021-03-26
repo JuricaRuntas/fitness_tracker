@@ -178,6 +178,15 @@ class Update1RMWindow(QWidget):
                          "Squat": "Back Squat", "Vertical Press": "Overhead Press"}
     secondary_exercises = {"Horizontal Press": "Incline Bench Press", "Floor Pull": "Sumo Deadlift",
                            "Squat": "Front Squat", "Vertical Press": "Push Press"} 
+    exercises = {}
+
+    for default in default_exercises:
+      if not default in exercises: exercises[default] = []
+      exercises[default].append(default_exercises[default])
+
+    for secondary in secondary_exercises:
+      exercises[secondary].append(secondary_exercises[secondary])
+
     now = datetime.now()
     if year not in rm_history:
       rm_history[year] = {}
@@ -190,9 +199,12 @@ class Update1RMWindow(QWidget):
         rm_history[year][month] = exercises_dict 
     
     for i, (lift, weight) in enumerate(diff.items()):
-      current_lift_type = rm_history[year][self.db_wrapper.months[now.month-1]][list(self.preferred_lifts.keys())[i]]
-      if lift not in current_lift_type: current_lift_type[lift] = []
-      current_lift_type[lift].append(weight) 
+      lift_type = None
+      for exercise_type in exercises:
+        if lift in exercises[exercise_type]: lift_type = exercise_type
+      entry = rm_history[year][self.db_wrapper.months[now.month-1]][lift_type]
+      if lift not in entry: entry[lift] = []
+      entry[lift].append(weight) 
     
     rm_history = json.dumps(rm_history)
     self.db_wrapper.update_table_column(self.table_name, "rm_history", rm_history)
