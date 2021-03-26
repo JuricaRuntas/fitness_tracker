@@ -9,6 +9,7 @@ class WeightLossEditDialog(QWidget):
   update_label_signal = pyqtSignal(bool)
   update_weight_signal = pyqtSignal(bool)
   update_cardio_notes_signal = pyqtSignal(str)
+  update_graph_signal = pyqtSignal(bool)
 
   def __init__(self, to_edit, old_value, fitness_goal=None, date=None):
     super().__init__()
@@ -95,6 +96,7 @@ class WeightLossEditDialog(QWidget):
       weight_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "weight_history"))
       weight_history[self.date] = self.line_edit.text()
       self.db_wrapper.update_table_column(self.table_name, "weight_history", json.dumps(weight_history))
+      self.update_graph_signal.emit(True)
       if self.current_date == self.date:
         self.db_wrapper.update_table_column("Users", "weight", self.line_edit.text())
       self.update_weight_signal.emit(True)

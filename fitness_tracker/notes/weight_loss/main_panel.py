@@ -1,4 +1,5 @@
 import json
+import matplotlib
 from datetime import datetime
 from PyQt5.QtWidgets import QWidget, QGridLayout, QVBoxLayout, QLabel, QHBoxLayout, QComboBox, QFrame, QPushButton
 from PyQt5.QtGui import QFont
@@ -8,6 +9,10 @@ from .weight_loss_edit_dialog import WeightLossEditDialog
 from .weight_loss_history import WeightLossHistory
 from .calories_burnt_dialog import CaloriesBurntDialog
 from .cardio_history import CardioHistory
+from fitness_tracker.notes.weight_loss.weight_loss_graph import WeightLossGraphCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+
+matplotlib.use("Qt5Agg")
 
 class MainPanel(QWidget):
   def __init__(self, parent):
@@ -75,18 +80,21 @@ class MainPanel(QWidget):
     self.db_wrapper.create_local_table("Nutrition")
    
     if self.db_wrapper.local_table_is_empty("Nutrition"):
-      self.db_wrapper.insert_default__values("Nutrition") 
+      self.db_wrapper.insert_default_values("Nutrition") 
     
     if self.db_wrapper.local_table_is_empty(self.table_name):
       self.db_wrapper.insert_default_values(self.table_name)
     
     self.fetch_user_data()
     self.date = datetime.today().strftime("%d/%m/%Y")
+    self.current_year = datetime.today().year
     self.calorie_goal = self.db_wrapper.fetch_local_column("Nutrition", "calorie_goal")
     self.units = "kg" if self.db_wrapper.fetch_local_column("Users", "units") == "metric" else "lb"
     self.preferred_activity = self.db_wrapper.fetch_local_column(self.table_name, "preferred_activity")
     self.cardio_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "cardio_history"))
+    self.weight_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "weight_history"))
     if not self.date in self.cardio_history: self.add_date_to_cardio_history()
+    if not self.date in self.weight_history: self.add_date_to_weight_history()
     
     self.init_cardio_labels()
     self.create_panel()
@@ -108,28 +116,47 @@ class MainPanel(QWidget):
     return description
 
   def create_graph(self):
-    graph_layout = QVBoxLayout()
-    graph = QWidget()
-    graph.setStyleSheet("background-color: yellow")
-
-    combobox_layout = QHBoxLayout()
-    months_combobox = QComboBox()
-    months_combobox.addItems(["January", "February", "March", "April", "May", "June", "July",
-                              "August", "September", "October", "November", "December"])
+    self.graph_layout = QVBoxLayout()
     
-    change_year_combobox = QComboBox()
-    change_year_combobox.addItems(["2020", "2021"])
+    graph = WeightLossGraphCanvas(self.db_wrapper.months[datetime.today().month-1], self.current_year, self)
+    toolbar = NavigationToolbar(graph, self)
+    toolbar.setStyleSheet("background-color: white;") 
+    
+    combobox_layout = QHBoxLayout()
+    self.months_combobox = QComboBox()
 
-    combobox_layout.addWidget(months_combobox)
-    combobox_layout.addWidget(change_year_combobox)
+    months = []
+    for entry in self.weight_history:
+      month = entry.split("/")[1]
+      for month_name, code in self.db_wrapper.months_mappings.items():
+        if code == month: month = month_name
+      if not month in months:
+        months.append(month)
+    if len(months) == 0: months.append(self.db_wrapper.months[datetime.today().month-1])
+    self.months_combobox.addItems(months)
+    self.months_combobox.setCurrentText(self.db_wrapper.months[datetime.today().month-1])
+    self.months_combobox.currentTextChanged.connect(lambda month: self.change_month_graph(month))
+    
+    self.change_year_combobox = QComboBox()
+    
+    years = []
+    for entry in self.weight_history:
+      if not entry.split("/")[-1] in years: years.append(entry.split("/")[-1])
+    if len(years) == 0: years.append(str(self.current_year))
+    self.change_year_combobox.addItems(list(reversed(years)))
+    self.change_year_combobox.currentTextChanged.connect(lambda year: self.change_year_graph(year))
 
-    graph_layout.addWidget(graph)
-    graph_layout.addLayout(combobox_layout)
+    combobox_layout.addWidget(self.months_combobox)
+    combobox_layout.addWidget(self.change_year_combobox)
+
+    self.graph_layout.addWidget(toolbar)
+    self.graph_layout.addWidget(graph)
+    self.graph_layout.addLayout(combobox_layout)
 
     framed_graph = QFrame(self)
     framed_graph.setFrameStyle(QFrame.Box)
     framed_graph.setLineWidth(3)
-    framed_graph.setLayout(graph_layout)
+    framed_graph.setLayout(self.graph_layout)
 
     return framed_graph
 
@@ -263,6 +290,7 @@ class MainPanel(QWidget):
       self.dialog = WeightLossEditDialog(to_edit, old_value, fitness_goal, date)
       self.dialog.update_label_signal.connect(lambda label_to_update: self.update_weight_loss_label(label_to_update))
       self.dialog.update_cardio_notes_signal.connect(lambda value_to_update: self.update_cardio_notes_label(to_edit, value_to_update))
+      self.dialog.update_graph_signal.connect(lambda signal: self.refresh_graph(signal))
     else:
       self.dialog = CaloriesBurntDialog(to_edit, old_value, self.time_spent, self.distance_travelled, self.preferred_activity, self.current_weight)
       self.dialog.update_calories_label_signal.connect(lambda value_to_update: self.update_cardio_notes_label(to_edit, value_to_update))
@@ -352,3 +380,34 @@ class MainPanel(QWidget):
     self.cardio_history[date][self.preferred_activity].append(new_entry)
     current_cardio_history = json.dumps(self.cardio_history) 
     self.db_wrapper.update_table_column(self.table_name, "cardio_history", current_cardio_history)
+
+  def add_date_to_weight_history(self):
+    try:
+      last_entry = list(self.weight_history.values())[-1]
+      self.weight_history[self.date] = last_entry
+      self.db_wrapper.update_table_column(self.table_name, "weight_history", json.dumps(self.weight_history))
+    except IndexError: # no records
+      pass
+  
+  @pyqtSlot(bool)
+  def refresh_graph(self, signal):
+    if signal:
+      self.weight_history = self.db_wrapper.fetch_local_column(self.table_name, "weight_history")
+      self.replace_graph(str(self.months_combobox.currentText()))
+
+  def replace_graph(self, month):
+    new_graph = WeightLossGraphCanvas(month, self.current_year, self)
+    new_toolbar = NavigationToolbar(new_graph, self)
+    
+    old_toolbar_reference = self.graph_layout.itemAt(0).widget()
+    old_graph_reference = self.graph_layout.itemAt(1).widget()
+
+    self.graph_layout.replaceWidget(old_toolbar_reference, new_toolbar)
+    self.graph_layout.replaceWidget(old_graph_reference, new_graph)
+  
+  def change_year_graph(self, year):
+    self.current_year = year
+    self.replace_graph(str(self.months_combobox.currentText()))
+
+  def change_month_graph(self, month):
+    self.replace_graph(str(month))
