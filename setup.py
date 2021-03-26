@@ -7,7 +7,7 @@ with open(os.path.join(directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
   name="fitness_tracker",
-  version="0.4.1",
+  version="0.5.0",
   author="Jurica Runtas, Kristijan Milić",
   url="https://github.com/JuricaRT/fitness_tracker",
   license="MIT",
