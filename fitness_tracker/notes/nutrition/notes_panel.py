@@ -1,7 +1,8 @@
 import os
 import json
+from functools import partial
 from datetime import datetime
-from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
+from PyQt5.QtWidgets import (QComboBox, QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QPushButton, QFrame, QHBoxLayout, QVBoxLayout,
                              QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, 
                              QLineEdit, QScrollArea)
@@ -28,8 +29,11 @@ class NotesPanel(QWidget):
     self.db_wrapper = DatabaseWrapper()
     self.table_name = "Nutrition"
     self.db_wrapper.create_local_table("Nutrition")
+    self.selected_week = "Present"
+    self.selected_day = "Monday"
+    self.selected_past_week = 0
     global b
-    b = FoodDBSearchPanel("e", "e")
+    b = FoodDBSearchPanel("this", "Monday", "Breakfast")
     b.show()
     if self.db_wrapper.local_table_is_empty(self.table_name): self.db_wrapper.insert_default_values(self.table_name)
     self.setStyleSheet(
@@ -80,8 +84,8 @@ class NotesPanel(QWidget):
     }
       """)
     self.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "meal_plans"))
-    if datetime.now().strftime("%V") != self.meal_plans["Current Week Number"]:
-      self.db_wrapper.rotate_meals(self.meal_plans)
+    #if datetime.now().strftime("%V") != self.meal_plans["Current Week Number"]:
+    #  self.db_wrapper.rotate_meals(self.meal_plans)
     self.units = "kg" if self.db_wrapper.fetch_local_column("Users", "units") == "metric" else "lb"
     
     self.user_data = self.db_wrapper.fetch_local_user_info()
@@ -219,31 +223,39 @@ class NotesPanel(QWidget):
 
     return stats_layout
 
-  def create_notes(self):
+  def create_notes(self):    
+    #meals = ["Breakfast", "Lunch", "Dinner", "Snacks"]
+    meals = self.meal_plans['Present']['Monday']
+    number_of_meals = len(meals)
+    print(meals)
+
+    self.table = QTableWidget(16, number_of_meals)
+    self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+    self.table.verticalHeader().setVisible(False)
     
-    table = QTableWidget(2, 4)
-    table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-    table.verticalHeader().setVisible(False)
+    meal_entries = [None] * number_of_meals
+    plus_button = [None] * number_of_meals
+    for i in range(number_of_meals):
+      plus_button[i] = QPushButton("+")
     
-    meals = ["Breakfast", "Lunch", "Dinner", "Snacks"]
-    
-    plus_button = QPushButton(QIcon(icons["plus"]), "Add Food", self)
-    plus_button1 = QPushButton(QIcon(icons["plus"]), "Add Food", self)
-    plus_button2 = QPushButton(QIcon(icons["plus"]), "Add Food", self)
-    plus_button3 = QPushButton(QIcon(icons["plus"]), "Add Food", self)
-    
-    buttons = [plus_button, plus_button1, plus_button2, plus_button3]
-    j = i = 0
+    buttons = plus_button
+    j = i = k = 0
     for item in meals:
       buttons[i].setFlat(True)
-      table.setHorizontalHeaderItem(i, QTableWidgetItem(item))
-      table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-      table.setCellWidget(0, j, buttons[i])
+      buttons[i].clicked.connect(partial(self.add_button_func, self.selected_week, self.selected_day, item))
+      self.table.setHorizontalHeaderItem(i, QTableWidgetItem(item))
+      self.table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+      for key in meals[item]:
+        widget = QLabel(key['name'])
+        self.table.setCellWidget(k, j, widget)
+        k += 1
+      self.table.setCellWidget(k, j, buttons[i])
       j += 1
       i += 1
+      k = 0
 
     for i in range(2):
-      table.verticalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+      self.table.verticalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
         
     table_title_layout = QHBoxLayout()
     style = """QPushButton{background-color: rgba(88, 41, 41, 20%);
@@ -256,26 +268,32 @@ class NotesPanel(QWidget):
                  background-color: rgba(166, 55, 55, 20%);
                }
              """
-    lastweek_button = QPushButton("Last Week")
-    lastweek_button.setCursor(QCursor(Qt.PointingHandCursor))
-    lastweek_button.setStyleSheet(style)
+    self.past_combobox = QComboBox()
+    self.past_combobox.addItems(["1 Week Ago", "2 Weeks Ago", "3 Weeks Ago", "4 Weeks Ago", "5 Weeks Ago", "6 Weeks Ago", "7 Weeks Ago", "8 Weeks Ago"])
+    self.past_combobox.activated[str].connect(self.index_past_week)
     thisweek_button = QPushButton("This Week")
     thisweek_button.setStyleSheet(style)
     thisweek_button.setCursor(QCursor(Qt.PointingHandCursor))
+    thisweek_button.clicked.connect(lambda:self.change_week("Present", 0))
     nextweek_button = QPushButton("Next Week")
     nextweek_button.setStyleSheet(style)
     nextweek_button.setCursor(QCursor(Qt.PointingHandCursor))
+    nextweek_button.clicked.connect(lambda:self.change_week("Future", 0))
     manage_meals = QPushButton("Manage Meals")
     manage_meals.setStyleSheet(style)
     manage_meals.setCursor(QCursor(Qt.PointingHandCursor))
+    self.day_combobox = QComboBox()
+    self.day_combobox.addItems(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+    self.day_combobox.activated.connect(lambda:self.change_day(self.day_combobox.currentText()))
 
-    table_title_layout.addWidget(lastweek_button)
+    table_title_layout.addWidget(self.past_combobox)
     table_title_layout.addWidget(thisweek_button)
     table_title_layout.addWidget(nextweek_button)
     table_title_layout.addWidget(manage_meals)
+    table_title_layout.addWidget(self.day_combobox)
 
     table_wrapper = QVBoxLayout()
-    table_wrapper.addWidget(table)
+    table_wrapper.addWidget(self.table)
     
     grid = QGridLayout()
     grid.setVerticalSpacing(0)
@@ -293,6 +311,66 @@ class NotesPanel(QWidget):
     framed_layout.addWidget(framed_grid)
     
     return framed_layout
+
+  def index_past_week(self, week_string):
+    week = "Past"
+    index = 0
+    items = [self.past_combobox.itemText(i) for i in range(self.past_combobox.count())]
+    for item in items:
+      if (item == week_string):
+        break
+      index += 1
+    self.change_week(week, index)
+
+  def change_week(self, week, past_week_index):
+    self.selected_week = week
+    self.selected_past_week = past_week_index
+    print (past_week_index)
+    print(week)
+    self.repopulate_table()
+
+  def change_day(self, day):
+    self.selected_day = day
+    self.repopulate_table()
+
+  def repopulate_table(self):
+    for i in range (self.table.rowCount()):
+      for j in range(self.table.columnCount()):
+        self.table.removeCellWidget(i, j)
+
+    if self.selected_week == "Past":
+      meals = self.meal_plans[self.selected_week][self.selected_past_week][self.selected_day]
+    else: 
+      meals = self.meal_plans[self.selected_week][self.selected_day]
+    number_of_meals = len(meals)
+    meal_entries = [None] * number_of_meals
+    plus_button = [None] * number_of_meals
+    for i in range(number_of_meals):
+      plus_button[i] = QPushButton("+")
+
+    buttons = plus_button
+    j = i = k = 0
+    for item in meals:
+      buttons[i].setFlat(True)
+      buttons[i].clicked.connect(partial(self.add_button_func, self.selected_week, self.selected_day, item))
+      self.table.setHorizontalHeaderItem(i, QTableWidgetItem(item))
+      self.table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+      for key in meals[item]:
+        widget = QLabel(str(key['amount']) + "g " + key['name'])
+        self.table.setCellWidget(k, j, widget)
+        k += 1
+      self.table.setCellWidget(k, j, buttons[i])
+      j += 1
+      i += 1
+      k = 0
+
+  def add_button_func(self, week, day, meal):
+    global panel
+    panel = FoodDBSearchPanel(week, day, meal)
+    print(panel.week)
+    print(panel.day)
+    print(panel.meal)
+    panel.show()
 
   def calculate_calorie_intake(self, weight, height, age, gender, activity, weight_goal):
     bmr = self.calculate_bmr(weight, height, age, gender)
@@ -322,7 +400,7 @@ class NotesPanel(QWidget):
       bmr *= 0.79
     elif weight_goal == "1":
       bmr *= 0.59
-    update_calorie_goal(int(bmr))
+    self.db_wrapper.update_calorie_goal(int(bmr))
     self.calorie_goal = bmr
     self.calorie_goal = int(self.calorie_goal)
     self.calorie_goal = str(self.calorie_goal)
@@ -424,10 +502,12 @@ class EditDailyIntake(QWidget):
       self.close()
 
 class FoodDBSearchPanel(QWidget):
-  def __init__(self, week, day):
+  def __init__(self, week, day, meal):
     super().__init__()
+    self.db_wrapper = DatabaseWrapper()
     self.week = week
     self.day = day
+    self.meal = meal
     self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
     self.setWindowModality(Qt.ApplicationModal)
     self.setMinimumWidth(430)
@@ -494,7 +574,13 @@ class FoodDBSearchPanel(QWidget):
   def create_search_results(self):
     self.result_layout = QVBoxLayout()
     self.result_layout.setAlignment(Qt.AlignTop)
-    self.result_layout.addWidget(QPushButton("DA"))
+    with open('temp.json', 'r') as datafile:
+      food_info_temp = json.load(datafile)
+    response_button = [None] * len(food_info_temp)
+    for i in range(len(food_info_temp)):
+      response_button[i] = QPushButton(str(food_info_temp[i]["name"]) + str(food_info_temp[i]["nutrition"]["nutrients"][1]["amount"]))
+      response_button[i].clicked.connect(partial(self.result_to_data, food_info_temp[i]))
+      self.result_layout.addWidget(response_button[i])
     self.scroll_area = QScrollArea()
     self.scroll_area.setWidgetResizable(True)
     widg = QWidget()
@@ -510,11 +596,11 @@ class FoodDBSearchPanel(QWidget):
     response = api.food_search(query, 512)
     response_button = [None] * len(response)
     food_info = [None] * len(response)
+    data_func = [None] * len(response)
     for i in range(len(response)):
       food_info[i] = api.food_info(response[i]["id"], "g", 100)
       response_button[i] = QPushButton(str(food_info[i]["name"]) + str(food_info[i]["nutrition"]["nutrients"][1]["amount"]))
-      print(food_info[i]["name"])
-      response_button[i].clicked.connect(lambda:self.result_to_data(food_info[i]))
+      response_button[i].clicked.connect(partial(self.result_to_data, food_info[i]))
       self.result_layout.addWidget(response_button[i])
 
   def create_confirm_cancel(self):
@@ -531,13 +617,14 @@ class FoodDBSearchPanel(QWidget):
 
     return layout
 
-  def result_to_data(self, response):
-    print(response["name"])
+  def result_to_data(self, select_response):
+    print(select_response['name'])
+    if self.week == "Present":
+      self.db_wrapper.update_meal(self.meal, select_response, self.day, True, False)
+    elif self.week == "Future":
+      self.db_wrapper.update_meal(self.meal, select_response, self.day, False, True)
     #test stage
-    return
-
-  def data_to_table(self):
-    #Update data in database
+    self.close()
     return
 
   def closefunc(self):
