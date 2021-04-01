@@ -400,7 +400,7 @@ class NotesPanel(QWidget):
       bmr *= 0.79
     elif weight_goal == "1":
       bmr *= 0.59
-    self.db_wrapper.update_calorie_goal(int(bmr))
+    self.db_wrapper.update_table_column(self.table_name, "calorie_goal", int(bmr))
     self.calorie_goal = bmr
     self.calorie_goal = int(self.calorie_goal)
     self.calorie_goal = str(self.calorie_goal)
@@ -574,6 +574,7 @@ class FoodDBSearchPanel(QWidget):
   def create_search_results(self):
     self.result_layout = QVBoxLayout()
     self.result_layout.setAlignment(Qt.AlignTop)
+    
     with open('temp.json', 'r') as datafile:
       food_info_temp = json.load(datafile)
     response_button = [None] * len(food_info_temp)

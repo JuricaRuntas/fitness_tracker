@@ -6,8 +6,7 @@ from .spoonacular import FoodDatabase
 from fitness_tracker.homepage.side_panel import SidePanel
 
 class FoodDatabasePanel(QWidget):
-  search_signal = pyqtSignal(str)
-  emit_search_results = pyqtSignal(object)
+  search_signal = pyqtSignal(object)
 
   def __init__(self, parent):
     super().__init__(parent)
@@ -65,5 +64,4 @@ class FoodDatabasePanel(QWidget):
       search = self.search_bar.text()
       search_results = api.food_search(search, 6)
       api.download_food_images(search_results, 250)
-      self.emit_search_results.emit([search_results, search])
-      self.search_signal.emit("Search")
+      self.search_signal.emit([search_results, search])

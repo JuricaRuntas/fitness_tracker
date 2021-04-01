@@ -6,7 +6,6 @@ from .food_database_panel import FoodDatabasePanel
 from .search_results_panel import SearchResultsPanel
 from .food_panel import FoodPanel
 from fitness_tracker.homepage.side_panel import SidePanel
-from .header import Header
 
 class NutritionNotes(QWidget):
   display_layout_signal = pyqtSignal(str)
@@ -14,17 +13,14 @@ class NutritionNotes(QWidget):
   def __init__(self):
     super().__init__()
     self.notes_panel = NotesPanel(self)
-    self.header = Header(self)
     self.side_panel = SidePanel(self)
     self.side_panel.emit_layout_name.connect(lambda layout_name: self.emit_display_layout_signal(layout_name))
     self.create_grid()
-    self.header.change_layout_signal.connect(lambda name: self.change_layout(name))
        
   def create_grid(self):
     self.grid = QGridLayout()
     self.grid.setContentsMargins(0, 0, 0, 0)
     self.grid.addWidget(self.side_panel, 0, 0, 1, 1)
-    #self.grid.addWidget(self.header, 0, 1, 1, 2)
     self.grid.addWidget(self.notes_panel, 0, 1, 1, 1)
     self.setLayout(self.grid)
   
