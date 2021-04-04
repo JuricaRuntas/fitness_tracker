@@ -69,8 +69,12 @@ class SidePanel(QWidget):
     notes_layout.setContentsMargins(0, 0, 0, 0)
     lifts_button = QPushButton("Compound Exercises", self)
     lifts_button.clicked.connect(lambda: self.emit_layout_name.emit(lifts_button.text()))
-    workouts_button = QPushButton("Workouts", self)
-    workouts_button.clicked.connect(lambda: self.emit_layout_name.emit(workouts_button.text()))
+    
+    workout_planner_button = QPushButton("Workout Planner")
+    workout_planner_button.clicked.connect(lambda: self.emit_layout_name.emit(workout_planner_button.text()))
+    exercises_and_workouts_button = QPushButton("Exercises and Workouts")
+    exercises_and_workouts_button.clicked.connect(lambda: self.emit_layout_name.emit(exercises_and_workouts_button.text()))
+
     nutrition_button = QPushButton("Nutrition", self)
     nutrition_button.clicked.connect(lambda: self.emit_layout_name.emit(nutrition_button.text()))
     weight_notes_button = QPushButton("Weight Loss", self)
@@ -88,8 +92,8 @@ class SidePanel(QWidget):
     strength_es_button.clicked.connect(lambda: self.emit_layout_name.emit(strength_es_button.text()))
     
     layouts = {general_layout: [line_divider_general, home_button, user_button,
-                                line_divider_notes, lifts_button, workouts_button,
-                                nutrition_button, weight_notes_button, food_database_button,
+                                line_divider_notes, lifts_button, workout_planner_button,
+                                exercises_and_workouts_button, nutrition_button, weight_notes_button, food_database_button,
                                 line_divider_calc, max_button, fat_button, strength_es_button,
                                 line_divider_logout, logout_button],
                notes_layout: [],

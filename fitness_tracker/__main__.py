@@ -43,7 +43,8 @@ class FitnessTracker(QMainWindow):
     self.cw.display_layout_signal.connect(lambda layout: self.display_layout(layout))
     self.layouts = {"Login": Login, "Signup": Signup, "Continue": SignupQuestions,
                     "Home": Homepage, "Profile": Profile, "Logout": Login,
-                    "Compound Exercises": BigLiftsNotes, "Workouts": WorkoutsNotes, "Nutrition": NutritionNotes,
+                    "Compound Exercises": BigLiftsNotes, "Workout Planner": WorkoutsNotes,
+                    "Exercises and Workouts": WorkoutsNotes, "Nutrition": NutritionNotes,
                     "Weight Loss": WeightLossNotes, "1 Rep Max Calculator": OneRepMaxCalculator,
                     "Body Fat Calculator": BodyFatCalculator, "Strength Estimator": StrengthEstimator,
                     "Food Database": FoodDB}
@@ -108,11 +109,12 @@ class FitnessTracker(QMainWindow):
   
   @pyqtSlot(str)
   def display_layout(self, layout_name):
-      self.cw = self.layouts[layout_name]()
-      self.cw.display_layout_signal.connect(lambda layout_name: self.display_layout(layout_name))
-      self.layout = QWidget()
-      self.layout = self.setup_main_layout()
-      self.setCentralWidget(self.layout)
+    if layout_name in ("Workout Planner", "Exercises and Workouts"): self.cw = self.layouts[layout_name](layout_name)
+    else: self.cw = self.layouts[layout_name]()
+    self.cw.display_layout_signal.connect(lambda layout_name: self.display_layout(layout_name))
+    self.layout = QWidget()
+    self.layout = self.setup_main_layout()
+    self.setCentralWidget(self.layout)
 
 if __name__ == "__main__":
   app = QApplication(sys.argv)
