@@ -2,11 +2,12 @@ import os
 import json
 from functools import partial
 from datetime import datetime
+from typing import ContextManager
 from PyQt5.QtWidgets import (QComboBox, QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QPushButton, QFrame, QHBoxLayout, QVBoxLayout,
                              QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, 
                              QLineEdit, QScrollArea)
-from PyQt5.QtGui import QFont, QCursor, QIcon, QIntValidator
+from PyQt5.QtGui import QDoubleValidator, QFont, QCursor, QIcon, QIntValidator
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal
 from fitness_tracker.database_wrapper import DatabaseWrapper
 from .change_weight_dialog import ChangeWeightDialog
@@ -282,6 +283,7 @@ class NotesPanel(QWidget):
     manage_meals = QPushButton("Manage Meals")
     manage_meals.setStyleSheet(style)
     manage_meals.setCursor(QCursor(Qt.PointingHandCursor))
+    manage_meals.clicked.connect(lambda:self.open_meal_manager())
     self.day_combobox = QComboBox()
     self.day_combobox.addItems(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
     self.day_combobox.activated.connect(lambda:self.change_day(self.day_combobox.currentText()))
@@ -311,6 +313,12 @@ class NotesPanel(QWidget):
     framed_layout.addWidget(framed_grid)
     
     return framed_layout
+
+  def open_meal_manager(self):
+    global manager
+    if self.selected_week is not "Past":
+      manager = MealPlanPanel(self.selected_week, self.selected_day)
+      manager.show()
 
   def index_past_week(self, week_string):
     week = "Past"
@@ -347,6 +355,11 @@ class NotesPanel(QWidget):
     plus_button = [None] * number_of_meals
     for i in range(number_of_meals):
       plus_button[i] = QPushButton("+")
+
+    while self.table.columnCount() < number_of_meals:
+      self.table.insertColumn(1)
+    while self.table.columnCount() > number_of_meals:
+      self.table.removeColumn(1)
 
     buttons = plus_button
     j = i = k = 0
@@ -560,6 +573,11 @@ class FoodDBSearchPanel(QWidget):
     search_bar_line_edit = QLineEdit()
     search_bar_line_edit.setPlaceholderText("Search")
 
+    self.search_bar_amount = QLineEdit()
+    self.search_bar_amount.setPlaceholderText("Amount")
+    self.search_bar_amount.setFixedWidth(120)
+    self.search_bar_amount.setValidator(QDoubleValidator())
+
     search_icon = QIcon(icons["search"])
 
     search_bar_button = QPushButton()
@@ -567,6 +585,7 @@ class FoodDBSearchPanel(QWidget):
     search_bar_button.clicked.connect(lambda:self.update_search_results(search_bar_line_edit.text()))
 
     search_bar_layout.addWidget(search_bar_line_edit)
+    search_bar_layout.addWidget(self.search_bar_amount)
     search_bar_layout.addWidget(search_bar_button)
 
     return search_bar_layout
@@ -597,9 +616,8 @@ class FoodDBSearchPanel(QWidget):
     response = api.food_search(query, 512)
     response_button = [None] * len(response)
     food_info = [None] * len(response)
-    data_func = [None] * len(response)
     for i in range(len(response)):
-      food_info[i] = api.food_info(response[i]["id"], "g", 100)
+      food_info[i] = api.food_info(response[i]["id"], "g", float(self.search_bar_amount.text()))
       response_button[i] = QPushButton(str(food_info[i]["name"]) + str(food_info[i]["nutrition"]["nutrients"][1]["amount"]))
       response_button[i].clicked.connect(partial(self.result_to_data, food_info[i]))
       self.result_layout.addWidget(response_button[i])
@@ -630,3 +648,189 @@ class FoodDBSearchPanel(QWidget):
 
   def closefunc(self):
     self.close()
+
+class MealPlanPanel(QWidget):
+  def __init__(self, week, day):
+    super().__init__()
+    self.week = week
+    self.day = day
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
+    self.setWindowModality(Qt.ApplicationModal)
+    self.db_wrapper = DatabaseWrapper()
+    self.setStyleSheet(   
+    """QWidget{
+      background-color: #232120;
+      color:#c7c7c7;
+      font-weight: bold;
+      font-family: Montserrat;
+      font-size: 16px;
+      }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }
+    QLineEdit{
+      padding: 6px;
+      background-color: rgb(33,33,33);
+      border: 1px solid;
+      border-color: #cdcdcd;
+    }
+    QScrollArea{
+      background-color: #1A1A1A;
+    }""")
+    self.table_name = "Nutrition"
+    self.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "meal_plans"))
+    layout = QVBoxLayout()
+    self.setFixedSize(250, 500)
+    layout.addLayout(self.create_main_panel())
+    self.setLayout(layout)
+
+  def create_main_panel(self):
+    layout = QVBoxLayout()
+    self.meal_number = len(self.meal_plans[self.week][self.day])
+    horizontal_layouts = [None] * len(self.meal_plans[self.week][self.day])
+    meal_labels = [None] * len(self.meal_plans[self.week][self.day])
+    meal_rename = [None] * len(self.meal_plans[self.week][self.day])
+    meal_remove = [None] * len(self.meal_plans[self.week][self.day])
+    add_button = QPushButton("Add (" + str(self.meal_number) + "/7)")
+    add_button.clicked.connect(lambda:self.add_meal())
+    close_button = QPushButton("Close")
+    close_button.clicked.connect(lambda:self.close())
+    j = 0
+    for i in self.meal_plans[self.week][self.day]:
+      horizontal_layouts[j] = QHBoxLayout()
+      meal_labels[j] = QLabel(i)
+      meal_remove[j] = QPushButton("-")
+      meal_remove[j].setFixedSize(32, 32)
+      meal_rename[j] = QPushButton("E")
+      meal_rename[j].setFixedSize(32, 32)
+      meal_remove[j].clicked.connect(partial(self.remove_meal, i))
+      meal_rename[j].clicked.connect(partial(self.open_rename_query, i))
+      horizontal_layouts[j].addWidget(meal_labels[j])
+      horizontal_layouts[j].addWidget(meal_rename[j])
+      horizontal_layouts[j].addWidget(meal_remove[j])
+      layout.addLayout(horizontal_layouts[j])
+      j += 1
+    layout.addWidget(add_button)
+    layout.addStretch(0)
+    layout.addWidget(close_button)
+    return layout
+
+  def open_rename_query(self, meal):
+    global query
+    query = RenameMeal(self.week, self.day, meal)
+    query.show()
+
+  def remove_meal(self, meal):
+    if self.week == "Present":
+      self.db_wrapper.modify_meal("Delete", meal, self.day, None, True, False)
+    elif self.week == "Future":
+      self.db_wrapper.modify_meal("Delete", meal, self.day, None, False, True)
+
+  def add_meal(self):
+    if self.meal_number < 7:
+      meal_string = "Meal #" + str((self.meal_number + 1))
+      if self.week == "Present":
+        self.db_wrapper.modify_meal("Add", meal_string, self.day, None, True, False)
+      elif self.week == "Future":
+        self.db_wrapper.modify_meal("Add", meal_string, self.day, None, False, True)
+
+class RenameMeal(QWidget):
+  def __init__(self, week, day, meal):
+    super().__init__()
+    self.week = week
+    self.day = day
+    self.meal = meal
+    self.db_wrapper = DatabaseWrapper()
+    self.setStyleSheet(   
+    """QWidget{
+      background-color: #232120;
+      color:#c7c7c7;
+      font-weight: bold;
+      font-family: Montserrat;
+      font-size: 16px;
+      }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }
+    QLineEdit{
+      padding: 6px;
+      background-color: rgb(33,33,33);
+      border: 1px solid;
+      border-color: #cdcdcd;
+    }""")
+
+    dialog_layout = QVBoxLayout()
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
+    self.setWindowModality(Qt.ApplicationModal)
+    dialog_layout.addLayout(self.create_input_window())
+    self.setLayout(dialog_layout)
+
+  def create_input_window(self):
+    layout = QVBoxLayout()
+    entry_label = QLabel("Rename")
+
+    self.meal_rename_line_edit = QLineEdit()
+
+    helper_layout = QHBoxLayout()
+
+    cancel_button = QPushButton("Cancel")
+    cancel_button.clicked.connect(lambda: self.close_button())
+
+    confirm_button = QPushButton("Confirm")
+    confirm_button.clicked.connect(lambda: self.confirm_button())
+
+    helper_layout.addWidget(cancel_button)
+    helper_layout.addWidget(confirm_button)
+
+    layout.addWidget(entry_label)
+    layout.addWidget(self.meal_rename_line_edit)
+    layout.addLayout(helper_layout)
+
+    return layout
+
+  def close_button(self):
+    self.close()
+
+  def confirm_button(self):
+    if self.meal_rename_line_edit.text() != "":
+      if self.week == "Present":
+        self.db_wrapper.modify_meal("Rename", self.meal, self.day, self.meal_rename_line_edit.text(), True, False)
+      if self.week == "Future":
+        self.db_wrapper.modify_meal("Rename", self.meal, self.day, self.meal_rename_line_edit.text(), False, True)
+      self.close()
