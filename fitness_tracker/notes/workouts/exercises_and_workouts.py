@@ -113,13 +113,6 @@ class ExercisesAndWorkouts(QWidget):
     layout = QVBoxLayout()
     layout.setAlignment(Qt.AlignTop)    
 
-    search_layout = QHBoxLayout()
-    search_bar = QLineEdit()
-    search_button = QPushButton("Search")
-    search_bar.setPlaceholderText("Search for a specific exercise")
-    search_layout.addWidget(search_bar)
-    search_layout.addWidget(search_button)
-
     label_layout = QHBoxLayout()
     label = QLabel("Exercises by muscle group", self)
     label.setFont(QFont("Ariel", 15))
@@ -265,7 +258,6 @@ class ExercisesAndWorkouts(QWidget):
     grid_layout.addLayout(calves_muscle_group, 2, 1)
     grid_layout.addLayout(hamstrings_muscle_group, 2, 2)
 
-    layout.addLayout(search_layout)
     layout.addLayout(label_layout) 
     layout.addWidget(QLabel(" "))
     layout.addLayout(grid_layout)

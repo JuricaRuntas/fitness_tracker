@@ -1,9 +1,6 @@
-import os
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout, QPushButton, QFrame, QVBoxLayout, QPlainTextEdit, QHBoxLayout, QTextEdit
-from PyQt5.QtGui import QFont, QIcon
-from PyQt5.QtCore import Qt, QSize
-
-path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "exercise_images")
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt
 
 class Exercise(QWidget):
   def __init__(self, parent, exercise_info):
@@ -14,28 +11,19 @@ class Exercise(QWidget):
     self.setLayout(self.grid)
 
   def create_panel(self):
-    self.grid.addLayout(self.create_title_and_image(), 0, 0, 1, 2)
+    self.grid.addLayout(self.create_title(), 0, 0, 1, 2)
     self.grid.addWidget(self.create_description(), 1, 0, 2, 1)
     self.grid.addWidget(self.create_muscle_targeted(), 1, 1, 1, 1)
     self.grid.addWidget(self.create_tips(), 2, 1, 1, 1)
 
-  def create_title_and_image(self):
+  def create_title(self):
     layout = QVBoxLayout()
     
     label = QLabel(self.exercise_info["name"], self)
     label.setAlignment(Qt.AlignCenter)
     label.setFont(QFont("Ariel", 30))
 
-    exercise = QPushButton(self)
-    
-    image_name = os.path.basename(self.exercise_info["image"][0])
-    exercise.setIcon(QIcon(os.path.join(path, image_name)))
-    exercise.setIconSize(QSize(200, 200))
-    exercise.resize(200, 200)
-    exercise.setStyleSheet("border: none")
-    
     layout.addWidget(label)
-    layout.addWidget(exercise)
     
     return layout
 

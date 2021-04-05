@@ -2,7 +2,8 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from fitness_tracker.homepage.side_panel import SidePanel
-from .exercises.exercises import Exercises
+from .exercises import Exercises
+from .exercise_info import Exercise
 from .exercises_and_workouts import ExercisesAndWorkouts
 from .workout_planner import WorkoutPlanner
 
@@ -34,3 +35,9 @@ class WorkoutsNotes(QWidget):
     self.exercises = Exercises(self, muscle_group)
     self.exercises.show_exercise_signal.connect(lambda exercise_info: self.show_exercise_info_layout(exercise_info))
     self.grid.addWidget(self.exercises, 1, 1, 8, 3)
+
+  @pyqtSlot(object)
+  def show_exercise_info_layout(self, exercise_info):
+    self.grid.itemAt(1).widget().setParent(None)
+    self.exercise_info = Exercise(self, exercise_info)
+    self.grid.addWidget(self.exercise_info, 1, 1, 8, 3) 
