@@ -1,8 +1,12 @@
 import os
+import json
+from functools import partial
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QLabel, QPushButton,
                              QVBoxLayout, QHBoxLayout, QGridLayout, QLineEdit)
 from PyQt5.QtGui import QFont, QIcon
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal
+from fitness_tracker.database_wrapper import DatabaseWrapper
+from .create_workout_window import CreateWorkoutWindow
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)))
 muscle_groups_path = os.path.join(path, "muscle_groups")
@@ -20,6 +24,8 @@ muscle_groups = {"Chest": os.path.join(muscle_groups_path, "chest.svg"),
                  "Hamstrings": os.path.join(muscle_groups_path, "hamstrings.svg")}
 
 class ExercisesAndWorkouts(QWidget):
+  show_muscle_group_signal = pyqtSignal(str)
+
   def __init__(self):
     super().__init__()
     self.setStyleSheet("""
@@ -48,6 +54,11 @@ class ExercisesAndWorkouts(QWidget):
       background-color: #323232;
       border-color: #6C6C6C;
     }""")
+    self.db_wrapper = DatabaseWrapper()
+    self.table_name = "Workouts"
+    self.db_wrapper.create_local_table(self.table_name)
+    if self.db_wrapper.local_table_is_empty(self.table_name): self.db_wrapper.insert_default_values(self.table_name)
+    self.fetched_my_workouts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "my_workouts"))
     self.create_panel()
 
   def create_panel(self):
@@ -62,28 +73,34 @@ class ExercisesAndWorkouts(QWidget):
     
     layout = QVBoxLayout()
 
-    workouts_layout = QVBoxLayout()
-    workouts_layout.setAlignment(Qt.AlignTop)
+    self.workouts_layout = QVBoxLayout()
+    self.workouts_layout.setAlignment(Qt.AlignTop)
 
     label_layout = QHBoxLayout()
     label_layout.setAlignment(Qt.AlignCenter)
     label = QLabel("My Workouts")
     label.setFont(QFont("Ariel", 18, weight=QFont.Bold))
     label_layout.addWidget(label)
-    workouts_layout.addLayout(label_layout)
+    self.workouts_layout.addLayout(label_layout)
 
-    workouts = ["Leg Day #1", "Powerlift Monday", "Powerlift Deadlift Day", "Monday #1"]
-    
-    for workout in workouts:
-      workouts_layout.addWidget(QPushButton(workout))
+    if len(self.fetched_my_workouts.keys()) > 0:
+      self.buttons = [None] * len(self.fetched_my_workouts.keys())
+      
+      for i, workout in enumerate(self.fetched_my_workouts.keys()):
+        self.buttons[i] = QPushButton(workout)
+        self.buttons[i].setProperty("button_index", i)
+        self.buttons[i].clicked.connect(partial(self.select_button, self.buttons[i].property("button_index")))
+        self.workouts_layout.addWidget(self.buttons[i])
     
     buttons_layout = QHBoxLayout()
     create_new_workout_button = QPushButton("Create New Workout")
+    create_new_workout_button.clicked.connect(lambda: self.create_new_workout())
     edit_workout_button = QPushButton("Edit Workout")
+    edit_workout_button.clicked.connect(lambda: self.edit_workout())
     buttons_layout.addWidget(create_new_workout_button)
     buttons_layout.addWidget(edit_workout_button)
     
-    layout.addLayout(workouts_layout)
+    layout.addLayout(self.workouts_layout)
     layout.addLayout(buttons_layout)
     frame.setLayout(layout)
 
@@ -255,3 +272,72 @@ class ExercisesAndWorkouts(QWidget):
     frame.setLayout(layout) 
 
     return frame
+
+  def create_new_workout(self):
+    self.create_workout_window = CreateWorkoutWindow() 
+    self.create_workout_window.refresh_after_creating_signal.connect(lambda signal: self.refresh_my_workouts_after_create(signal))
+    self.create_workout_window.setGeometry(100, 200, 300, 300) 
+    self.create_workout_window.show()
+
+  def edit_workout(self):
+    selected_button = None
+    for button in self.buttons:
+      if button.isFlat(): selected_button = button
+    if selected_button != None:
+      self.edit_workout_window = CreateWorkoutWindow(selected_button.text())
+      self.edit_workout_window.refresh_my_workouts_signal.connect(lambda workout_name: self.refresh_my_workouts(workout_name))
+      self.edit_workout_window.setGeometry(100, 200, 300, 300) 
+      self.edit_workout_window.show()
+
+  def select_button(self, button_index):
+    for button in self.buttons:
+      if button.isFlat():
+        button.setFlat(False)
+        button.setStyleSheet("")
+        button.setStyleSheet("""
+        QPushButton{
+          background-color: rgba(0, 0, 0, 0);
+          border: 1px solid;
+          font-size: 18px;
+          font-weight: bold;
+          border-color: #808080;
+          min-height: 28px;
+          white-space:nowrap;
+          text-align: left;
+          padding-left: 5%;
+          font-family: Montserrat;
+        }
+        QPushButton:hover:!pressed{
+          border: 2px solid;
+          border-color: #747474;
+        }
+        QPushButton:pressed:{
+          border: 2px solid;
+          background-color: #323232;
+          border-color: #6C6C6C;
+        }""")
+
+    self.buttons[button_index].setFlat(True)
+    self.buttons[button_index].setStyleSheet("background-color: #323232; border-color: #6C6C6C; border: 2px solid;")
+  
+  @pyqtSlot(str)
+  def refresh_my_workouts(self, workout_name): 
+    for button in self.buttons:
+      if button.text() == workout_name:
+        button.setParent(None)
+
+  @pyqtSlot(bool)
+  def refresh_my_workouts_after_create(self, signal):
+    if signal:
+      self.fetched_my_workouts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "my_workouts"))
+      for i in reversed(range(self.workouts_layout.count())):
+        if self.workouts_layout.itemAt(i).widget() != None:
+          self.workouts_layout.itemAt(i).widget().setParent(None)
+      
+      if len(self.fetched_my_workouts.keys()) > 0:
+        self.buttons = [None] * len(self.fetched_my_workouts.keys())
+        for i, workout in enumerate(self.fetched_my_workouts.keys()):
+          self.buttons[i] = QPushButton(workout)
+          self.buttons[i].setProperty("button_index", i)
+          self.buttons[i].clicked.connect(partial(self.select_button, self.buttons[i].property("button_index")))
+          self.workouts_layout.addWidget(self.buttons[i])

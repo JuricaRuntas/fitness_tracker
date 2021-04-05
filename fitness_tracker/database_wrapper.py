@@ -38,7 +38,7 @@ class DatabaseWrapper(metaclass=Singleton):
                                                  "units", "rm_history"),
                           "Nutrition": ("email", "calorie_goal", "meal_plans", "manage_meals"),
                           "Weight Loss": ("email", "weight_history", "preferred_activity", "cardio_history"),
-                          "Workouts": ("email", "workouts", "current_workout_plan")}
+                          "Workouts": ("email", "workouts", "my_workouts")}
 
     self.months = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
                    'August', 'September', 'October', 'November', 'December'] 
@@ -181,9 +181,8 @@ class DatabaseWrapper(metaclass=Singleton):
                       "cardio_history": json.dumps(default_cardio_history)} 
 
     elif table_name == "Workouts":
-      workouts = {}
-      current_workout_plan = ""
-      default_values = {"email": self.user_email, "workouts": json.dumps(workouts), "current_workout_plan": current_workout_plan} 
+      workouts, my_workouts = {}, {}
+      default_values = {"email": self.user_email, "workouts": json.dumps(workouts), "my_workouts": json.dumps(my_workouts)} 
 
     columns = sql.SQL(", ").join(sql.Identifier(column) for column in tuple(default_values.keys()))
     values = tuple(value for value in default_values.values())
@@ -246,7 +245,7 @@ class DatabaseWrapper(metaclass=Singleton):
                      'workouts' (
                      email text,
                      workouts text,
-                     current_workout_plan text,
+                     my_workouts text,
                      id integer NOT NULL,
                      PRIMARY KEY(id));
                      """ 
@@ -347,8 +346,8 @@ class DatabaseWrapper(metaclass=Singleton):
       return
     
     self.user_email = email
-    remote_column_names = self.fetch_remote_column_names("Users")
-    
+    remote_column_names = self.table_columns["Users"]
+
     if self.local_table_exists("Users"):
       current_user_email = self.fetch_logged_in_user_email()
       if email != current_user_email:
