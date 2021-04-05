@@ -39,7 +39,10 @@ class CreateWorkoutWindow(QWidget):
     }
     """)
     self.setWindowModality(Qt.ApplicationModal)
-    self.setWindowTitle("Create a New Workout")
+    if workout_name != None:
+      self.setWindowTitle("Edit Workout")
+    else:
+      self.setWindowTitle("Create a New Workout")
     self.db_wrapper = DatabaseWrapper()
     self.table_name = "Workouts"
     self.workout_name = workout_name
