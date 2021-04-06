@@ -161,11 +161,13 @@ class NotesPanel(QWidget):
     """
     dm_style_selected = """"""
     daily_button = QPushButton("Daily")
+    daily_button.clicked.connect(lambda:self.set_daily())
     daily_button.setFixedWidth(130)
     daily_button.setStyleSheet(dm_style)
     monthly_button = QPushButton("Monthly")
     monthly_button.setFixedWidth(130)
     monthly_button.setStyleSheet(dm_style)
+    monthly_button.clicked.connect(lambda:self.set_monthly())
     nutrients_button = QPushButton("Nutrients")
     nutrients_button.setFixedWidth(145)
     daily_monthlyavg_buttons.addWidget(daily_button)
@@ -173,16 +175,16 @@ class NotesPanel(QWidget):
     daily_monthlyavg_buttons.addWidget(nutrients_button)
 
     nsummary_layout.addLayout(daily_monthlyavg_buttons)
-    nutrients = (["Calories", 1], ["Proteins", 21], ["Carbohydrates", 32], ["Fats", 24], ["Fibers", 13], ["Sugars", 6])
-    options = config.items('NUTRITION')
-    totals = [0] * len(nutrients)
-    self.nutrition_labels = [None] * len(nutrients)
+    self.nutrients = (["Calories", 1], ["Proteins", 21], ["Carbohydrates", 32], ["Fats", 24], ["Fibers", 13], ["Sugars", 6])
+    self.options = config.items('NUTRITION')
+    self.totals = [0] * len(self.nutrients)
+    self.nutrition_labels = [None] * len(self.nutrients)
     for i in range(len(self.nutrition_labels)):
-      if config['NUTRITION'].get(options[i][0]) == 'yes':
+      if config['NUTRITION'].get(self.options[i][0]) == 'yes':
         for item in self.meal_plans['Present']['Monday']:
           for subitem in self.meal_plans['Present']['Monday'][item]:
-            totals[i] += int(subitem["nutrition"]["nutrients"][nutrients[i][1]]["amount"])
-        self.nutrition_labels[i] = QLabel(nutrients[i][0] + ": " + str(totals[i]))
+            self.totals[i] += int(subitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+        self.nutrition_labels[i] = QLabel(self.nutrients[i][0] + ": " + str(self.totals[i]))
         self.nutrition_labels[i].setAlignment(Qt.AlignCenter)
         nsummary_layout.addWidget(self.nutrition_labels[i])
 
@@ -244,7 +246,6 @@ class NotesPanel(QWidget):
     return stats_layout
 
   def create_notes(self):    
-    #meals = ["Breakfast", "Lunch", "Dinner", "Snacks"]
     meals = self.meal_plans['Present']['Monday']
     number_of_meals = len(meals)
 
@@ -342,8 +343,55 @@ class NotesPanel(QWidget):
       config.set('NUTRITION', 'ShowFibers', 'no')
       config.set('NUTRITION', 'ShowSugars', 'no')
       with open(config_path, 'w') as configfile:
-        config.write(configfile)      
+        config.write(configfile)   
 
+  def set_monthly(self):
+    self.daily_summary = False
+    self.calculate_monthly_totals()
+
+  def set_daily(self):
+    self.daily_summary = True
+    self.recalculate_daily_totals()   
+
+  def recalculate_daily_totals(self):
+    for i in range(len(self.totals)):
+      self.totals[i] = 0
+    for i in range(len(self.nutrition_labels)):
+      if config['NUTRITION'].get(self.options[i][0]) == 'yes':
+        if self.selected_week == 'Past':
+          for item in self.meal_plans[self.selected_week][self.selected_past_week][self.selected_day]:
+            for subitem in self.meal_plans[self.selected_week][self.selected_past_week][self.selected_day][item]:
+              self.totals[i] += int(subitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+        else:
+          for item in self.meal_plans[self.selected_week][self.selected_day]:
+            for subitem in self.meal_plans[self.selected_week][self.selected_day][item]:
+              self.totals[i] += int(subitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+        if self.nutrition_labels[i] != None: self.nutrition_labels[i].setText(self.nutrients[i][0] + ": " + str(self.totals[i])) 
+
+  def calculate_monthly_totals(self):
+    for i in range(len(self.totals)):
+      self.totals[i] = 0
+    for i in range(len(self.nutrition_labels)):
+      if config['NUTRITION'].get(self.options[i][0]) == 'yes':
+        for item in self.meal_plans['Past'][0]:
+          for subitem in self.meal_plans['Past'][0][item]:
+            for subsubitem in self.meal_plans['Past'][0][item][subitem]:
+              self.totals[i] += int(subsubitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+        for item in self.meal_plans['Past'][1]:
+          for subitem in self.meal_plans['Past'][1][item]:
+            for subsubitem in self.meal_plans['Past'][1][item][subitem]:
+              self.totals[i] += int(subsubitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+        for item in self.meal_plans['Past'][2]:
+          for subitem in self.meal_plans['Past'][2][item]:
+            for subsubitem in self.meal_plans['Past'][2][item][subitem]:
+              self.totals[i] += int(subsubitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+        for item in self.meal_plans['Present']:
+          for subitem in self.meal_plans['Present'][item]:
+            for subsubitem in self.meal_plans['Present'][item][subitem]:
+              self.totals[i] += int(subsubitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+        self.totals[i] /= 28
+        self.totals[i] = int(self.totals[i])
+        if self.nutrition_labels[i] != None: self.nutrition_labels[i].setText(self.nutrients[i][0] + ": " + str(self.totals[i]))  
 
   def open_meal_manager(self):
     global manager
@@ -364,10 +412,13 @@ class NotesPanel(QWidget):
   def change_week(self, week, past_week_index):
     self.selected_week = week
     self.selected_past_week = past_week_index
+    if self.daily_summary == True:
+      self.recalculate_daily_totals()
     self.repopulate_table()
 
   def change_day(self, day):
     self.selected_day = day
+    self.recalculate_daily_totals()
     self.repopulate_table()
 
   def repopulate_table(self):
@@ -401,7 +452,8 @@ class NotesPanel(QWidget):
         widget = QLabel(str(key['amount']) + "g " + key['name'])
         self.table.setCellWidget(k, j, widget)
         k += 1
-      self.table.setCellWidget(k, j, buttons[i])
+      if self.selected_week != 'Past':
+        self.table.setCellWidget(k, j, buttons[i])
       j += 1
       i += 1
       k = 0
