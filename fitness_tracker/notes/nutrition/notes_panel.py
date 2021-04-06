@@ -12,6 +12,11 @@ from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal
 from fitness_tracker.database_wrapper import DatabaseWrapper
 from .change_weight_dialog import ChangeWeightDialog
 from .spoonacular import FoodDatabase
+from configparser import ConfigParser
+
+config_path = os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir, "config", "settings.ini")
+config = ConfigParser()
+config.read(config_path)
 
 path = os.path.abspath(os.path.dirname(__file__))
 icons_path = os.path.join(path, "icons")
@@ -33,6 +38,7 @@ class NotesPanel(QWidget):
     self.selected_week = "Present"
     self.selected_day = "Monday"
     self.selected_past_week = 0
+    self.daily_summary = True
     global b
     b = FoodDBSearchPanel("this", "Monday", "Breakfast")
     b.show()
@@ -104,6 +110,7 @@ class NotesPanel(QWidget):
     self.change_weight_dialog.change_goal_weight_signal.connect(lambda weight: self.change_goal_weight(weight))
     self.change_weight_dialog.change_calorie_goal_signal.connect(lambda calorie_goal: self.change_calorie_goal(calorie_goal))
     self.create_panel()
+    self.write_default_settings()
     self.setStyleSheet("QLabel{color:white;}")
 
   @pyqtSlot(str)
@@ -166,10 +173,22 @@ class NotesPanel(QWidget):
     daily_monthlyavg_buttons.addWidget(nutrients_button)
 
     nsummary_layout.addLayout(daily_monthlyavg_buttons)
-    
-    temp_label = QLabel("Proteins: 30g \nCarbs: 300g \nCalories: 2000kcal")
-    temp_label.setAlignment(Qt.AlignCenter)
-    nsummary_layout.addWidget(temp_label) # Temp
+    nutrients = (["Calories", 1], ["Proteins", 21], ["Carbohydrates", 32], ["Fats", 24], ["Fibers", 13], ["Sugars", 6])
+    options = config.items('NUTRITION')
+    totals = [0] * len(nutrients)
+    self.nutrition_labels = [None] * len(nutrients)
+    for i in range(len(self.nutrition_labels)):
+      if config['NUTRITION'].get(options[i][0]) == 'yes':
+        for item in self.meal_plans['Present']['Monday']:
+          for subitem in self.meal_plans['Present']['Monday'][item]:
+            totals[i] += int(subitem["nutrition"]["nutrients"][nutrients[i][1]]["amount"])
+        self.nutrition_labels[i] = QLabel(nutrients[i][0] + ": " + str(totals[i]))
+        self.nutrition_labels[i].setAlignment(Qt.AlignCenter)
+        nsummary_layout.addWidget(self.nutrition_labels[i])
+
+    #temp_label = QLabel("Proteins: 30g \nCarbs: 300g \nCalories: 2000kcal")
+    #temp_label.setAlignment(Qt.AlignCenter)
+    #nsummary_layout.addWidget(temp_label) # Temp
 
     nsummary_layout_framed = QFrame()
     nsummary_layout_framed.setLayout(nsummary_layout)
@@ -228,7 +247,6 @@ class NotesPanel(QWidget):
     #meals = ["Breakfast", "Lunch", "Dinner", "Snacks"]
     meals = self.meal_plans['Present']['Monday']
     number_of_meals = len(meals)
-    print(meals)
 
     self.table = QTableWidget(16, number_of_meals)
     self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -314,6 +332,19 @@ class NotesPanel(QWidget):
     
     return framed_layout
 
+  def write_default_settings(self):
+    if config.has_section('NUTRITION') == False:
+      config.add_section('NUTRITION')
+      config.set('NUTRITION', 'ShowCalories', 'yes')
+      config.set('NUTRITION', 'ShowProteins', 'yes')
+      config.set('NUTRITION', 'ShowCarbs', 'yes')
+      config.set('NUTRITION', 'ShowFats', 'no')
+      config.set('NUTRITION', 'ShowFibers', 'no')
+      config.set('NUTRITION', 'ShowSugars', 'no')
+      with open(config_path, 'w') as configfile:
+        config.write(configfile)      
+
+
   def open_meal_manager(self):
     global manager
     if self.selected_week is not "Past":
@@ -333,8 +364,6 @@ class NotesPanel(QWidget):
   def change_week(self, week, past_week_index):
     self.selected_week = week
     self.selected_past_week = past_week_index
-    print (past_week_index)
-    print(week)
     self.repopulate_table()
 
   def change_day(self, day):
@@ -380,9 +409,6 @@ class NotesPanel(QWidget):
   def add_button_func(self, week, day, meal):
     global panel
     panel = FoodDBSearchPanel(week, day, meal)
-    print(panel.week)
-    print(panel.day)
-    print(panel.meal)
     panel.show()
 
   def calculate_calorie_intake(self, weight, height, age, gender, activity, weight_goal):
@@ -637,7 +663,6 @@ class FoodDBSearchPanel(QWidget):
     return layout
 
   def result_to_data(self, select_response):
-    print(select_response['name'])
     if self.week == "Present":
       self.db_wrapper.update_meal(self.meal, select_response, self.day, True, False)
     elif self.week == "Future":
