@@ -258,7 +258,9 @@ class NotesPanel(QWidget):
     self.table = QTableWidget(16, number_of_meals)
     self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
     self.table.verticalHeader().setVisible(False)
-    
+    for i in range(self.table.rowCount()):
+      self.table.setRowHeight(i, 50)
+
     meal_entries = [None] * number_of_meals
     plus_button = [None] * number_of_meals
     for i in range(number_of_meals):
@@ -456,13 +458,28 @@ class NotesPanel(QWidget):
       self.table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
       for key in meals[item]:
         widget = QLabel(str(key['amount']) + "g " + key['name'])
-        self.table.setCellWidget(k, j, widget)
+        remove_widget = QPushButton("x")
+        remove_widget.setFixedSize(24, 24)
+        remove_widget.clicked.connect(partial(self.remove_food, key, item))
+        helper_layout = QHBoxLayout()
+        helper_layout.addWidget(widget)
+        helper_layout.addWidget(remove_widget)
+        wrapper_widget = QWidget()
+        wrapper_widget.setLayout(helper_layout)
+        self.table.setCellWidget(k, j, wrapper_widget)
         k += 1
       if self.selected_week != 'Past':
         self.table.setCellWidget(k, j, buttons[i])
       j += 1
       i += 1
       k = 0
+
+  def remove_food(self, food, meal):
+    if self.selected_week == "Present":
+      self.db_wrapper.delete_food_from_meal(food['name'], meal, self.selected_day, True, False)
+    if self.selected_week == "Future":
+      self.db_wrapper.delete_food_from_meal(food, meal, self.selected_day, False, True)
+      
 
   def add_button_func(self, week, day, meal):
     global panel
@@ -525,6 +542,7 @@ class EditDailyIntake(QWidget):
   def __init__(self):
     super().__init__()
     self.db_wrapper = DatabaseWrapper()
+    self.table_name = "Nutrition"
     self.setStyleSheet(   
     """QWidget{
       background-color: #232120;
