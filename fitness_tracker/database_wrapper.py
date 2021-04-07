@@ -440,6 +440,21 @@ class DatabaseWrapper(metaclass=Singleton):
     
     self.update_table_column("Nutrition", "meal_plans", new_meal_plans)
 
+  def delete_food_from_meal(self, food_name, meal_name, day, this_week=False, next_week=False):
+    assert this_week != False or next_week != False
+    assert not (this_week == True and next_week == True)
+    time = "Present" if this_week == True else "Future"
+    
+    fetched_meal_plans = json.loads(self.fetch_local_column("Nutrition", "meal_plans"))
+
+    for i, food in enumerate(fetched_meal_plans[time][day][meal_name]):
+      if food["name"] == food_name:
+        del fetched_meal_plans[time][day][meal_name][i]
+    
+    new_meal_plans = json.dumps(fetched_meal_plans)
+
+    self.update_table_column("Nutrition", "meal_plans", new_meal_plans)
+
   def modify_meal(self, action, meal_to_modify, day=None, modify_to=None, this_week=False, next_week=False):
     assert action in ("Add", "Delete", "Rename")
     assert this_week != False or next_week != False
