@@ -274,8 +274,16 @@ class NotesPanel(QWidget):
       self.table.setHorizontalHeaderItem(i, QTableWidgetItem(item))
       self.table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
       for key in meals[item]:
-        widget = QLabel(key['name'])
-        self.table.setCellWidget(k, j, widget)
+        widget = QLabel(str(key['amount']) + "g " + key['name'])
+        remove_widget = QPushButton("x")
+        remove_widget.setFixedSize(24, 24)
+        remove_widget.clicked.connect(partial(self.remove_food, key, item))
+        helper_layout = QHBoxLayout()
+        helper_layout.addWidget(widget)
+        helper_layout.addWidget(remove_widget)
+        wrapper_widget = QWidget()
+        wrapper_widget.setLayout(helper_layout)
+        self.table.setCellWidget(k, j, wrapper_widget)
         k += 1
       self.table.setCellWidget(k, j, buttons[i])
       j += 1
