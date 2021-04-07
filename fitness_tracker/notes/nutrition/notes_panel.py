@@ -3,7 +3,7 @@ import json
 from functools import partial
 from datetime import datetime
 from typing import ContextManager
-from PyQt5.QtWidgets import (QComboBox, QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QPushButton, QFrame, QHBoxLayout, QVBoxLayout,
                              QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, 
                              QLineEdit, QScrollArea)
@@ -142,6 +142,11 @@ class NotesPanel(QWidget):
     self.description = QLabel("Improve your diet and eating habits by tracking what you eat and searching through our database for healthy \nfood.")
     return self.description
 
+  def create_nutrients_panel(self):
+    global nutrients
+    self.nutrients = NutrientsPanel()
+    self.nutrients.show()
+
   def create_nutrition_summary(self):
     nsummary_layout = QVBoxLayout()
     daily_monthlyavg_buttons = QHBoxLayout()
@@ -169,13 +174,14 @@ class NotesPanel(QWidget):
     monthly_button.setStyleSheet(dm_style)
     monthly_button.clicked.connect(lambda:self.set_monthly())
     nutrients_button = QPushButton("Nutrients")
+    nutrients_button.clicked.connect(lambda:self.create_nutrients_panel())
     nutrients_button.setFixedWidth(145)
     daily_monthlyavg_buttons.addWidget(daily_button)
     daily_monthlyavg_buttons.addWidget(monthly_button)
     daily_monthlyavg_buttons.addWidget(nutrients_button)
 
+    self.nutrients = (["Calories", 1, 'kcal'], ["Proteins", 21, 'g'], ["Carbohydrates", 32, 'g'], ["Fats", 24, 'g'], ["Fibers", 13, 'g'], ["Sugars", 6, 'g'])
     nsummary_layout.addLayout(daily_monthlyavg_buttons)
-    self.nutrients = (["Calories", 1], ["Proteins", 21], ["Carbohydrates", 32], ["Fats", 24], ["Fibers", 13], ["Sugars", 6])
     self.options = config.items('NUTRITION')
     self.totals = [0] * len(self.nutrients)
     self.nutrition_labels = [None] * len(self.nutrients)
@@ -184,7 +190,7 @@ class NotesPanel(QWidget):
         for item in self.meal_plans['Present']['Monday']:
           for subitem in self.meal_plans['Present']['Monday'][item]:
             self.totals[i] += int(subitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
-        self.nutrition_labels[i] = QLabel(self.nutrients[i][0] + ": " + str(self.totals[i]))
+        self.nutrition_labels[i] = QLabel(self.nutrients[i][0] + ": " + str(self.totals[i]) + self.nutrients[i][2])
         self.nutrition_labels[i].setAlignment(Qt.AlignCenter)
         nsummary_layout.addWidget(self.nutrition_labels[i])
 
@@ -338,7 +344,7 @@ class NotesPanel(QWidget):
       config.add_section('NUTRITION')
       config.set('NUTRITION', 'ShowCalories', 'yes')
       config.set('NUTRITION', 'ShowProteins', 'yes')
-      config.set('NUTRITION', 'ShowCarbs', 'yes')
+      config.set('NUTRITION', 'ShowCarbohydrates', 'yes')
       config.set('NUTRITION', 'ShowFats', 'no')
       config.set('NUTRITION', 'ShowFibers', 'no')
       config.set('NUTRITION', 'ShowSugars', 'no')
@@ -366,7 +372,7 @@ class NotesPanel(QWidget):
           for item in self.meal_plans[self.selected_week][self.selected_day]:
             for subitem in self.meal_plans[self.selected_week][self.selected_day][item]:
               self.totals[i] += int(subitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
-        if self.nutrition_labels[i] != None: self.nutrition_labels[i].setText(self.nutrients[i][0] + ": " + str(self.totals[i])) 
+        if self.nutrition_labels[i] != None: self.nutrition_labels[i].setText(self.nutrients[i][0] + ": " + str(self.totals[i]) + self.nutrients[i][2]) 
 
   def calculate_monthly_totals(self):
     for i in range(len(self.totals)):
@@ -391,7 +397,7 @@ class NotesPanel(QWidget):
               self.totals[i] += int(subsubitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
         self.totals[i] /= 28
         self.totals[i] = int(self.totals[i])
-        if self.nutrition_labels[i] != None: self.nutrition_labels[i].setText(self.nutrients[i][0] + ": " + str(self.totals[i]))  
+        if self.nutrition_labels[i] != None: self.nutrition_labels[i].setText(self.nutrients[i][0] + ": " + str(self.totals[i]) + self.nutrients[i][2])  
 
   def open_meal_manager(self):
     global manager
@@ -911,3 +917,82 @@ class RenameMeal(QWidget):
       if self.week == "Future":
         self.db_wrapper.modify_meal("Rename", self.meal, self.day, self.meal_rename_line_edit.text(), False, True)
       self.close()
+
+class NutrientsPanel(QWidget):
+  def __init__(self):
+    super().__init__()
+    self.setStyleSheet(   
+    """QWidget{
+      background-color: #232120;
+      color:#c7c7c7;
+      font-weight: bold;
+      font-family: Montserrat;
+      font-size: 16px;
+      }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }
+    QLineEdit{
+      padding: 6px;
+      background-color: rgb(33,33,33);
+      border: 1px solid;
+      border-color: #cdcdcd;
+    }""")
+    layout = QVBoxLayout()
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
+    self.setWindowModality(Qt.ApplicationModal)
+
+    layout.addLayout(self.create_main_layout())
+    self.setLayout(layout)
+
+  def create_main_layout(self):
+    layout = QVBoxLayout()
+
+    nutrients = (["Calories", 1], ["Proteins", 21], ["Carbohydrates", 32], ["Fats", 24], ["Fibers", 13], ["Sugars", 6])
+
+    labels = [None] * len(nutrients)
+    checkbox = [None] * len(nutrients)
+    helper_layouts = [None] * len(nutrients)
+    for i in range(len(labels)):
+      labels[i] = QLabel("Show " + nutrients[i][0] + ": ")
+      checkbox[i] = QCheckBox()
+      checkbox[i].clicked.connect(partial(self.show_nutrients, checkbox[i], nutrients[i][0]))
+      helper_layouts[i] = QHBoxLayout()     
+      helper_layouts[i].addWidget(labels[i])
+      helper_layouts[i].addWidget(checkbox[i])
+      if config['NUTRITION'].get('Show' + nutrients[i][0]) == 'yes':
+        checkbox[i].setChecked(True)
+      layout.addLayout(helper_layouts[i])
+
+    layout.addStretch(0)
+    close_button = QPushButton("Close")
+    close_button.clicked.connect(lambda:self.close())
+    layout.addWidget(close_button)
+
+    return layout
+  
+  def show_nutrients(self, btn, nutrient):
+    if btn.isChecked() == True:
+      config.set('NUTRITION', 'Show' + nutrient, 'yes')
+    if btn.isChecked() == False:
+      config.set('NUTRITION', 'Show' + nutrient, 'no')
+    with open(config_path, 'w') as configfile:
+      config.write(configfile)

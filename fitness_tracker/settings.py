@@ -39,7 +39,8 @@ class SettingsWindow(QWidget):
             background-color: #323232;
             border-color: #6C6C6C;
         }""")
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint) #windowstaysontop is temporary, custom function is required for focus on the window and disabling mw
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
+        self.setWindowModality(Qt.ApplicationModal)
         self.setFixedSize(300, 500)
         layout = QVBoxLayout()
 
