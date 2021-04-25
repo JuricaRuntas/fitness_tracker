@@ -3,7 +3,7 @@ import json
 from functools import partial
 from datetime import datetime
 from typing import ContextManager
-from PyQt5.QtWidgets import (QCheckBox, QComboBox, QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QMainWindow, QWidget, QGridLayout, QFrame, QLabel, QProgressBar,
                              QPushButton, QFrame, QHBoxLayout, QVBoxLayout,
                              QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, 
                              QLineEdit, QScrollArea)
@@ -40,7 +40,7 @@ class NotesPanel(QWidget):
     self.selected_past_week = 0
     self.daily_summary = True
     global b
-    b = FoodDBSearchPanel("this", "Monday", "Breakfast")
+    b = FoodDBSearchPanel(self, "this", "Monday", "Breakfast")
     b.show()
     if self.db_wrapper.local_table_is_empty(self.table_name): self.db_wrapper.insert_default_values(self.table_name)
     self.setStyleSheet(
@@ -88,6 +88,35 @@ class NotesPanel(QWidget):
     }
     QProgressBar:chunk{
       background-color: qlineargradient(x1: 0, y1: 0.5, x2: 1, y2: 0.5, stop: 0 #434343, stop: 1 #440d0f);    
+    }
+    QComboBox{
+      border-radius: 4px;
+      font-size: 18px;
+      font-weight: bold;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+      min-height: 28px;
+      background-color: #440D0F;
+    }
+    QComboBox:down-arrow{
+      width: 0px;
+      height: 0px;
+      background: #d3d3d3; 
+      opacity:0
+    }
+    QComboBox:drop-down{
+      background-color: #440D0F;
+      border: 0px;
+      opacity:0;
+      border-radius: 0px;
+    }
+    QComboBox:hover:!pressed{
+      background-color: #5D1A1D;
+    }
+    QComboBox:pressed{
+      background-color: #551812;
     }
       """)
     self.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "meal_plans"))
@@ -216,11 +245,13 @@ class NotesPanel(QWidget):
     self.calorie_goal_label = QLabel(" ".join(["Daily Goal: ", self.calorie_goal, "kcal"]))
     self.calorie_goal_label.setFont(QFont("Ariel", 15))
     self.calorie_goal_label.setAlignment(Qt.AlignCenter)
+
+    #self.current_goal_value = self.meal_plans[self.selected_week][self.selected_past_week]
      
     self.progress_bar = QProgressBar()
     self.progress_bar.setStyleSheet("background-color:grey;")
     self.progress_bar.setMaximum(int(self.calorie_goal))
-    self.progress_bar.setValue(500)
+    self.progress_bar.setValue(3)
     calories_left = self.progress_bar.maximum() - self.progress_bar.value()
     self.progress_bar.setFormat("")
     self.progress_bar.setAlignment(Qt.AlignCenter)
@@ -274,7 +305,7 @@ class NotesPanel(QWidget):
       self.table.setHorizontalHeaderItem(i, QTableWidgetItem(item))
       self.table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
       for key in meals[item]:
-        widget = QLabel(str(key['amount']) + "g " + key['name'])
+        widget = QLabel(str(int(key['amount'])) + "g " + key['name'])
         remove_widget = QPushButton("x")
         remove_widget.setFixedSize(24, 24)
         remove_widget.clicked.connect(partial(self.remove_food, key, item))
@@ -465,7 +496,7 @@ class NotesPanel(QWidget):
       self.table.setHorizontalHeaderItem(i, QTableWidgetItem(item))
       self.table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
       for key in meals[item]:
-        widget = QLabel(str(key['amount']) + "g " + key['name'])
+        widget = QLabel(str(int(key['amount'])) + "g " + key['name'])
         remove_widget = QPushButton("x")
         remove_widget.setFixedSize(24, 24)
         remove_widget.clicked.connect(partial(self.remove_food, key, item))
@@ -487,11 +518,13 @@ class NotesPanel(QWidget):
       self.db_wrapper.delete_food_from_meal(food['name'], meal, self.selected_day, True, False)
     if self.selected_week == "Future":
       self.db_wrapper.delete_food_from_meal(food, meal, self.selected_day, False, True)
+    self.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "meal_plans"))
+    self.repopulate_table()
       
 
   def add_button_func(self, week, day, meal):
     global panel
-    panel = FoodDBSearchPanel(week, day, meal)
+    panel = FoodDBSearchPanel(self, week, day, meal)
     panel.show()
 
   def calculate_calorie_intake(self, weight, height, age, gender, activity, weight_goal):
@@ -625,9 +658,10 @@ class EditDailyIntake(QWidget):
       self.close()
 
 class FoodDBSearchPanel(QWidget):
-  def __init__(self, week, day, meal):
+  def __init__(self, parentobj, week, day, meal):
     super().__init__()
     self.db_wrapper = DatabaseWrapper()
+    self.parentobj = parentobj
     self.week = week
     self.day = day
     self.meal = meal
@@ -752,6 +786,8 @@ class FoodDBSearchPanel(QWidget):
     elif self.week == "Future":
       self.db_wrapper.update_meal(self.meal, select_response, self.day, False, True)
     #test stage
+    self.parentobj.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.parentobj.table_name, "meal_plans"))
+    self.parentobj.repopulate_table()
     self.close()
     return
 

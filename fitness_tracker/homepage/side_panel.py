@@ -58,8 +58,8 @@ class SidePanel(QWidget):
 
     general_layout = QVBoxLayout()
     general_layout.setContentsMargins(0, 0, 0, 0)
-    home_button = QPushButton("Home", self)
-    home_button.clicked.connect(lambda: self.emit_layout_name.emit(home_button.text()))
+    #home_button = QPushButton("Home", self)
+    #home_button.clicked.connect(lambda: self.emit_layout_name.emit(home_button.text()))
     user_button = QPushButton("Profile", self)
     user_button.clicked.connect(lambda: self.emit_layout_name.emit(user_button.text()))
     logout_button = QPushButton("Logout", self)
@@ -73,6 +73,9 @@ class SidePanel(QWidget):
     workout_planner_button = QPushButton("Workout Planner")
     workout_planner_button.clicked.connect(lambda: self.emit_layout_name.emit(workout_planner_button.text()))
     exercises_and_workouts_button = QPushButton("Exercises and Workouts")
+    exercises_and_workouts_button.setStyleSheet("""font: 13px;
+                                                font-weight:500;
+                                                font-family:Montserrat;""")
     exercises_and_workouts_button.clicked.connect(lambda: self.emit_layout_name.emit(exercises_and_workouts_button.text()))
 
     nutrition_button = QPushButton("Nutrition", self)
@@ -91,11 +94,10 @@ class SidePanel(QWidget):
     strength_es_button = QPushButton("Strength Estimator", self)
     strength_es_button.clicked.connect(lambda: self.emit_layout_name.emit(strength_es_button.text()))
     
-    layouts = {general_layout: [line_divider_general, home_button, user_button,
-                                line_divider_notes, lifts_button, workout_planner_button,
-                                exercises_and_workouts_button, nutrition_button, weight_notes_button, food_database_button,
+    layouts = {general_layout: [line_divider_notes, lifts_button, workout_planner_button,
+                                exercises_and_workouts_button, line_divider_stats, nutrition_button, weight_notes_button, food_database_button,
                                 line_divider_calc, max_button, fat_button, strength_es_button,
-                                line_divider_logout, logout_button],
+                                line_divider_logout, user_button, logout_button],
                notes_layout: [],
                calculators_layout: [],
                }

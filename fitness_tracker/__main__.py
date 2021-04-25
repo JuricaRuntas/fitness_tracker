@@ -37,7 +37,7 @@ class FitnessTracker(QMainWindow):
     self.create_window()
     if self.db_wrapper.local_table_exists("Users"):
       if not self.db_wrapper.one_logged_in_user(): self.cw = Login()
-      else: self.cw = Homepage()
+      else: self.cw = BigLiftsNotes()
     else:
       self.cw = Login()
     self.cw.display_layout_signal.connect(lambda layout: self.display_layout(layout))
