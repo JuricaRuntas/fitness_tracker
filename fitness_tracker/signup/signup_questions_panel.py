@@ -2,10 +2,12 @@ import json
 import os
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit,
                              QLabel, QPushButton, QGroupBox, QRadioButton, QHBoxLayout, QComboBox)
-from PyQt5.QtGui import QFont, QCursor
+from PyQt5.QtGui import QFont, QCursor, QPixmap
 from PyQt5.QtCore import Qt, pyqtSignal
 from fitness_tracker.notes.nutrition.calorie_goal_calculator import CalorieGoalCalculator
 from fitness_tracker.database_wrapper import DatabaseWrapper
+
+icon_path = os.path.join(os.path.dirname(__file__), os.path.pardir, "icons", "ftarizonacalligraphy.png")
 
 class SignupQuestions(QWidget):
   display_layout_signal = pyqtSignal(str)
@@ -76,47 +78,45 @@ class SignupQuestions(QWidget):
     title_frame = QFrame()
     title_layout = QVBoxLayout()
 
-    signup_label = QLabel("ft", self)
-    signup_label.setStyleSheet("font-size: 48px;")
-    signup_label.setFont(QFont("Cantonese"))
-    signup_label.setFixedHeight(70)
+    signup_label = QLabel()
+    pixmap = QPixmap(icon_path)
+    signup_label.setPixmap(pixmap)
+    signup_label.setAlignment(Qt.AlignCenter)
 
     title_layout.addWidget(signup_label)
+    title_layout.setAlignment(Qt.AlignCenter)
     title_frame.setLayout(title_layout)
 
-    signup_frame = QFrame()
-    signup_frame.setFrameStyle(QFrame.StyledPanel)
-
     form_layout = self.create_form_layout()
-    signup_frame.setLayout(form_layout)
 
     wrapper_layout = QVBoxLayout()
+    wrapper_layout.setAlignment(Qt.AlignCenter)
     wrapper_layout.addWidget(title_frame)
-    wrapper_layout.addWidget(signup_frame)
+    wrapper_layout.addLayout(form_layout)
     return wrapper_layout
 
   def create_form_layout(self):
     self.form_layout = QFormLayout()
+    self.form_layout.setFormAlignment(Qt.AlignCenter)
+    self.form_layout.setAlignment(Qt.AlignCenter)
 
-    name_label = QLabel("Name", self)
-    name_label.setAlignment(Qt.AlignCenter)
-    name_label.setFixedSize(115, 30)
     self.name_entry = QLineEdit()
-    self.name_entry.setFixedSize(100, 30)
+    self.name_entry.setPlaceholderText("Name")
+    self.name_entry.setFixedSize(300, 30)
     
-    age_label = QLabel("Age", self)
     self.age_line_edit = QLineEdit()
     self.age_line_edit.setPlaceholderText("Age")
-    self.age_line_edit.setFixedSize(100, 30)
+    self.age_line_edit.setFixedSize(300, 30)
 
     gender = QGroupBox()
-    gender.setFixedSize(110, 30)
+    gender.setAlignment(Qt.AlignCenter)
+    gender.setFixedSize(185, 40)
     gender_layout = QHBoxLayout()
     gender_layout.setAlignment(Qt.AlignCenter)
 
     gender_label = QLabel("Gender", self)
     gender_label.setAlignment(Qt.AlignCenter)
-    gender_label.setFixedSize(160, 40)
+    gender_label.setFixedSize(115, 30)
     self.male_button = QRadioButton("Male")
     self.male_button.setChecked(True)
     self.female_button = QRadioButton("Female")
@@ -125,7 +125,8 @@ class SignupQuestions(QWidget):
     gender.setLayout(gender_layout)
     
     units = QGroupBox()
-    units.setFixedSize(160, 40)
+    units.setAlignment(Qt.AlignCenter)
+    units.setFixedSize(185, 40)
     units_layout = QHBoxLayout()
     units_layout.setAlignment(Qt.AlignCenter)
 
@@ -141,35 +142,32 @@ class SignupQuestions(QWidget):
     units_layout.addWidget(self.imperial_button)
     units.setLayout(units_layout)
     
-    weight_label = QLabel("Weight", self)
-    weight_label.setAlignment(Qt.AlignCenter)
-    weight_label.setFixedSize(115, 30)
     self.weight_entry = QLineEdit()
     self.weight_entry.setPlaceholderText("Weight")
-    self.weight_entry.setFixedSize(100, 30)
+    self.weight_entry.setFixedSize(300, 30)
     
     self.height_layout = QHBoxLayout()
-    height_label = QLabel("Height", self)
-    height_label.setAlignment(Qt.AlignCenter)
-    height_label.setFixedSize(115, 30)
+    self.height_layout.setAlignment(Qt.AlignCenter)
     self.height_entry = QLineEdit()
-    self.height_entry.setFixedSize(100, 30)
+    self.height_entry.setFixedSize(300, 30)
+    self.height_entry.setPlaceholderText("Height")
     self.height_layout.addWidget(self.height_entry)
 
-    self.form_layout.setAlignment(Qt.AlignCenter)
-    self.form_layout.addRow(name_label, self.name_entry)
-    self.form_layout.addRow(age_label, self.age_line_edit)
+    self.form_layout.addRow(self.name_entry)
+    self.form_layout.addRow(self.age_line_edit)
     self.form_layout.addRow(gender_label, gender)
     self.form_layout.addRow(units_label, units)
-    self.form_layout.addRow(weight_label, self.weight_entry)
-    self.form_layout.addRow(height_label, self.height_layout)
+    self.form_layout.addRow(self.weight_entry)
+    self.form_layout.addRow(self.height_layout)
 
     goal_label = QLabel("Goal", self)
     goal_label.setAlignment(Qt.AlignCenter)
     goal_label.setFixedSize(115, 30)
-    goal_layout = QHBoxLayout()
+    goal_layout = QVBoxLayout()
+    goal_layout.setAlignment(Qt.AlignCenter)
     goal = QGroupBox()
-    goal.setFixedSize(250, 40)
+    goal.setAlignment(Qt.AlignCenter)
+    goal.setFixedSize(185, 120)
     self.weight_loss_button = QRadioButton("Weight loss")
     self.weight_loss_button.setChecked(True)
     self.weight_loss_button.toggled.connect(lambda: self.hide_or_show_params_layout())
@@ -186,12 +184,14 @@ class SignupQuestions(QWidget):
 
     self.form_layout.addRow(goal_label, goal)
     
-    self.params_label = QLabel("Goal parameters")
+    self.params_label = QLabel("Goal Parameters:")
     self.params_layout = self.calorie_params_layout()
-    self.form_layout.addRow(self.params_label, self.params_layout)
+    self.form_layout.addRow(self.params_label)
+    self.form_layout.addRow(self.params_layout)
 
     self.signup_button = QPushButton("Signup", self)
     self.signup_button.clicked.connect(lambda: self.signup())
+    self.signup_button.setFixedSize(230, 30)
     self.signup_button.setCursor(QCursor(Qt.PointingHandCursor))
     
     self.form_layout.addRow(self.signup_button)
@@ -238,26 +238,33 @@ class SignupQuestions(QWidget):
           self.delete_layout(item.layout())
 
   def calorie_params_layout(self):
-    params_layout = QHBoxLayout()
+    params_layout = QVBoxLayout()
+    params_layout.setAlignment(Qt.AlignCenter)
     
     goal_weight_layout = QVBoxLayout()
-    goal_weight_label = QLabel("Goal weight")
+    #goal_weight_label = QLabel("Goal weight")
     self.goal_weight_line_edit = QLineEdit()
+    self.goal_weight_line_edit.setPlaceholderText("Goal Weight")
+    self.goal_weight_line_edit.setFixedSize(300, 30)
 
-    goal_weight_layout.addWidget(goal_weight_label)
+    #goal_weight_layout.addWidget(goal_weight_label)
     goal_weight_layout.addWidget(self.goal_weight_line_edit)
     
-    activity_level_layout = QVBoxLayout()
-    activity_level_label = QLabel("Activity level")
+    activity_level_layout = QHBoxLayout()
+    activity_level_label = QLabel("Activity Level:")
+    activity_level_label.setFixedSize(120, 30)
     self.activity_level = QComboBox()
     self.activity_level.addItems(["Sedentary", "Lightly active", "Moderately active", "Very active", "Extra active"])
+    self.activity_level.setFixedSize(180, 30)
 
     activity_level_layout.addWidget(activity_level_label)
     activity_level_layout.addWidget(self.activity_level)
     
-    weight_per_week_layout = QVBoxLayout()
-    weight_per_week_label = QLabel("Weight to lose/gain per week (kg)")
+    weight_per_week_layout = QHBoxLayout()
+    weight_per_week_label = QLabel("Weight Change Per Week (kg):")
+    weight_per_week_label.setFixedSize(160, 30)
     self.weight_per_week = QComboBox()
+    self.weight_per_week.setFixedSize(140, 30)
     self.weight_per_week.addItems(["0.25", "0.5", "1"])
     
     weight_per_week_layout.addWidget(weight_per_week_label)

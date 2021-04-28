@@ -1,8 +1,11 @@
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit,
                              QLabel, QPushButton, QSpacerItem, QSizePolicy)
-from PyQt5.QtGui import QFont, QCursor
+from PyQt5.QtGui import QFont, QCursor, QPixmap
 from PyQt5.QtCore import Qt, pyqtSignal
 from fitness_tracker.database_wrapper import DatabaseWrapper
+import os
+
+icon_path = os.path.join(os.path.dirname(__file__), os.path.pardir, "icons", "ftarizonacalligraphy.png")
 
 class MainPanel(QWidget):
   emit_layout_name = pyqtSignal(str)
@@ -46,7 +49,10 @@ class MainPanel(QWidget):
     title_layout = QVBoxLayout()
 
     #TEMP USED AS LOGO
-    login_label = QLabel("ft", self)
+    login_label = QLabel()
+    pixmap = QPixmap(icon_path)
+    login_label.setPixmap(pixmap)
+    login_label.setAlignment(Qt.AlignCenter)
 
     login_label.setAlignment(Qt.AlignCenter)
     login_label.setStyleSheet("font-size: 48px;")

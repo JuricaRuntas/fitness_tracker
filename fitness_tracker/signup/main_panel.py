@@ -2,9 +2,11 @@ import string
 import re
 import os
 from PyQt5.QtWidgets import QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit, QLabel, QPushButton
-from PyQt5.QtGui import QFont, QCursor, QFontDatabase
+from PyQt5.QtGui import QFont, QCursor, QFontDatabase, QImage, QPixmap
 from PyQt5.QtCore import Qt, pyqtSignal
 from fitness_tracker.database_wrapper import DatabaseWrapper
+
+icon_path = os.path.join(os.path.dirname(__file__), os.path.pardir, "icons", "ftarizonacalligraphy.png")
 
 class MainPanel(QWidget):
   emit_layout_name = pyqtSignal(str)
@@ -47,10 +49,13 @@ class MainPanel(QWidget):
     title_frame = QFrame()
     title_layout = QVBoxLayout()
     title_layout.setAlignment(Qt.AlignCenter)
-    signup_label = QLabel("ft", self)
-    signup_label.setStyleSheet("font-size: 48px;")
-    signup_label.setFont(QFont("Cantonese"))
-    signup_label.setFixedHeight(70)
+    signup_label = QLabel()
+    pixmap = QPixmap(icon_path)
+    signup_label.setPixmap(pixmap)
+    signup_label.setAlignment(Qt.AlignCenter)
+    #signup_label.setStyleSheet("font-size: 48px;")
+    #signup_label.setFont(QFont("Cantonese"))
+    #signup_label.setFixedHeight(70)
 
     title_layout.addWidget(signup_label)
     title_frame.setLayout(title_layout)
