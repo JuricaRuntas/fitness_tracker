@@ -51,6 +51,37 @@ class MainPanel(QWidget):
       border-color: rgb(88, 88, 88);
       font-size: 14px;
     }
+    QComboBox{
+      border-radius: 4px;
+      font-size: 18px;
+      font-weight: bold;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+      min-height: 28px;
+      background-color: #440D0F;
+    }
+    QComboBox:down-arrow{
+      width: 0px;
+      height: 0px;
+      background: #d3d3d3; 
+      opacity:0
+    }
+    QComboBox:drop-down{
+      background-color: #440D0F;
+      border: 0px;
+      opacity:0;
+      border-radius: 0px;
+      width: 0px;
+      height: 0px;
+    }
+    QComboBox:hover:!pressed{
+      background-color: #5D1A1D;
+    }
+    QComboBox:pressed{
+      background-color: #551812;
+    }
     QHeaderView:section{
       background-color: rgb(54,54,54);  
       border: 1px solid;
@@ -183,7 +214,7 @@ class MainPanel(QWidget):
     self.table_age_combobox.setFixedWidth(80)
     self.table_exercise_combobox = QComboBox()
     self.table_exercise_combobox.addItems(["Bench Press", "Deadlift", "Squat"])
-    self.table_exercise_combobox.setFixedWidth(120)
+    self.table_exercise_combobox.setFixedWidth(180)
     self.table_exercise_combobox.activated[str].connect(self.update_standards_table)
     standards_info_layout.addWidget(self.table_age_combobox)
     standards_info_layout.addWidget(self.table_exercise_combobox)

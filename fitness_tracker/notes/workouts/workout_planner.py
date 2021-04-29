@@ -282,6 +282,8 @@ class SelectWorkout(QWidget):
       border-color: #6C6C6C;
     }""")
     self.db_wrapper = DatabaseWrapper()
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
+    self.setWindowModality(Qt.ApplicationModal)
     self.table_name = "Workouts"
     self.current_date = datetime.today().strftime("%d/%m/%Y")
     self.fetched_my_workouts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "my_workouts"))
