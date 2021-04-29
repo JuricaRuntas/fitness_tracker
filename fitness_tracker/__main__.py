@@ -4,7 +4,7 @@ import importlib
 import sqlite3
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, QVBoxLayout, QWidget, QSpacerItem, QSizeGrip, QSizePolicy
 from PyQt5.QtCore import Qt, QObject, pyqtSlot
-from PyQt5.QtGui import QColor, QFontDatabase
+from PyQt5.QtGui import QColor, QFontDatabase, QIcon
 from fitness_tracker.homepage.homepage import Homepage
 from fitness_tracker.user_profile.profile import Profile
 from fitness_tracker.calculators.one_rep_max.one_rep_max import OneRepMaxCalculator
@@ -22,6 +22,7 @@ from fitness_tracker.titlebar import TitleBar
 from fitness_tracker.database_wrapper import DatabaseWrapper
 from configparser import ConfigParser
 
+icon_path = os.path.join(os.path.dirname(__file__), "icon.png")
 config_path = os.path.join(os.path.dirname(__file__), "config", "settings.ini")
 config = ConfigParser()
 config.read(config_path)
@@ -29,6 +30,7 @@ config.read(config_path)
 class FitnessTracker(QMainWindow):
   def __init__(self):
     super().__init__()
+    self.setWindowIcon(QIcon(icon_path))
     QFontDatabase.addApplicationFont(os.path.join(os.path.dirname(__file__), "font", "Montserrat-Regular.ttf"))
     QFontDatabase.addApplicationFont(os.path.join(os.path.dirname(__file__), "font", "Ubuntu-Regular.ttf"))
     
