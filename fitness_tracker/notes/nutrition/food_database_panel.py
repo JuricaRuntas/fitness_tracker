@@ -11,7 +11,70 @@ class FoodDatabasePanel(QWidget):
   def __init__(self, parent):
     super().__init__(parent)
     self.create_panel()
-    self.setStyleSheet("QLabel{color:white;}")
+    self.setStyleSheet("""
+    QWidget{
+      color:#c7c7c7;
+      font-weight: bold;
+    }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }
+    QComboBox{
+      border-radius: 4px;
+      font-size: 18px;
+      font-weight: bold;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+      min-height: 28px;
+      background-color: #440D0F;
+    }
+    QComboBox:down-arrow{
+      width: 0px;
+      height: 0px;
+      background: #d3d3d3; 
+      opacity:0
+    }
+    QComboBox:drop-down{
+      background-color: #440D0F;
+      border: 0px;
+      opacity:0;
+      border-radius: 0px;
+      width: 0px;
+      height: 0px;
+    }
+    QComboBox:hover:!pressed{
+      background-color: #5D1A1D;
+    }
+    QComboBox:pressed{
+      background-color: #551812;
+    }
+    QLineEdit{
+      padding: 6px;
+      background-color: rgb(33,33,33);
+      border: 1px solid;
+      border-color: #cdcdcd;
+    }
+    """) 
 
   def create_panel(self):
     grid = QGridLayout()
@@ -22,18 +85,18 @@ class FoodDatabasePanel(QWidget):
     find_food_label.setAlignment(Qt.AlignCenter)
     
     description_label = QLabel(
-    """<html><head/><body><p align="center">Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-       </p><p align="center">Nulla congue consequat ante, vitae viverra quam pharetra non.
-       </p><p align="center">Hac habitasse platea dictumst. Aliquam eu mi imperdiet.</p></body></html>
+    """<html><head/><body><p align="center">Use this search engine to find nutritional facts of almost every ingredient in the world.</p></body></html>
     """)
+    description_label.setWordWrap(True)
+    description_label.setFont(QFont("Cantonese", 18))
+    description_label.setStyleSheet("""font-weight: normal;""")
     
     description_layout.addWidget(find_food_label)
     description_layout.addWidget(description_label)
 
     search_layout = QHBoxLayout()
     self.search_bar = QLineEdit()
-    self.search_bar.setStyleSheet("background-color:white;")
-    self.search_bar.setPlaceholderText("Search")
+    self.search_bar.setPlaceholderText("Enter Ingredient")
     spacer = QSpacerItem(40, 20, QSizePolicy.Expanding)
     spacer1 = QSpacerItem(40, 20, QSizePolicy.Expanding)
 
@@ -43,7 +106,7 @@ class FoodDatabasePanel(QWidget):
     
     search_button_layout = QHBoxLayout()
     search_button = QPushButton("Search")
-    search_button.setStyleSheet("color:white;background-color: #440D0F;")
+    search_button.setFixedWidth(240)
     search_button.setCursor(QCursor(Qt.PointingHandCursor))
     search_button.clicked.connect(self.emit_search_signal)
 

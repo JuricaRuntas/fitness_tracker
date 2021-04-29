@@ -7,6 +7,77 @@ class Exercise(QWidget):
     super().__init__(parent)
     self.exercise_info = exercise_info
     self.grid = QGridLayout()
+    self.setStyleSheet("""
+    QWidget{
+      color:#c7c7c7;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    QPushButton{
+      background-color: rgba(0, 0, 0, 0);
+      border: 1px solid;
+      font-size: 18px;
+      font-weight: bold;
+      border-color: #808080;
+      min-height: 28px;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+    }
+    QPushButton:hover:!pressed{
+      border: 2px solid;
+      border-color: #747474;
+    }
+    QPushButton:pressed{
+      border: 2px solid;
+      background-color: #323232;
+      border-color: #6C6C6C;
+    }
+    QComboBox{
+      border-radius: 4px;
+      font-size: 18px;
+      font-weight: bold;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+      min-height: 28px;
+      background-color: #440D0F;
+    }
+    QComboBox:down-arrow{
+      width: 0px;
+      height: 0px;
+      background: #d3d3d3; 
+      opacity:0
+    }
+    QComboBox:drop-down{
+      background-color: #440D0F;
+      border: 0px;
+      opacity:0;
+      border-radius: 0px;
+      width: 0px;
+      height: 0px;
+    }
+    QComboBox:hover:!pressed{
+      background-color: #5D1A1D;
+    }
+    QComboBox:pressed{
+      background-color: #551812;
+    }
+    QTextEdit{
+      font-weight: normal;
+      background-color: #232120;
+      border: 2px solid;
+      border-color: #110f00
+    }
+    QPlainTextEdit{
+      font-weight: normal;
+      background-color: #232120;
+      border: 2px solid;
+      border-color: #110f00
+    }
+    """)
     self.create_panel()
     self.setLayout(self.grid)
 
@@ -21,7 +92,7 @@ class Exercise(QWidget):
     
     label = QLabel(self.exercise_info["name"], self)
     label.setAlignment(Qt.AlignCenter)
-    label.setFont(QFont("Ariel", 30))
+    label.setStyleSheet("""font-size: 30px;""")
 
     layout.addWidget(label)
     

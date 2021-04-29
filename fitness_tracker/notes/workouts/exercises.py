@@ -12,7 +12,7 @@ class Exercises(QScrollArea):
     super().__init__(parent)
     self.setStyleSheet("""
     QWidget{
-      background-color:#322d2d;
+      background-color: #232120;
       font-weight: bold;
       color:#c7c7c7;
     }

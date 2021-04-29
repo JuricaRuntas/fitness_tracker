@@ -14,6 +14,7 @@ class SettingsWindow(QWidget):
         self.setStyleSheet("""
         QWidget{
             color:#c7c7c7;
+            background-color: #232120;
             font-weight: bold;
             font-family: Montserrat;
             font-size: 16px;
