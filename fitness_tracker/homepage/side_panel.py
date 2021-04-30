@@ -7,8 +7,7 @@ from fitness_tracker.database_wrapper import DatabaseWrapper
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
 
-icons = {"Home": os.path.join(path, "home.png"),
-         "Profile": os.path.join(path, "user.png"),
+icons = {"Profile": os.path.join(path, "user.png"),
          "Logout": os.path.join(path, "logout.png"),
          "Compound Exercises": os.path.join(path, "big_lifts.png"),
          "Workouts": os.path.join(path, "workouts.png"),

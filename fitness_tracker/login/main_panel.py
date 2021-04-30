@@ -124,4 +124,4 @@ class MainPanel(QWidget):
   def login(self):
     email = self.email_entry.text()
     password = self.password_entry.text()
-    if self.db_wrapper.login_user(email, password): self.emit_layout_name.emit("Home")
+    if self.db_wrapper.login_user(email, password): self.emit_layout_name.emit("Compound Exercises")
