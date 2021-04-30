@@ -61,6 +61,7 @@ class WeightLossEditDialog(QWidget):
       border: 1px solid;
       border-color: #cdcdcd;
     }""") 
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
     self.setWindowModality(Qt.ApplicationModal)
     self.setWindowTitle("".join(["Edit ", self.to_edit]))
     self.layout = QVBoxLayout()

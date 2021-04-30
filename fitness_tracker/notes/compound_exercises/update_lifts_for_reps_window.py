@@ -15,7 +15,7 @@ class UpdateLiftsForRepsWindow(QWidget):
     self.table_name = "Compound Exercises"
     self.setStyleSheet("""
     QWidget{
-      background-color: #322d2d;
+      background-color: #232120;
       font-weight: bold;
       color:#c7c7c7;
     }
@@ -40,6 +40,7 @@ class UpdateLiftsForRepsWindow(QWidget):
       background-color: #323232;
     }
     """) 
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
     self.setWindowModality(Qt.ApplicationModal)
     self.units = "kg" if self.db_wrapper.fetch_local_column("Users", "units") == "metric" else "lb"
     self.preferred_lifts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "preferred_lifts"))

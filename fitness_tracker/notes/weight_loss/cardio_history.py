@@ -16,7 +16,7 @@ class CardioHistory(QScrollArea):
     self.table_name = "Weight Loss"
     self.setStyleSheet("""
     QWidget{
-      background-color: #322d2d;
+      background-color: #232120;
       font-weight: bold;
       color:#c7c7c7;
     }
@@ -43,8 +43,8 @@ class CardioHistory(QScrollArea):
     """)
     self.units = "kg" if self.db_wrapper.fetch_local_column("Users", "units") == "metric" else "lb"
     self.cardio_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "cardio_history")) 
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
     self.setWindowModality(Qt.ApplicationModal)
-    self.setWindowFlags(Qt.Tool)
     self.setWindowTitle("Cardio History")
     
     widget = QWidget()
@@ -110,6 +110,10 @@ class CardioHistory(QScrollArea):
               self.layout.addWidget(self.delete_buttons[j], row, 3, 1, 1)
               j += 1
               row += 1
+
+    close_button = QPushButton("Close")
+    close_button.clicked.connect(lambda:self.close())
+    self.layout.addWidget(close_button, row, 0, 1, 4)
 
   def edit_cardio_dialog(self, date, activity, index):
     self.edit_entry_dialog = EditCardioHistoryEntry(self.cardio_history, date, activity, index)

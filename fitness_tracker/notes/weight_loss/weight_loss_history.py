@@ -14,7 +14,7 @@ class WeightLossHistory(QScrollArea):
     self.table_name = "Weight Loss"
     self.setStyleSheet("""
     QWidget{
-      background-color: #322d2d;
+      background-color: #232120;
       font-weight: bold;
       color:#c7c7c7;
     }
@@ -41,8 +41,8 @@ class WeightLossHistory(QScrollArea):
     """)
     self.units = "kg" if self.db_wrapper.fetch_local_column("Users", "units") == "metric" else "lb"
     self.weight_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "weight_history"))
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
     self.setWindowModality(Qt.ApplicationModal)
-    self.setWindowFlags(Qt.Tool)
     self.setWindowTitle("Weight History")
 
     widget = QWidget()
@@ -100,6 +100,10 @@ class WeightLossHistory(QScrollArea):
         self.layout.addWidget(self.edit_buttons[j], row, 2, 1, 1)
         self.layout.addWidget(self.delete_buttons[j], row, 3, 1, 1)
         row += 1
+        
+    close_button = QPushButton("Close")
+    close_button.clicked.connect(lambda:self.close())
+    self.layout.addWidget(close_button, row, 0, 1, 4)
 
   def edit_weight_dialog(self, to_edit, value, date):
     self.edit_weight_dialog_window = WeightLossEditDialog(to_edit, value, date=date)

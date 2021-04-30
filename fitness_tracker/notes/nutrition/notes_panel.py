@@ -111,6 +111,8 @@ class NotesPanel(QWidget):
       border: 0px;
       opacity:0;
       border-radius: 0px;
+      width: 0px;
+      height: 0px;
     }
     QComboBox:hover:!pressed{
       background-color: #5D1A1D;

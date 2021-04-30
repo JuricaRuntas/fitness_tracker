@@ -13,7 +13,7 @@ class CreateWorkoutWindow(QWidget):
     super().__init__()
     self.setStyleSheet("""
     QWidget{
-      background-color: #322d2d;
+      background-color: #232120;
       font-weight: bold;
       color:#c7c7c7;
     }
@@ -38,6 +38,7 @@ class CreateWorkoutWindow(QWidget):
       background-color: #323232;
     }
     """)
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
     self.setWindowModality(Qt.ApplicationModal)
     if workout_name != None:
       self.setWindowTitle("Edit Workout")

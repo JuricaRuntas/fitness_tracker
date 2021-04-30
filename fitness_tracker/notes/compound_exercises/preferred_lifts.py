@@ -13,7 +13,7 @@ class PreferredLifts(QWidget):
     self.table_name = "Compound Exercises"
     self.setStyleSheet("""
     QWidget{
-      background-color: #322d2d;
+      background-color: #232120;
       font-weight: bold;
       color:#c7c7c7;      
     }
@@ -50,8 +50,8 @@ class PreferredLifts(QWidget):
       background-color: #440D0F;
     }
     QComboBox:down-arrow{
-      width: 24.54px;
-      height: 10px;
+      width: 0px;
+      height: 0px;
       background: #d3d3d3; 
       opacity:0
     }
@@ -60,6 +60,8 @@ class PreferredLifts(QWidget):
       border: 0px;
       opacity:0;
       border-radius: 0px;
+      width: 0px;
+      height: 0px;
     }
     QComboBox:hover:!pressed{
       background-color: #5D1A1D;
@@ -68,6 +70,7 @@ class PreferredLifts(QWidget):
       background-color: #551812;
     }
     """) 
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
     self.setWindowModality(Qt.ApplicationModal)
     self.setWindowTitle("Edit Preferred Lifts")
     self.preferred_lifts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "preferred_lifts"))

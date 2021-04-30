@@ -12,7 +12,7 @@ class LiftHistory(QScrollArea):
     self.table_name = "Compound Exercises"
     self.setStyleSheet("""
     QWidget{
-      background-color: #322d2d;
+      background-color: #232120;
       font-weight: bold;
       color:#c7c7c7;
     }
@@ -37,8 +37,8 @@ class LiftHistory(QScrollArea):
       background-color: #323232;
     }
     """)
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
     self.setWindowModality(Qt.ApplicationModal)
-    self.setWindowFlags(Qt.Tool)
     self.units = "kg" if self.db_wrapper.fetch_local_column("Users", "units") == "metric" else "lb"
     self.setWindowTitle("Lift History")
     
@@ -79,6 +79,10 @@ class LiftHistory(QScrollArea):
         self.delete_buttons[j].clicked.connect(partial(self.delete_history_entry_from_layout, j, self.delete_buttons[j].property("entry_index")))
         
         self.layout.addRow(self.labels[j], self.delete_buttons[j])
+
+    close_button = QPushButton("Close")
+    close_button.clicked.connect(lambda:self.close())
+    self.layout.addRow(close_button)
 
   def delete_history(self):
     for i in reversed(range(self.layout.count())):

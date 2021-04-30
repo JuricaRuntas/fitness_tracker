@@ -18,7 +18,7 @@ class Update1RMWindow(QWidget):
     self.table_name = "Compound Exercises"
     self.setStyleSheet("""
     QWidget{
-      background-color: #322d2d;
+      background-color: #232120;
       font-weight: bold;
       color:#c7c7c7;
     }
@@ -43,6 +43,7 @@ class Update1RMWindow(QWidget):
       background-color: #323232;
     }
     """)
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
     self.setWindowModality(Qt.ApplicationModal)
     self.current_year = str(datetime.now().year)
     self.units = "kg" if self.db_wrapper.fetch_local_column("Users", "units") == "metric" else "lb"

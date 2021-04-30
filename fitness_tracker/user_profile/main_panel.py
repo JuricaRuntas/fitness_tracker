@@ -38,6 +38,37 @@ class MainPanel(QWidget):
       border: 2px solid;
       background-color: #323232;
       border-color: #6C6C6C;
+    }
+    QComboBox{
+      border-radius: 4px;
+      font-size: 18px;
+      font-weight: bold;
+      white-space:nowrap;
+      text-align: left;
+      padding-left: 5%;
+      font-family: Montserrat;
+      min-height: 28px;
+      background-color: #440D0F;
+    }
+    QComboBox:down-arrow{
+      width: 0px;
+      height: 0px;
+      background: #d3d3d3; 
+      opacity:0
+    }
+    QComboBox:drop-down{
+      background-color: #440D0F;
+      border: 0px;
+      opacity:0;
+      border-radius: 0px;
+      width: 0px;
+      height: 0px;
+    }
+    QComboBox:hover:!pressed{
+      background-color: #5D1A1D;
+    }
+    QComboBox:pressed{
+      background-color: #551812;
     }""")
     self.create_panel()
 
@@ -164,9 +195,9 @@ class MainPanel(QWidget):
 
   def settings_layout(self):
     settings = QVBoxLayout()
-    settings_label = QLabel("Other")
-    settings_label.setFont(QFont("Ariel", 14))
-    settings.addWidget(settings_label)
+    #settings_label = QLabel("Other")
+    #settings_label.setFont(QFont("Ariel", 14))
+    #settings.addWidget(settings_label)
     
     settings_layout = QHBoxLayout()
     settings_left_layout = QVBoxLayout()
@@ -192,7 +223,7 @@ class MainPanel(QWidget):
     settings_left_layout.addLayout(display_units)
 
     framed_left_layout = QFrame()
-    framed_left_layout.setFrameStyle(QFrame.StyledPanel)
+    framed_left_layout = self.setup_frame(framed_left_layout)
     framed_left_layout.setLayout(settings_left_layout)
 
     settings_layout.addWidget(framed_left_layout)
@@ -447,7 +478,7 @@ class EditRadioButton(QWidget):
     return layout
 
   def update_goal(self, goal):
-    update_goal(goal)
+    self.db_wrapper.update_goal(goal)
 
   def create_radio_button_gender(self):
     layout = QVBoxLayout()

@@ -57,8 +57,8 @@ class MainPanel(QWidget):
       background-color: #440D0F;
     }
     QComboBox:down-arrow{
-      width: 24.54px;
-      height: 10px;
+      width: 0px;
+      height: 0px;
       background: #d3d3d3; 
       opacity:0
     }
@@ -67,6 +67,8 @@ class MainPanel(QWidget):
       border: 0px;
       opacity:0;
       border-radius: 0px;
+      width: 0px;
+      height: 0px;
     }
     QComboBox:hover:!pressed{
       background-color: #5D1A1D;
