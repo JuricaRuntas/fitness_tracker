@@ -1,4 +1,5 @@
 import string
+import json
 import re
 import os
 from PyQt5.QtWidgets import QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit, QLabel, QPushButton
@@ -128,6 +129,5 @@ class MainPanel(QWidget):
     password = self.password_entry.text()
     confirmed_password = self.confirm_password_entry.text()
     if password == confirmed_password and self.check_valid_password(password) and self.check_valid_email(email):
-      if self.db_wrapper.create_user(email, password):
-        self.db_wrapper.create_user_table(email, password)
-        self.emit_layout_name.emit("Continue")
+      if not self.db_wrapper.check_user_exists(email):
+        self.emit_layout_name.emit(json.dumps(["Continue", email, password]))

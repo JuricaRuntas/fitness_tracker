@@ -2,6 +2,7 @@ import sys
 import os
 import importlib
 import sqlite3
+import json
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, QVBoxLayout, QWidget, QSpacerItem, QSizeGrip, QSizePolicy
 from PyQt5.QtCore import Qt, QObject, pyqtSlot
 from PyQt5.QtGui import QColor, QFontDatabase
@@ -108,9 +109,14 @@ class FitnessTracker(QMainWindow):
     self.move(window.topLeft())
   
   @pyqtSlot(str)
-  def display_layout(self, layout_name):
-    if layout_name in ("Workout Planner", "Exercises and Workouts"): self.cw = self.layouts[layout_name](layout_name)
-    else: self.cw = self.layouts[layout_name]()
+  def display_layout(self, layout_name, extra_info=None):
+    try:
+      if json.loads(layout_name)[0] == "Continue":
+        extra_info = json.loads(layout_name)
+        self.cw = self.layouts[extra_info[0]](extra_info[1], extra_info[2])
+    except:
+      if layout_name in ("Workout Planner", "Exercises and Workouts"): self.cw = self.layouts[layout_name](layout_name)
+      else: self.cw = self.layouts[layout_name]()
     self.cw.display_layout_signal.connect(lambda layout_name: self.display_layout(layout_name))
     self.layout = QWidget()
     self.layout = self.setup_main_layout()

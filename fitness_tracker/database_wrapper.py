@@ -386,6 +386,12 @@ class DatabaseWrapper(metaclass=Singleton):
       status = False
     return status 
 
+  def check_user_exists(self, email):
+    self.pg_cursor.execute(sql.SQL("SELECT COUNT(*) FROM users WHERE email=%s"), (email,))
+    exists = self.pg_cursor.fetchone()[0]
+    if exists == 1: return True
+    else: return False
+
   def create_user_info_after_signup(self, user_info):
     email = "'{e}'".format(e=self.user_email)
     pg_query = sql.SQL("UPDATE {table} SET {data} WHERE email="+email).format(

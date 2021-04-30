@@ -10,7 +10,7 @@ from fitness_tracker.database_wrapper import DatabaseWrapper
 class SignupQuestions(QWidget):
   display_layout_signal = pyqtSignal(str)
 
-  def __init__(self):
+  def __init__(self, email, password):
     super().__init__()
     self.setStyleSheet("""
     QWidget{
@@ -65,6 +65,8 @@ class SignupQuestions(QWidget):
     }
     """)
     self.db_wrapper = DatabaseWrapper()
+    self.email = email
+    self.password = password
     self.create_panel()
 
   def create_panel(self):
@@ -295,13 +297,16 @@ class SignupQuestions(QWidget):
                    "goal": goal,
                    "goalparams": goal_params,
                    "goalweight": goal_weight}
-      if not gender == "" and not units == "" and not self.name_entry.text() == "" and not self.weight_entry.text() == "":
-        goal_params = json.loads(goal_params)
-        self.db_wrapper.create_user_info_after_signup(user_info)
-        calorie_goal_calculator = CalorieGoalCalculator(int(age), gender, float(height),
-                                                        float(weight), goal_params[0], goal, goal_params[1])
-        calorie_goal = calorie_goal_calculator.calculate_calorie_goal()
-        self.db_wrapper.insert_default_values("Nutrition", calorie_goal=calorie_goal)
-        self.display_layout_signal.emit("Home")
     except ValueError:
-      pass
+      return
+    
+    if not gender == "" and not units == "" and not self.name_entry.text() == "" and not self.weight_entry.text() == "":
+      goal_params = json.loads(goal_params)
+      self.db_wrapper.create_user(self.email, self.password)
+      self.db_wrapper.create_user_table(self.email, self.password)
+      self.db_wrapper.create_user_info_after_signup(user_info)
+      calorie_goal_calculator = CalorieGoalCalculator(int(age), gender, float(height),
+                                                      float(weight), goal_params[0], goal, goal_params[1])
+      calorie_goal = calorie_goal_calculator.calculate_calorie_goal()
+      self.db_wrapper.insert_default_values("Nutrition", calorie_goal=calorie_goal)
+      self.display_layout_signal.emit("Home")
