@@ -6,7 +6,6 @@ import json
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, QVBoxLayout, QWidget, QSpacerItem, QSizeGrip, QSizePolicy
 from PyQt5.QtCore import Qt, QObject, pyqtSlot
 from PyQt5.QtGui import QColor, QFontDatabase, QIcon
-from fitness_tracker.homepage.homepage import Homepage
 from fitness_tracker.user_profile.profile import Profile
 from fitness_tracker.calculators.one_rep_max.one_rep_max import OneRepMaxCalculator
 from fitness_tracker.calculators.body_fat.body_fat import BodyFatCalculator
@@ -45,12 +44,11 @@ class FitnessTracker(QMainWindow):
       self.cw = Login()
     self.cw.display_layout_signal.connect(lambda layout: self.display_layout(layout))
     self.layouts = {"Login": Login, "Signup": Signup, "Continue": SignupQuestions,
-                    "Home": Homepage, "Profile": Profile, "Logout": Login,
-                    "Compound Exercises": BigLiftsNotes, "Workout Planner": WorkoutsNotes,
-                    "Exercises and Workouts": WorkoutsNotes, "Nutrition": NutritionNotes,
-                    "Weight Loss": WeightLossNotes, "1 Rep Max Calculator": OneRepMaxCalculator,
-                    "Body Fat Calculator": BodyFatCalculator, "Strength Estimator": StrengthEstimator,
-                    "Food Database": FoodDB}
+                    "Profile": Profile, "Logout": Login, "Compound Exercises": BigLiftsNotes,
+                    "Workout Planner": WorkoutsNotes, "Exercises and Workouts": WorkoutsNotes,
+                    "Nutrition": NutritionNotes, "Weight Loss": WeightLossNotes,
+                    "1 Rep Max Calculator": OneRepMaxCalculator, "Body Fat Calculator": BodyFatCalculator,
+                    "Strength Estimator": StrengthEstimator, "Food Database": FoodDB}
     self.colorize_background()
     self.colorize_foreground()
     self.setup_borders()
