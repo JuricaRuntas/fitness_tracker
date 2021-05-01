@@ -37,7 +37,7 @@ class DatabaseWrapper(metaclass=Singleton):
                           "Compound Exercises": ("email", "one_rep_maxes", "lifts_for_reps", "preferred_lifts", "lift_history",
                                                  "units", "rm_history"),
                           "Nutrition": ("email", "calorie_goal", "meal_plans", "manage_meals"),
-                          "Weight Loss": ("email", "weight_history", "preferred_activity", "cardio_history"),
+                          "Weight Loss": ("email", "weight_history", "preferred_activity", "cardio_history", "units"),
                           "Workouts": ("email", "workouts", "my_workouts")}
 
     self.months = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
@@ -68,7 +68,8 @@ class DatabaseWrapper(metaclass=Singleton):
     self.sqlite_cursor.execute("SELECT "+column+" FROM "+self.table_names[table_name]+" WHERE email=?", (self.user_email,))
     return self.sqlite_cursor.fetchone()[0]
 
-  def update_table_column(self, table_name, column_name, value, delete_history_entry=False, update_preferred_lifts=False):
+  def update_table_column(self, table_name, column_name, value, delete_history_entry=False, update_preferred_lifts=False,
+                          convert_lift_history_units=False):
     assert table_name in self.table_names.keys()
     assert column_name in self.table_columns[table_name]
     
@@ -89,7 +90,7 @@ class DatabaseWrapper(metaclass=Singleton):
         lifts_for_reps[lift] = value[i]
       value = json.dumps(lifts_for_reps)
 
-    elif column_name == "lift_history" and not delete_history_entry:
+    elif column_name == "lift_history" and not delete_history_entry and convert_lift_history_units == False:
       if value == None: value = "NULL"
       else:
         current_lift_history = self.fetch_local_column(table_name, "lift_history")
@@ -109,7 +110,7 @@ class DatabaseWrapper(metaclass=Singleton):
             last_index += 1
           new_lift_history = json.dumps(list(reversed(current_lift_history)))
         value = new_lift_history
-
+    
     pg_update_query = "UPDATE {table} SET {column}=%s WHERE email=%s"
     sqlite_update_query = "UPDATE "+self.table_names[table_name]+" SET "+column_name+"=?"+ " WHERE email=?"
     
@@ -171,13 +172,14 @@ class DatabaseWrapper(metaclass=Singleton):
       default_weight_history, default_cardio_history = {}, {}
       default_activities = ["Running", "Walking", "Cycling", "Swimming"]
       default_preferred_activity = "Running"
-      
+      units = self.fetch_local_column("Users", "units")
+
       default_cardio_history[current_date] = {}
       for activity in default_activities:
         default_cardio_history[current_date][activity] = []
     
       default_values = {"email": self.user_email, "weight_history": json.dumps(default_weight_history),
-                      "preferred_activity": default_preferred_activity,
+                      "preferred_activity": default_preferred_activity, "units": units,
                       "cardio_history": json.dumps(default_cardio_history)} 
 
     elif table_name == "Workouts":
@@ -236,6 +238,7 @@ class DatabaseWrapper(metaclass=Singleton):
                      weight_history text,
                      preferred_activity text,
                      cardio_history text,
+                     units text,
                      ID integer NOT NULL,
                      PRIMARY KEY(ID));
                      """ % self.table_names["Weight Loss"]

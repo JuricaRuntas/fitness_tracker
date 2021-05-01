@@ -89,30 +89,44 @@ class MainPanel(QWidget):
     
     one_rep_maxes = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "one_rep_maxes"))
     lifts_for_reps = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "lifts_for_reps"))
+    self.rm_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "rm_history"))
+    
+    if not self.current_year in self.rm_history:
+      self.add_year_to_rm_history(self.current_year)
+      self.rm_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "rm_history"))
 
+    if self.units != big_lifts_units:
+      units_name = "metric" if self.units == "kg" else "imperial"
+      self.db_wrapper.update_table_column(self.table_name, "units", units_name)
+      if units_name == "metric":
+        for exercise, weight in one_rep_maxes.items():
+          one_rep_maxes[exercise] = str(pounds_to_kg(weight))
+        for exercise, reps_and_weight in lifts_for_reps.items():
+          lifts_for_reps[exercise] = [reps_and_weight[0], str(pounds_to_kg(reps_and_weight[1]))] 
+      
+      elif units_name == "imperial":
+        for exercise, weight in one_rep_maxes.items():
+          one_rep_maxes[exercise] = str(kg_to_pounds(weight))
+        for exercise, reps_and_weight in lifts_for_reps.items():
+          lifts_for_reps[exercise] = [reps_and_weight[0], str(kg_to_pounds(reps_and_weight[1]))] 
+    
+      for year in self.rm_history:
+        for month in self.rm_history[year]:
+          for exercise_type in list(self.rm_history[year][month]):
+            for exercise in list(self.rm_history[year][month][exercise_type]):
+              for i, weight in enumerate(self.rm_history[year][month][exercise_type][exercise]):
+                if units_name == "imperial":
+                  self.rm_history[year][month][exercise_type][exercise][i] = str(kg_to_pounds(weight))
+                elif units_name == "metric":
+                  self.rm_history[year][month][exercise_type][exercise][i] = str(pounds_to_kg(weight))
+
+      self.db_wrapper.update_table_column(self.table_name, "one_rep_maxes", one_rep_maxes)
+      self.db_wrapper.update_table_column(self.table_name, "lifts_for_reps", lifts_for_reps)
+      self.convert_lift_history_weight(self.units)
+    
     self.one_RM = [[lift, " ".join([weight, self.units])] for lift, weight in one_rep_maxes.items()]
     self.lifts_reps = [[lift, " ".join(["x".join(weight), self.units])] for lift, weight in lifts_for_reps.items()]
     
-    if not self.units == big_lifts_units:
-      self.db_wrapper.update_table_column(self.table_name, "units", self.units)
-      if self.units == "kg":
-        self.one_RM = [[lift[0], " ".join([str(pounds_to_kg(float(lift[1].split(" ")[0]))), self.units])] for lift in self.one_RM]
-        self.lifts_reps = [[lift[0], " ".join(["x".join([lift[1].split("x")[0],
-                                              str(pounds_to_kg(float(lift[1].split("x")[1].split(" ")[0])))]),
-                                              self.units])] for lift in self.lifts_reps]
-      elif self.units == "lb":
-        self.one_RM = [[lift[0], " ".join([str(kg_to_pounds(float(lift[1].split(" ")[0]))), self.units])] for lift in self.one_RM]
-        self.lifts_reps = [[lift[0], " ".join(["x".join([lift[1].split("x")[0],
-                                              str(kg_to_pounds(float(lift[1].split("x")[1].split(" ")[0])))]),
-                                              self.units])] for lift in self.lifts_reps]
-      
-      new_one_RM_lifts = {lift[0]:lift[1].split(" ")[0] for lift in self.one_RM}
-      new_lifts_for_reps = {lift[0]: [lift[1].split("x")[0], lift[1].split("x")[1].split(" ")[0]] for lift in self.lifts_reps}
-      
-      self.db_wrapper.update_table_column(self.table_name, "one_rep_maxes", new_one_RM_lifts)
-      self.db_wrapper.update_table_column(self.table_name, "lifts_for_reps", new_lifts_for_reps)
-      self.convert_lift_history_weight(self.units)
-
     self.lift_history_window = LiftHistory()
     self.lift_history_window.setGeometry(100, 200, 300, 300) 
     
@@ -130,12 +144,6 @@ class MainPanel(QWidget):
      
     self.preferred_lifts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "preferred_lifts"))
     self.one_rep_maxes = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "one_rep_maxes"))
-    self.rm_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "rm_history"))
-    
-    if not self.current_year in self.rm_history:
-      self.add_year_to_rm_history(self.current_year)
-      self.rm_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "rm_history"))
-
     self.create_panel()
 
   def create_panel(self):
@@ -408,7 +416,7 @@ class MainPanel(QWidget):
         else:
           lift[1] = str(kg_to_pounds(float(lift[1])))
     lift_history = json.dumps(lift_history)
-    self.db_wrapper.update_table_column(self.table_name, "lift_history", lift_history)
+    self.db_wrapper.update_table_column(self.table_name, "lift_history", lift_history, convert_lift_history_units=True)
 
   def add_year_to_rm_history(self, year):
     new_year = {}

@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (QRadioButton, QWidget, QGridLayout, QLabel, QLineEd
                              QFrame, QHBoxLayout, QVBoxLayout)
 from PyQt5.QtGui import QFont, QCursor, QDoubleValidator
 from PyQt5.QtCore import Qt
-from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
+from fitness_tracker.common.units_conversion import *
 from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class MainPanel(QWidget):
@@ -212,7 +212,7 @@ class MainPanel(QWidget):
     
     current_index = 0 if self.user_data["Units"] == "metric" else 1
     self.display_units_combobox.setCurrentIndex(current_index)
-    self.display_units_combobox.activated.connect(lambda: self.change_units(self.display_units_combobox.currentText()))
+    self.display_units_combobox.activated.connect(lambda: self.change_units(self.display_units_combobox.currentText().lower()))
     
     display_units.addWidget(display_units_label)
     display_units.addWidget(self.display_units_combobox)
@@ -233,28 +233,53 @@ class MainPanel(QWidget):
     return settings
 
   def change_units(self, selected_units):
-    return # for now, don't do anything
+    current_units = self.db_wrapper.fetch_local_column("Users", "units")
+    if current_units != selected_units:
+      self.db_wrapper.update_table_column("Users", "units", selected_units)
+      if selected_units == "imperial":
+        # update height
+        new_height = metric_to_imperial_height(int(self.user_data["Height"]))
+        self.height_label.setText(" ".join(["Height:", "%s'%s''" % (new_height[0], new_height[1])]))
+        self.user_data["Height"] = "%s'%s''" % (new_height[0], new_height[1])
+        self.db_wrapper.update_table_column("Users", "height", "%s'%s''" % (new_height[0], new_height[1]))
+        
+        # update weight, goal weight and loss_per_week
+        new_weight = kg_to_pounds(self.user_data["Weight"])
+        new_goal_weight = kg_to_pounds(self.user_data["Weight Goal"])
+        new_loss_per_week = kg_to_pounds(self.user_data["Goal Params"][1])
 
-    # don't do anything if current units are metric or imperial
-    # and users clicks again on metric or imperial
-    if selected_units == "Metric" and self.user_data[2] == "metric":
-      pass
-    elif selected_units ==  "Imperial" and self.user_data[2] == "imperial":
-      pass
-    else:
-      # update units in user table
-      update_units(self.sqlite_connection, self.pg_connection)
-      # get updated units
-      updated_units = fetch_units(self.sqlite_cursor)
-      current_weight = float(self.user_data[4])
-      converted_weight = convert_weight(self.user_data[3], current_weight)
-      # update self.user_data
-      self.user_data[4] = converted_weight
-      self.user_data[3] = updated_units
-      # update weight in user table
-      update_weight(converted_weight)
-      self.weight.setText(set_weight(self.user_data))
+        self.weight_label.setText(" ".join(["Weight:", str(new_weight)]))
+        self.goalw_label.setText(" ".join(["Goal Weight:", str(new_goal_weight)]))
 
+        self.user_data["Weight"] = new_weight
+        self.user_data["Weight Goal"] = new_goal_weight
+        self.user_data["Goal Params"][1] = new_loss_per_week
+
+        
+      elif selected_units == "metric":
+        # update height
+        parsed_imperial_height = self.user_data["Height"].strip("''").split("'")
+        new_height = imperial_to_metric_height(int(parsed_imperial_height[0]), int(parsed_imperial_height[1]))
+        self.height_label.setText(" ".join(["Height:", str(new_height)]))
+        self.user_data["Height"] = new_height
+        self.db_wrapper.update_table_column("Users", "height", str(new_height))
+        
+        # update weight
+        new_weight = pounds_to_kg(self.user_data["Weight"])
+        new_goal_weight = pounds_to_kg(self.user_data["Weight Goal"])
+        new_loss_per_week = pounds_to_kg(self.user_data["Goal Params"][1])
+
+        self.weight_label.setText(" ".join(["Weight:", str(new_weight)]))
+        self.goalw_label.setText(" ".join(["Goal Weight:", str(new_goal_weight)]))
+
+        self.user_data["Weight"] = new_weight
+        self.user_data["Weight Goal"] = new_goal_weight
+        self.user_data["Goal Params"][1] = new_loss_per_week
+
+      self.db_wrapper.update_table_column("Users", "weight", new_weight)
+      self.db_wrapper.update_table_column("Users", "goalweight", new_goal_weight)
+      self.db_wrapper.update_table_column("Users", "goalparams", json.dumps(self.user_data["Goal Params"]))
+  
   def update_weight(self):
     global weight_edit
     weight_edit = EditButtonLine("weight")
@@ -508,17 +533,3 @@ class EditRadioButton(QWidget):
 
   def close_button(self):
     self.close()
-
-  #?
-  def set_weight(user_data):
-    # 4th column of user table is currently weight
-    weight = user_data[4]
-    if "metric" in user_data: return " ".join([str(weight), "kg"])
-    elif "imperial" in user_data: return " ".join([str(weight), "lb"])
-  
-  #?  
-  def convert_weight(current_units, weight):
-    if current_units == "metric":
-      return kg_to_pounds(float(weight))
-    elif current_units == "imperial":
-      return pounds_to_kg(float(weight))

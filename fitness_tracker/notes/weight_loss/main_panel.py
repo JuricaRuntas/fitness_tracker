@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QVBoxLayout, QLabel, QHBoxLayo
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot
 from fitness_tracker.database_wrapper import DatabaseWrapper
+from fitness_tracker.common.units_conversion import kg_to_pounds, pounds_to_kg
 from .weight_loss_edit_dialog import WeightLossEditDialog
 from .weight_loss_history import WeightLossHistory
 from .calories_burnt_dialog import CaloriesBurntDialog
@@ -91,10 +92,26 @@ class MainPanel(QWidget):
     self.date = datetime.today().strftime("%d/%m/%Y")
     self.current_year = datetime.today().year
     self.calorie_goal = self.db_wrapper.fetch_local_column("Nutrition", "calorie_goal")
+    
     self.units = "kg" if self.db_wrapper.fetch_local_column("Users", "units") == "metric" else "lb"
+    weight_loss_units = "kg" if self.db_wrapper.fetch_local_column(self.table_name, "units") == "metric" else "lb"
+    self.weight_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "weight_history"))
+    
+    if self.units != weight_loss_units:
+      units_name = "metric" if self.units == "kg" else "imperial"
+      self.db_wrapper.update_table_column(self.table_name, "units", units_name)
+      if units_name == "metric":
+        for date in self.weight_history:
+          self.weight_history[date] = str(pounds_to_kg(self.weight_history[date]))
+      
+      elif units_name == "imperial":
+        for date in self.weight_history:
+          self.weight_history[date] = str(kg_to_pounds(self.weight_history[date]))
+
+      self.db_wrapper.update_table_column(self.table_name, "weight_history", json.dumps(self.weight_history))
+
     self.preferred_activity = self.db_wrapper.fetch_local_column(self.table_name, "preferred_activity")
     self.cardio_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "cardio_history"))
-    self.weight_history = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "weight_history"))
     if not self.date in self.cardio_history: self.add_date_to_cardio_history()
     if not self.date in self.weight_history: self.add_date_to_weight_history()
     
