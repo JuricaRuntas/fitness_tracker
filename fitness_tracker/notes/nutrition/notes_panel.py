@@ -211,7 +211,7 @@ class NotesPanel(QWidget):
     daily_monthlyavg_buttons.addWidget(monthly_button)
     daily_monthlyavg_buttons.addWidget(nutrients_button)
 
-    self.nutrients = (["Calories", 1, 'kcal'], ["Proteins", 21, 'g'], ["Carbohydrates", 32, 'g'], ["Fats", 24, 'g'], ["Fibers", 13, 'g'], ["Sugars", 6, 'g'])
+    self.nutrients = (["Calories", 1, 'kcal'], ["Protein", 21, 'g'], ["Carbohydrates", 32, 'g'], ["Fat", 24, 'g'], ["Fiber", 13, 'g'], ["Sugar", 6, 'g'])
     nsummary_layout.addLayout(daily_monthlyavg_buttons)
     self.options = config.items('NUTRITION')
     self.totals = [0] * len(self.nutrients)
@@ -220,7 +220,8 @@ class NotesPanel(QWidget):
       if config['NUTRITION'].get(self.options[i][0]) == 'yes':
         for item in self.meal_plans['Present']['Monday']:
           for subitem in self.meal_plans['Present']['Monday'][item]:
-            self.totals[i] += int(subitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+            self.totals[i] += int(self.get_nutrient(subitem, self.nutrients[i][0]))
+            #self.totals[i] += int(self.get_nutrient(subitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"]))
         self.nutrition_labels[i] = QLabel(self.nutrients[i][0] + ": " + str(self.totals[i]) + self.nutrients[i][2])
         self.nutrition_labels[i].setAlignment(Qt.AlignCenter)
         nsummary_layout.addWidget(self.nutrition_labels[i])
@@ -417,11 +418,11 @@ class NotesPanel(QWidget):
         if self.selected_week == 'Past':
           for item in self.meal_plans[self.selected_week][self.selected_past_week][self.selected_day]:
             for subitem in self.meal_plans[self.selected_week][self.selected_past_week][self.selected_day][item]:
-              self.totals[i] += int(subitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+              self.totals[i] += int(self.get_nutrient(subitem, self.nutrients[i][0]))
         else:
           for item in self.meal_plans[self.selected_week][self.selected_day]:
             for subitem in self.meal_plans[self.selected_week][self.selected_day][item]:
-              self.totals[i] += int(subitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+              self.totals[i] += int(self.get_nutrient(subitem, self.nutrients[i][0]))
         if self.nutrition_labels[i] != None: self.nutrition_labels[i].setText(self.nutrients[i][0] + ": " + str(self.totals[i]) + self.nutrients[i][2]) 
 
   def calculate_monthly_totals(self):
@@ -432,19 +433,19 @@ class NotesPanel(QWidget):
         for item in self.meal_plans['Past'][0]:
           for subitem in self.meal_plans['Past'][0][item]:
             for subsubitem in self.meal_plans['Past'][0][item][subitem]:
-              self.totals[i] += int(subsubitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+              self.totals[i] += int(self.get_nutrient(subsubitem, self.nutrients[i][0]))
         for item in self.meal_plans['Past'][1]:
           for subitem in self.meal_plans['Past'][1][item]:
             for subsubitem in self.meal_plans['Past'][1][item][subitem]:
-              self.totals[i] += int(subsubitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+              self.totals[i] += int(self.get_nutrient(subsubitem, self.nutrients[i][0]))
         for item in self.meal_plans['Past'][2]:
           for subitem in self.meal_plans['Past'][2][item]:
             for subsubitem in self.meal_plans['Past'][2][item][subitem]:
-              self.totals[i] += int(subsubitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+              self.totals[i] += int(self.get_nutrient(subsubitem, self.nutrients[i][0]))
         for item in self.meal_plans['Present']:
           for subitem in self.meal_plans['Present'][item]:
             for subsubitem in self.meal_plans['Present'][item][subitem]:
-              self.totals[i] += int(subsubitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"])
+              self.totals[i] += int(self.get_nutrient(subsubitem, self.nutrients[i][0]))
         self.totals[i] /= 28
         self.totals[i] = int(self.totals[i])
         if self.nutrition_labels[i] != None: self.nutrition_labels[i].setText(self.nutrients[i][0] + ": " + str(self.totals[i]) + self.nutrients[i][2])  
@@ -555,7 +556,14 @@ class NotesPanel(QWidget):
       self.db_wrapper.delete_food_from_meal(food, meal, self.selected_day, False, True)
     self.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "meal_plans"))
     self.repopulate_table()
-      
+
+  def get_nutrient(self, info, nutrient):
+    index = 0
+    for i in info["nutrition"]["nutrients"]:
+      if info["nutrition"]["nutrients"][index]["title"] == nutrient:
+        return info["nutrition"]["nutrients"][index]["amount"]
+      index += 1
+    return 0      
 
   def add_button_func(self, week, day, meal):
     global panel
@@ -780,7 +788,7 @@ class FoodDBSearchPanel(QWidget):
       food_info_temp = json.load(datafile)
     response_button = [None] * len(food_info_temp)
     for i in range(len(food_info_temp)):
-      response_button[i] = QPushButton(str(food_info_temp[i]["name"]) + str(food_info_temp[i]["nutrition"]["nutrients"][1]["amount"]))
+      response_button[i] = QPushButton(str(food_info_temp[i]["name"]) + " " + str(self.get_nutrient(food_info_temp[i], "Calories")))
       response_button[i].clicked.connect(partial(self.result_to_data, food_info_temp[i]))
       self.result_layout.addWidget(response_button[i])
     self.scroll_area = QScrollArea()
@@ -790,6 +798,14 @@ class FoodDBSearchPanel(QWidget):
     self.scroll_area.setWidget(widg)
     self.scroll_area.setFixedSize(415, 550)
     return self.scroll_area
+
+  def get_nutrient(self, info, nutrient):
+    index = 0
+    for i in info["nutrition"]["nutrients"]:
+      if info["nutrition"]["nutrients"][index]["title"] == nutrient:
+        return info["nutrition"]["nutrients"][index]["amount"]
+      index += 1
+    return 0
 
   def update_search_results(self, query):
     for i in reversed(range(self.result_layout.count())): 
@@ -801,7 +817,7 @@ class FoodDBSearchPanel(QWidget):
     for i in range(len(response)):
       food_info[i] = api.food_info(response[i]["id"], "g", float(self.search_bar_amount.text()))
       print(food_info[i]["nutrition"]["nutrients"][1])
-      response_button[i] = QPushButton(str(food_info[i]["name"]) + " " + str(food_info[i]["nutrition"]["nutrients"][1]["amount"]))
+      response_button[i] = QPushButton(str(food_info[i]["name"]) + " " + str(self.get_nutrient(food_info[i], "Calories")))
       response_button[i].clicked.connect(partial(self.result_to_data, food_info[i]))
       self.result_layout.addWidget(response_button[i])
 
@@ -1110,7 +1126,7 @@ class NutrientsPanel(QWidget):
   def create_main_layout(self):
     layout = QVBoxLayout()
 
-    nutrients = (["Calories", 1], ["Proteins", 21], ["Carbohydrates", 32], ["Fats", 24], ["Fibers", 13], ["Sugars", 6])
+    nutrients = (["Calories", 1], ["Protein", 21], ["Carbohydrates", 32], ["Fat", 24], ["Fiber", 13], ["Sugar", 6])
 
     labels = [None] * len(nutrients)
     checkbox = [None] * len(nutrients)
