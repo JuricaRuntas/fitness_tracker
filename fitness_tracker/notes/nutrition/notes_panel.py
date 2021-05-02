@@ -248,17 +248,24 @@ class NotesPanel(QWidget):
     self.calorie_goal_label.setFont(QFont("Ariel", 15))
     self.calorie_goal_label.setAlignment(Qt.AlignCenter)
 
-    #self.current_goal_value = self.meal_plans[self.selected_week][self.selected_past_week]
+    self.total_day_calorie = 0
+    for i in self.meal_plans[self.selected_week][self.selected_day]:
+      for item in self.meal_plans[self.selected_week][self.selected_day][i]:
+        self.total_day_calorie += item["nutrition"]["nutrients"][1]["amount"]
      
     self.progress_bar = QProgressBar()
     self.progress_bar.setStyleSheet("background-color:grey;")
     self.progress_bar.setMaximum(int(self.calorie_goal))
-    self.progress_bar.setValue(3)
-    calories_left = self.progress_bar.maximum() - self.progress_bar.value()
+    self.progress_bar.setValue(self.total_day_calorie)
+    if int(self.total_day_calorie) > int(self.calorie_goal):
+      self.progress_bar.setValue(int(self.calorie_goal))
+    calories_left = self.progress_bar.maximum() - self.total_day_calorie
     self.progress_bar.setFormat("")
     self.progress_bar.setAlignment(Qt.AlignCenter)
     self.progress_bar.setMaximumHeight(18)
     self.calorie_label = QLabel(str(calories_left) + " calories left from goal")
+    if int(self.total_day_calorie) > int(self.calorie_goal):
+      self.calorie_label.setText(str(abs(calories_left)) + " calories over goal")
     self.calorie_label.setAlignment(Qt.AlignCenter)
 
     intake_button_layout = QHBoxLayout()
@@ -444,8 +451,8 @@ class NotesPanel(QWidget):
 
   def open_meal_manager(self):
     global manager
-    if self.selected_week is not "Past":
-      manager = MealPlanPanel(self.selected_week, self.selected_day)
+    if self.selected_week != "Past":
+      manager = MealPlanPanel(self, self.selected_week, self.selected_day)
       manager.show()
 
   def index_past_week(self, week_string):
@@ -471,6 +478,7 @@ class NotesPanel(QWidget):
     self.repopulate_table()
 
   def repopulate_table(self):
+    self.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "meal_plans"))
     for i in range (self.table.rowCount()):
       for j in range(self.table.columnCount()):
         self.table.removeCellWidget(i, j)
@@ -764,7 +772,7 @@ class FoodDBSearchPanel(QWidget):
     food_info = [None] * len(response)
     for i in range(len(response)):
       food_info[i] = api.food_info(response[i]["id"], "g", float(self.search_bar_amount.text()))
-      response_button[i] = QPushButton(str(food_info[i]["name"]) + str(food_info[i]["nutrition"]["nutrients"][1]["amount"]))
+      response_button[i] = QPushButton(str(food_info[i]["name"]) + " " + str(food_info[i]["nutrition"]["nutrients"][1]["amount"]))
       response_button[i].clicked.connect(partial(self.result_to_data, food_info[i]))
       self.result_layout.addWidget(response_button[i])
 
@@ -797,8 +805,9 @@ class FoodDBSearchPanel(QWidget):
     self.close()
 
 class MealPlanPanel(QWidget):
-  def __init__(self, week, day):
+  def __init__(self, parent, week, day):
     super().__init__()
+    self.this_parent = parent
     self.week = week
     self.day = day
     self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
@@ -844,45 +853,81 @@ class MealPlanPanel(QWidget):
     }""")
     self.table_name = "Nutrition"
     self.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "meal_plans"))
-    layout = QVBoxLayout()
+    self.this_layout = self.create_main_panel()
     self.setFixedSize(250, 500)
-    layout.addLayout(self.create_main_panel())
-    self.setLayout(layout)
+    #self.layout.addLayout(self.create_main_panel())
+    self.setLayout(self.this_layout)
 
   def create_main_panel(self):
     layout = QVBoxLayout()
     self.meal_number = len(self.meal_plans[self.week][self.day])
-    horizontal_layouts = [None] * len(self.meal_plans[self.week][self.day])
-    meal_labels = [None] * len(self.meal_plans[self.week][self.day])
-    meal_rename = [None] * len(self.meal_plans[self.week][self.day])
-    meal_remove = [None] * len(self.meal_plans[self.week][self.day])
+    self.horizontal_layouts = [None] * len(self.meal_plans[self.week][self.day])
+    self.meal_labels = [None] * len(self.meal_plans[self.week][self.day])
+    self.meal_rename = [None] * len(self.meal_plans[self.week][self.day])
+    self.meal_remove = [None] * len(self.meal_plans[self.week][self.day])
     add_button = QPushButton("Add (" + str(self.meal_number) + "/7)")
     add_button.clicked.connect(lambda:self.add_meal())
     close_button = QPushButton("Close")
     close_button.clicked.connect(lambda:self.close())
     j = 0
     for i in self.meal_plans[self.week][self.day]:
-      horizontal_layouts[j] = QHBoxLayout()
-      meal_labels[j] = QLabel(i)
-      meal_remove[j] = QPushButton("-")
-      meal_remove[j].setFixedSize(32, 32)
-      meal_rename[j] = QPushButton("E")
-      meal_rename[j].setFixedSize(32, 32)
-      meal_remove[j].clicked.connect(partial(self.remove_meal, i))
-      meal_rename[j].clicked.connect(partial(self.open_rename_query, i))
-      horizontal_layouts[j].addWidget(meal_labels[j])
-      horizontal_layouts[j].addWidget(meal_rename[j])
-      horizontal_layouts[j].addWidget(meal_remove[j])
-      layout.addLayout(horizontal_layouts[j])
+      self.horizontal_layouts[j] = QHBoxLayout()
+      self.meal_labels[j] = QLabel(i)
+      self.meal_remove[j] = QPushButton("-")
+      self.meal_remove[j].setFixedSize(32, 32)
+      self.meal_rename[j] = QPushButton("E")
+      self.meal_rename[j].setFixedSize(32, 32)
+      self.meal_remove[j].clicked.connect(partial(self.remove_meal, i))
+      self.meal_rename[j].clicked.connect(partial(self.open_rename_query, i))
+      self.horizontal_layouts[j].addWidget(self.meal_labels[j])
+      self.horizontal_layouts[j].addWidget(self.meal_rename[j])
+      self.horizontal_layouts[j].addWidget(self.meal_remove[j])
+      layout.addLayout(self.horizontal_layouts[j])
       j += 1
     layout.addWidget(add_button)
-    layout.addStretch(0)
     layout.addWidget(close_button)
     return layout
 
+  def update(self):            
+    self.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "meal_plans"))
+    self.meal_number = len(self.meal_plans[self.week][self.day])
+    for i in range(len(self.horizontal_layouts)):
+      for j in reversed(range(self.horizontal_layouts[i].count())):
+        self.horizontal_layouts[i].itemAt(j).widget().setParent(None)
+    for i in reversed(range(self.this_layout.count())):
+      item = self.this_layout.itemAt(i)
+      if item.widget() != None:
+        item.widget().setParent(None)
+    self.horizontal_layouts = [None] * len(self.meal_plans[self.week][self.day])
+    self.meal_labels = [None] * len(self.meal_plans[self.week][self.day])
+    self.meal_rename = [None] * len(self.meal_plans[self.week][self.day])
+    self.meal_remove = [None] * len(self.meal_plans[self.week][self.day])
+    add_button = QPushButton("Add (" + str(self.meal_number) + "/7)")
+    add_button.clicked.connect(lambda:self.add_meal())
+    close_button = QPushButton("Close")
+    close_button.clicked.connect(lambda:self.close())
+    j = 0
+    for i in self.meal_plans[self.week][self.day]:
+      self.horizontal_layouts[j] = QHBoxLayout()
+      self.meal_labels[j] = QLabel(i)
+      self.meal_remove[j] = QPushButton("-")
+      self.meal_remove[j].setFixedSize(32, 32)
+      self.meal_rename[j] = QPushButton("E")
+      self.meal_rename[j].setFixedSize(32, 32)
+      self.meal_remove[j].clicked.connect(partial(self.remove_meal, i))
+      self.meal_rename[j].clicked.connect(partial(self.open_rename_query, i))
+      self.horizontal_layouts[j].addWidget(self.meal_labels[j])
+      self.horizontal_layouts[j].addWidget(self.meal_rename[j])
+      self.horizontal_layouts[j].addWidget(self.meal_remove[j])
+      self.this_layout.addLayout(self.horizontal_layouts[j])
+      j += 1
+    self.this_layout.addWidget(add_button)
+    self.this_layout.addWidget(close_button)
+
+
   def open_rename_query(self, meal):
     global query
-    query = RenameMeal(self.week, self.day, meal)
+    query = RenameMeal(self, self.week, self.day, meal)
     query.show()
 
   def remove_meal(self, meal):
@@ -890,6 +935,8 @@ class MealPlanPanel(QWidget):
       self.db_wrapper.modify_meal("Delete", meal, self.day, None, True, False)
     elif self.week == "Future":
       self.db_wrapper.modify_meal("Delete", meal, self.day, None, False, True)
+    self.this_parent.repopulate_table()
+    self.update()
 
   def add_meal(self):
     if self.meal_number < 7:
@@ -898,11 +945,14 @@ class MealPlanPanel(QWidget):
         self.db_wrapper.modify_meal("Add", meal_string, self.day, None, True, False)
       elif self.week == "Future":
         self.db_wrapper.modify_meal("Add", meal_string, self.day, None, False, True)
+    self.this_parent.repopulate_table()
+    self.update()
 
 class RenameMeal(QWidget):
-  def __init__(self, week, day, meal):
+  def __init__(self, parent, week, day, meal):
     super().__init__()
     self.week = week
+    self.this_parent = parent
     self.day = day
     self.meal = meal
     self.db_wrapper = DatabaseWrapper()
@@ -980,6 +1030,7 @@ class RenameMeal(QWidget):
         self.db_wrapper.modify_meal("Rename", self.meal, self.day, self.meal_rename_line_edit.text(), True, False)
       if self.week == "Future":
         self.db_wrapper.modify_meal("Rename", self.meal, self.day, self.meal_rename_line_edit.text(), False, True)
+      self.this_parent.update()
       self.close()
 
 class NutrientsPanel(QWidget):
