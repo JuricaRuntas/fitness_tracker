@@ -465,17 +465,41 @@ class NotesPanel(QWidget):
       index += 1
     self.change_week(week, index)
 
+  def update_calorie_goal(self):
+    self.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "meal_plans")) 
+    self.calorie_goal = self.db_wrapper.fetch_local_column(self.table_name, "calorie_goal")
+    self.progress_bar.setMaximum(int(self.calorie_goal))
+    self.calorie_goal_label.setText(" ".join(["Daily Goal: ", self.calorie_goal, "kcal"]))
+    self.total_day_calorie = 0
+    if self.selected_week != "Past":
+      for i in self.meal_plans[self.selected_week][self.selected_day]:
+        for item in self.meal_plans[self.selected_week][self.selected_day][i]:
+         self.total_day_calorie += item["nutrition"]["nutrients"][1]["amount"]
+    else:
+      for i in self.meal_plans[self.selected_week][self.selected_past_week][self.selected_day]:
+        for item in self.meal_plans[self.selected_week][self.selected_past_week][self.selected_day][i]:
+         self.total_day_calorie += item["nutrition"]["nutrients"][1]["amount"]
+    self.progress_bar.setValue(self.total_day_calorie)
+    if int(self.total_day_calorie) > int(self.calorie_goal):
+      self.progress_bar.setValue(int(self.calorie_goal))
+    calories_left = self.progress_bar.maximum() - self.total_day_calorie
+    self.calorie_label.setText((str(calories_left) + " calories left from goal"))
+    if int(self.total_day_calorie) > int(self.calorie_goal):
+      self.calorie_label.setText(str(abs(calories_left)) + " calories over goal")
+
   def change_week(self, week, past_week_index):
     self.selected_week = week
     self.selected_past_week = past_week_index
     if self.daily_summary == True:
       self.recalculate_daily_totals()
     self.repopulate_table()
+    self.update_calorie_goal()
 
   def change_day(self, day):
     self.selected_day = day
     self.recalculate_daily_totals()
     self.repopulate_table()
+    self.update_calorie_goal()
 
   def repopulate_table(self):
     self.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "meal_plans"))
@@ -522,6 +546,7 @@ class NotesPanel(QWidget):
       j += 1
       i += 1
       k = 0
+    self.update_calorie_goal()
 
   def remove_food(self, food, meal):
     if self.selected_week == "Present":
@@ -570,6 +595,7 @@ class NotesPanel(QWidget):
     self.calorie_goal = int(self.calorie_goal)
     self.calorie_goal = str(self.calorie_goal)
     self.calorie_goal_label.setText(" ".join(["Daily Goal: ", self.calorie_goal, "kcal"]))
+    self.update_calorie_goal()
 
   def calculate_bmr(self, weight, height, age, gender):
     #Only calculates base BMR, depending on exercise level, BMR will be multiplied
@@ -586,12 +612,13 @@ class NotesPanel(QWidget):
 
   def show_intake_entry(self):
     global entry
-    entry = EditDailyIntake()
+    entry = EditDailyIntake(self)
     entry.show()
 
 class EditDailyIntake(QWidget):
-  def __init__(self):
+  def __init__(self, parent):
     super().__init__()
+    self.this_parent = parent
     self.db_wrapper = DatabaseWrapper()
     self.table_name = "Nutrition"
     self.setStyleSheet(   
@@ -665,6 +692,7 @@ class EditDailyIntake(QWidget):
   def confirm_button(self):
     if self.calorie_line_edit.text() != "":
       self.db_wrapper.update_table_column(self.table_name, "calorie_goal", self.calorie_line_edit.text())
+      self.this_parent.update_calorie_goal()
       self.close()
 
 class FoodDBSearchPanel(QWidget):
@@ -772,6 +800,7 @@ class FoodDBSearchPanel(QWidget):
     food_info = [None] * len(response)
     for i in range(len(response)):
       food_info[i] = api.food_info(response[i]["id"], "g", float(self.search_bar_amount.text()))
+      print(food_info[i]["nutrition"]["nutrients"][1])
       response_button[i] = QPushButton(str(food_info[i]["name"]) + " " + str(food_info[i]["nutrition"]["nutrients"][1]["amount"]))
       response_button[i].clicked.connect(partial(self.result_to_data, food_info[i]))
       self.result_layout.addWidget(response_button[i])
