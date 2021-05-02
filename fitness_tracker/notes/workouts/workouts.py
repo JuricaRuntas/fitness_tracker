@@ -21,6 +21,7 @@ class WorkoutsNotes(QWidget):
 
   def create_grid(self):
     self.grid = QGridLayout()
+    self.grid.setContentsMargins(0, 0, 0, 0)
     self.grid.addWidget(self.side_panel, 1, 0, 8, 1)
     self.grid.addWidget(self.main_panel, 1, 1, 8, 3)
     self.setLayout(self.grid)

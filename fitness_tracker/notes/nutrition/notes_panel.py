@@ -39,9 +39,6 @@ class NotesPanel(QWidget):
     self.selected_day = "Monday"
     self.selected_past_week = 0
     self.daily_summary = True
-    global b
-    b = FoodDBSearchPanel(self, "this", "Monday", "Breakfast")
-    b.show()
     if self.db_wrapper.local_table_is_empty(self.table_name): self.db_wrapper.insert_default_values(self.table_name)
     self.setStyleSheet(
     """QWidget{
@@ -784,13 +781,13 @@ class FoodDBSearchPanel(QWidget):
     self.result_layout = QVBoxLayout()
     self.result_layout.setAlignment(Qt.AlignTop)
     
-    with open('temp.json', 'r') as datafile:
-      food_info_temp = json.load(datafile)
-    response_button = [None] * len(food_info_temp)
-    for i in range(len(food_info_temp)):
-      response_button[i] = QPushButton(str(food_info_temp[i]["name"]) + " " + str(self.get_nutrient(food_info_temp[i], "Calories")))
-      response_button[i].clicked.connect(partial(self.result_to_data, food_info_temp[i]))
-      self.result_layout.addWidget(response_button[i])
+    #with open('temp.json', 'r') as datafile:
+    #  food_info_temp = json.load(datafile)
+    #response_button = [None] * len(food_info_temp)
+    #for i in range(len(food_info_temp)):
+    #  response_button[i] = QPushButton(str(food_info_temp[i]["name"]) + " " + str(self.get_nutrient(food_info_temp[i], "Calories")))
+    #  response_button[i].clicked.connect(partial(self.result_to_data, food_info_temp[i]))
+    #  self.result_layout.addWidget(response_button[i])
     self.scroll_area = QScrollArea()
     self.scroll_area.setWidgetResizable(True)
     widg = QWidget()
@@ -816,7 +813,6 @@ class FoodDBSearchPanel(QWidget):
     food_info = [None] * len(response)
     for i in range(len(response)):
       food_info[i] = api.food_info(response[i]["id"], "g", float(self.search_bar_amount.text()))
-      print(food_info[i]["nutrition"]["nutrients"][1])
       response_button[i] = QPushButton(str(food_info[i]["name"]) + " " + str(self.get_nutrient(food_info[i], "Calories")))
       response_button[i].clicked.connect(partial(self.result_to_data, food_info[i]))
       self.result_layout.addWidget(response_button[i])

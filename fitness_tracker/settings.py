@@ -42,11 +42,14 @@ class SettingsWindow(QWidget):
         }""")
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
         self.setWindowModality(Qt.ApplicationModal)
-        self.setFixedSize(300, 500)
+        self.setFixedSize(300, 200)
         layout = QVBoxLayout()
-
+        center_at_start_layout = QHBoxLayout()
+        center_at_start_label = QLabel("Center Window At Startup")
         self.center_at_start = QCheckBox()
         self.center_at_start.stateChanged.connect(lambda:self.center_startup_setting(self.center_at_start))
+        center_at_start_layout.addWidget(center_at_start_label)
+        center_at_start_layout.addWidget(self.center_at_start)
         if config['WINDOW'].get('CenterAtStartup') == 'yes':
             self.center_at_start.setChecked(True)
         else:
@@ -54,12 +57,12 @@ class SettingsWindow(QWidget):
 
         self.close_button = QPushButton("Close")
         self.close_button.clicked.connect(self.close_win)
-        self.label = QLabel("Temp")
+        self.label = QLabel("Settings:")
 
         #CLOSE LAUNCHER TO SYSTEM TRAY/CLOSE APPLICATION, LAUNCH AT STARTUP, VERSION INFO, UPDATE (AUTO, MANUAL, CHECK)
 
         layout.addWidget(self.label)
-        layout.addWidget(self.center_at_start)
+        layout.addLayout(center_at_start_layout)
         layout.addWidget(self.close_button)
         self.setLayout(layout)
 
