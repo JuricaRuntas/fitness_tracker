@@ -41,13 +41,14 @@ class FoodDB(QWidget):
   def show_main_panel(self, signal):
     if signal:
       old_main_panel_reference = self.grid.itemAt(1).widget() 
-      main_panel = FoodDatabase(self)
+      main_panel = FoodDatabasePanel(self)
       main_panel.search_signal.connect(lambda search: self.show_search_results(search))
       self.grid.replaceWidget(old_main_panel_reference, main_panel)
+      old_main_panel_reference.deleteLater()
 
   @pyqtSlot(int)
   def show_food_panel(self, food_id):
     old_main_panel_reference = self.grid.itemAt(1).widget() 
     food_panel = FoodPanel(self, food_id)
     self.grid.replaceWidget(old_main_panel_reference, food_panel)
-    self.search_results_panel.deleteLater()
+    old_main_panel_reference.deleteLater()
