@@ -282,43 +282,54 @@ class MainPanel(QWidget):
   
   def update_weight(self):
     global weight_edit
-    weight_edit = EditButtonLine("weight")
+    weight_edit = EditButtonLine(self, "weight")
     weight_edit.show()
 
   def update_goal(self):
     global goal_edit
-    goal_edit = EditRadioButton("goal", self.user_data["Goal"])
+    goal_edit = EditRadioButton(self, "goal", self.user_data["Goal"])
     goal_edit.show()
 
   def update_height(self):
     global height_edit
-    height_edit = EditButtonLine("height")
+    height_edit = EditButtonLine(self, "height")
     height_edit.show()
 
   def update_age(self):
     global age_edit
-    age_edit = EditButtonLine("age")
+    age_edit = EditButtonLine(self, "age")
     age_edit.show()
 
   def update_username(self):
     global name_edit
-    name_edit = EditButtonLine("username")
+    name_edit = EditButtonLine(self, "username")
     name_edit.show()
 
   def update_goal_weight(self):
     global gw_edit
-    gw_edit = EditButtonLine("goalweight")
+    gw_edit = EditButtonLine(self, "goalweight")
     gw_edit.show()
 
   def update_gender(self):
     global gender_edit
-    gender_edit = EditRadioButton("gender", self.user_data["Gender"])
+    gender_edit = EditRadioButton(self, "gender", self.user_data["Gender"])
     gender_edit.show()
 
+  def refresh_user_data(self):
+    self.user_data = self.db_wrapper.fetch_local_user_info()
+    self.name_label.setText(" ".join(["Username:", self.user_data["Name"]]))
+    self.age_label.setText(" ".join(["Age:", self.user_data["Age"]]))
+    self.height_label.setText(" ".join(["Height:", self.user_data["Height"]]))
+    self.goalw_label.setText(" ".join(["Goal Weight:", self.user_data["Weight Goal"]]))
+    self.weight_label.setText(" ".join(["Weight:", self.user_data["Weight"]]))
+    self.goal_label.setText(" ".join(["Goal:", self.user_data["Goal"]]))
+    self.gender_label.setText(" ".join(["Gender:", self.user_data["Gender"]]))
+
 class EditButtonLine(QWidget):
-  def __init__(self, edit_func):
+  def __init__(self, parent, edit_func):
     super().__init__()
     self.edit_func = edit_func
+    self.this_parent = parent
     self.db_wrapper = DatabaseWrapper()
     self.setStyleSheet(   
     """QWidget{
@@ -407,32 +418,38 @@ class EditButtonLine(QWidget):
   def confirm_height(self):
     if self.line_edit.text() != "":
       self.db_wrapper.update_table_column("Users", "height", self.line_edit.text())
+      self.this_parent.refresh_user_data()
       self.close()
 
   def confirm_weight(self):
     if self.line_edit.text() != "":
       self.db_wrapper.update_table_column("Users", "weight", self.line_edit.text())
+      self.this_parent.refresh_user_data()
       self.close()
 
   def confirm_age(self):
     if self.line_edit.text() != "":
       self.db_wrapper.update_table_column("Users", "age", self.line_edit.text())
+      self.this_parent.refresh_user_data()
       self.close()
 
   def confirm_name(self):
     if self.line_edit.text() != "":
       self.db_wrapper.update_table_column("Users", "name", self.line_edit.text())
+      self.this_parent.refresh_user_data()
       self.close()
 
   def confirm_goal_weight(self):
     if self.line_edit.text() != "":
       self.db_wrapper.update_table_column("Users", "goalweight", self.line_edit.text())
+      self.this_parent.refresh_user_data()
       self.close()    
 
 class EditRadioButton(QWidget):
-  def __init__(self, edit_func, parameter):
+  def __init__(self, parent, edit_func, parameter):
     super().__init__()
     self.edit_func = edit_func
+    self.this_parent = parent
     self.parameter = parameter # goal or gender
     self.db_wrapper = DatabaseWrapper()
     self.setStyleSheet(   
@@ -532,4 +549,5 @@ class EditRadioButton(QWidget):
     return layout
 
   def close_button(self):
+    self.this_parent.refresh_user_data()
     self.close()
