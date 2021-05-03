@@ -1,7 +1,7 @@
 import json
 import os
-from PyQt5.QtWidgets import (QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit,
-                             QLabel, QPushButton, QGroupBox, QRadioButton, QHBoxLayout, QComboBox)
+from PyQt5.QtWidgets import (QSizePolicy, QWidget, QGridLayout, QFrame, QVBoxLayout, QFormLayout, QLineEdit,
+                             QLabel, QPushButton, QGroupBox, QRadioButton, QHBoxLayout, QComboBox, QSpacerItem)
 from PyQt5.QtGui import QFont, QCursor, QPixmap
 from PyQt5.QtCore import Qt, pyqtSignal
 from fitness_tracker.notes.nutrition.calorie_goal_calculator import CalorieGoalCalculator
@@ -48,8 +48,8 @@ class SignupQuestions(QWidget):
       background-color: #440D0F;
     }
     QComboBox:down-arrow{
-      width: 24.54px;
-      height: 10px;
+      width: 0px;
+      height: 0px;
       background: #d3d3d3; 
       opacity:0
     }
@@ -58,6 +58,8 @@ class SignupQuestions(QWidget):
       border: 0px;
       opacity:0;
       border-radius: 0px;
+      width: 0px;
+      height: 0px;
     }
     QComboBox:hover:!pressed{
       background-color: #5D1A1D;
@@ -90,6 +92,7 @@ class SignupQuestions(QWidget):
     title_frame.setLayout(title_layout)
 
     form_layout = self.create_form_layout()
+    form_layout.setAlignment(Qt.AlignCenter)
 
     wrapper_layout = QVBoxLayout()
     wrapper_layout.setAlignment(Qt.AlignCenter)
@@ -149,7 +152,6 @@ class SignupQuestions(QWidget):
     self.weight_entry.setFixedSize(300, 30)
     
     self.height_layout = QHBoxLayout()
-    self.height_layout.setAlignment(Qt.AlignCenter)
     self.height_entry = QLineEdit()
     self.height_entry.setFixedSize(300, 30)
     self.height_entry.setPlaceholderText("Height")
@@ -241,7 +243,6 @@ class SignupQuestions(QWidget):
 
   def calorie_params_layout(self):
     params_layout = QVBoxLayout()
-    params_layout.setAlignment(Qt.AlignCenter)
     
     goal_weight_layout = QVBoxLayout()
     #goal_weight_label = QLabel("Goal weight")
@@ -263,7 +264,7 @@ class SignupQuestions(QWidget):
     activity_level_layout.addWidget(self.activity_level)
     
     weight_per_week_layout = QHBoxLayout()
-    weight_per_week_label = QLabel("Weight Change Per Week (kg):")
+    weight_per_week_label = QLabel("Weight/Week (kg):")
     weight_per_week_label.setFixedSize(160, 30)
     self.weight_per_week = QComboBox()
     self.weight_per_week.setFixedSize(140, 30)
