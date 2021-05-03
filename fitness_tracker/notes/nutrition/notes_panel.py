@@ -172,7 +172,7 @@ class NotesPanel(QWidget):
 
   def create_nutrients_panel(self):
     global nutrients
-    self.nutrients = NutrientsPanel()
+    self.nutrients = NutrientsPanel(self)
     self.nutrients.show()
 
   def create_nutrition_summary(self):
@@ -220,6 +220,11 @@ class NotesPanel(QWidget):
             self.totals[i] += int(self.get_nutrient(subitem, self.nutrients[i][0]))
             #self.totals[i] += int(self.get_nutrient(subitem["nutrition"]["nutrients"][self.nutrients[i][1]]["amount"]))
         self.nutrition_labels[i] = QLabel(self.nutrients[i][0] + ": " + str(self.totals[i]) + self.nutrients[i][2])
+        self.nutrition_labels[i].setAlignment(Qt.AlignCenter)
+        nsummary_layout.addWidget(self.nutrition_labels[i])
+      else:
+        self.nutrition_labels[i] = QLabel("")
+        self.nutrition_labels[i].setFixedHeight(0)
         self.nutrition_labels[i].setAlignment(Qt.AlignCenter)
         nsummary_layout.addWidget(self.nutrition_labels[i])
 
@@ -422,6 +427,18 @@ class NotesPanel(QWidget):
               self.totals[i] += int(self.get_nutrient(subitem, self.nutrients[i][0]))
         if self.nutrition_labels[i] != None: self.nutrition_labels[i].setText(self.nutrients[i][0] + ": " + str(self.totals[i]) + self.nutrients[i][2]) 
 
+  def update_nutrient_labels(self):
+    temp_nutrients = (["Calories", 1, 'kcal'], ["Protein", 21, 'g'], ["Carbohydrates", 32, 'g'], ["Fat", 24, 'g'], ["Fiber", 13, 'g'], ["Sugar", 6, 'g'])
+    for i in range(len(self.nutrition_labels)):
+      if config['NUTRITION'].get(self.options[i][0]) == 'yes':
+        self.nutrition_labels[i].setText(temp_nutrients[i][0] + ": " + str(self.totals[i]) + temp_nutrients[i][2])
+        self.nutrition_labels[i].setAlignment(Qt.AlignCenter)
+        self.nutrition_labels[i].setFixedHeight(32)
+      else:
+        self.nutrition_labels[i].setText("")
+        self.nutrition_labels[i].setFixedHeight(0)
+        self.nutrition_labels[i].setAlignment(Qt.AlignCenter)
+
   def calculate_monthly_totals(self):
     for i in range(len(self.totals)):
       self.totals[i] = 0
@@ -552,6 +569,10 @@ class NotesPanel(QWidget):
     if self.selected_week == "Future":
       self.db_wrapper.delete_food_from_meal(food, meal, self.selected_day, False, True)
     self.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "meal_plans"))
+    if self.daily_summary == True:
+      self.recalculate_daily_totals()
+    else:
+      self.calculate_monthly_totals()
     self.repopulate_table()
 
   def get_nutrient(self, info, nutrient):
@@ -839,6 +860,10 @@ class FoodDBSearchPanel(QWidget):
     #test stage
     self.parentobj.meal_plans = json.loads(self.db_wrapper.fetch_local_column(self.parentobj.table_name, "meal_plans"))
     self.parentobj.repopulate_table()
+    if self.parentobj.daily_summary == True:
+      self.parentobj.recalculate_daily_totals()
+    else:
+      self.parentobj.calculate_monthly_totals()
     self.close()
     return
 
@@ -1075,8 +1100,9 @@ class RenameMeal(QWidget):
       self.close()
 
 class NutrientsPanel(QWidget):
-  def __init__(self):
+  def __init__(self, parent):
     super().__init__()
+    self.this_parent = parent
     self.setStyleSheet(   
     """QWidget{
       background-color: #232120;
@@ -1152,3 +1178,4 @@ class NutrientsPanel(QWidget):
       config.set('NUTRITION', 'Show' + nutrient, 'no')
     with open(config_path, 'w') as configfile:
       config.write(configfile)
+    self.this_parent.update_nutrient_labels()
