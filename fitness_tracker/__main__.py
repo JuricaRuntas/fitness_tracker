@@ -71,8 +71,8 @@ class FitnessTracker(QMainWindow):
 
   def create_window(self):
     self.setWindowTitle("Fitness Tracker")
-    windowX = config['WINDOW'].get('WindowX')
-    windowY = config['WINDOW'].get('WindowY')
+    windowX = config['WINDOW'].get('WindowX', fallback='1126')
+    windowY = config['WINDOW'].get('WindowY', fallback='733')
     self.resize(int(windowX), int(windowY))
     if config['WINDOW'].get('CenterAtStartup') == 'yes':
       self.center()

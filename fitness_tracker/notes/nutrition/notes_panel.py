@@ -39,6 +39,7 @@ class NotesPanel(QWidget):
     self.selected_day = "Monday"
     self.selected_past_week = 0
     self.daily_summary = True
+    self.write_default_settings()
     if self.db_wrapper.local_table_is_empty(self.table_name): self.db_wrapper.insert_default_values(self.table_name)
     self.setStyleSheet(
     """QWidget{
@@ -138,7 +139,6 @@ class NotesPanel(QWidget):
     self.change_weight_dialog.change_goal_weight_signal.connect(lambda weight: self.change_goal_weight(weight))
     self.change_weight_dialog.change_calorie_goal_signal.connect(lambda calorie_goal: self.change_calorie_goal(calorie_goal))
     self.create_panel()
-    self.write_default_settings()
     self.setStyleSheet("QLabel{color:white;}")
 
   @pyqtSlot(str)
@@ -393,16 +393,22 @@ class NotesPanel(QWidget):
     return framed_layout
 
   def write_default_settings(self):
+    nutrients = ["Calories", "Protein", "Carbohydrates", "Fat", "Fiber", "Sugar"]
     if config.has_section('NUTRITION') == False:
       config.add_section('NUTRITION')
       config.set('NUTRITION', 'ShowCalories', 'yes')
-      config.set('NUTRITION', 'ShowProteins', 'yes')
+      config.set('NUTRITION', 'ShowProtein', 'yes')
       config.set('NUTRITION', 'ShowCarbohydrates', 'yes')
-      config.set('NUTRITION', 'ShowFats', 'no')
-      config.set('NUTRITION', 'ShowFibers', 'no')
-      config.set('NUTRITION', 'ShowSugars', 'no')
+      config.set('NUTRITION', 'ShowFat', 'no')
+      config.set('NUTRITION', 'ShowFiber', 'no')
+      config.set('NUTRITION', 'ShowSugar', 'no')
       with open(config_path, 'w') as configfile:
         config.write(configfile)   
+    for i in range(len(nutrients)):
+      if config.has_option('NUTRITION', "Show" + nutrients[i]) == False:
+        config.set('NUTRITION', "Show" + nutrients[i], 'yes')        
+        with open(config_path, 'w') as configfile:
+          config.write(configfile)   
 
   def set_monthly(self):
     self.daily_summary = False

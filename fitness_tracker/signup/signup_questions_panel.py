@@ -88,7 +88,6 @@ class SignupQuestions(QWidget):
     signup_label.setAlignment(Qt.AlignCenter)
 
     title_layout.addWidget(signup_label)
-    title_layout.setAlignment(Qt.AlignCenter)
     title_frame.setLayout(title_layout)
 
     form_layout = self.create_form_layout()
@@ -157,7 +156,6 @@ class SignupQuestions(QWidget):
     self.height_entry.setPlaceholderText("Height")
     self.height_layout.addWidget(self.height_entry)
 
-    self.form_layout.addRow(self.name_entry)
     self.form_layout.addRow(self.age_line_edit)
     self.form_layout.addRow(gender_label, gender)
     self.form_layout.addRow(units_label, units)
@@ -189,6 +187,7 @@ class SignupQuestions(QWidget):
     self.form_layout.addRow(goal_label, goal)
     
     self.params_label = QLabel("Goal Parameters:")
+    self.params_label.setFixedWidth(300)
     self.params_layout = self.calorie_params_layout()
     self.form_layout.addRow(self.params_label)
     self.form_layout.addRow(self.params_layout)
