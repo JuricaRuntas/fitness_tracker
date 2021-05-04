@@ -368,12 +368,16 @@ class MainPanel(QWidget):
   def replace_graph(self, lift_type):
     new_graph = OneRMGraphCanvas(lift_type, self.rm_history, self.current_year, self)
     new_toolbar = NavigationToolbar(new_graph, self)
+    new_toolbar.setStyleSheet("background-color: white;")
 
     old_toolbar_reference = self.graph_layout.itemAt(0).widget()
     old_graph_reference = self.graph_layout.itemAt(1).widget()
     
     self.graph_layout.replaceWidget(old_toolbar_reference, new_toolbar)
     self.graph_layout.replaceWidget(old_graph_reference, new_graph)
+    
+    old_toolbar_reference.deleteLater()
+    old_graph_reference.deleteLater()
 
   def change_exercise_graph(self, exercise_name):
     lift_type = None

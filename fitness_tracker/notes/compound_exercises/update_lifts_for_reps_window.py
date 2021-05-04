@@ -134,15 +134,15 @@ class UpdateLiftsForRepsWindow(QWidget):
     try:
       fetched_lifts_for_reps = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "lifts_for_reps"))
       exercises = list(fetched_lifts_for_reps.keys())
-      horizontal_press_weight = str(int(self.horizontal_press_edit.text()))
-      floor_pull_weight = str(int(self.floor_pull_edit.text()))
-      squat_weight = str(int(self.squat_edit.text()))
-      vertical_press_weight = str(int(self.vertical_press_edit.text()))
+      horizontal_press_weight = str(float(self.horizontal_press_edit.text()))
+      floor_pull_weight = str(float(self.floor_pull_edit.text()))
+      squat_weight = str(float(self.squat_edit.text()))
+      vertical_press_weight = str(float(self.vertical_press_edit.text()))
 
-      horizontal_press_reps = str(int(self.horizontal_press_reps_edit.text())) 
-      floor_pull_reps = str(int(self.floor_pull_reps_edit.text()))
-      squat_reps = str(int(self.squat_reps_edit.text()))
-      vertical_press_reps = str(int(self.vertical_press_reps_edit.text()))
+      horizontal_press_reps = str(float(self.horizontal_press_reps_edit.text())) 
+      floor_pull_reps = str(float(self.floor_pull_reps_edit.text()))
+      squat_reps = str(float(self.squat_reps_edit.text()))
+      vertical_press_reps = str(float(self.vertical_press_reps_edit.text()))
     
       new_lifts_for_reps = {exercises[0]: [horizontal_press_reps, horizontal_press_weight],
                             exercises[1]: [floor_pull_reps, floor_pull_weight],

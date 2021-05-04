@@ -118,10 +118,10 @@ class Update1RMWindow(QWidget):
     try:
       fetched_rep_maxes = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "one_rep_maxes"))
       exercises = list(fetched_rep_maxes.keys())
-      horizontal_press_max = str(int(self.horizontal_press_edit.text()))
-      floor_pull_max = str(int(self.floor_pull_edit.text()))
-      squat_max = str(int(self.squat_edit.text()))
-      vertical_press_max = str(int(self.vertical_press_edit.text()))
+      horizontal_press_max = str(float(self.horizontal_press_edit.text()))
+      floor_pull_max = str(float(self.floor_pull_edit.text()))
+      squat_max = str(float(self.squat_edit.text()))
+      vertical_press_max = str(float(self.vertical_press_edit.text()))
       new_maxes = {exercises[0]:horizontal_press_max, exercises[1]:floor_pull_max,
                    exercises[2]:squat_max, exercises[3]:vertical_press_max}
       

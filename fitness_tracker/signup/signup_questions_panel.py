@@ -155,7 +155,8 @@ class SignupQuestions(QWidget):
     self.height_entry.setFixedSize(300, 30)
     self.height_entry.setPlaceholderText("Height")
     self.height_layout.addWidget(self.height_entry)
-
+    
+    self.form_layout.addRow(self.name_entry)
     self.form_layout.addRow(self.age_line_edit)
     self.form_layout.addRow(gender_label, gender)
     self.form_layout.addRow(units_label, units)

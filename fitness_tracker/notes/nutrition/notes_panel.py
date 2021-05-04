@@ -273,7 +273,10 @@ class NotesPanel(QWidget):
 
     intake_button_layout = QHBoxLayout()
     self.calculate_intake = QPushButton("Calculate Daily Intake")
-    self.calculate_intake.clicked.connect(lambda: self.calculate_calorie_intake(float(self.user_weight), float(self.user_height), float(self.user_age), self.gender, self.user_activity, self.loss_per_week))
+    try:
+      self.calculate_intake.clicked.connect(lambda: self.calculate_calorie_intake(float(self.user_weight), float(self.user_height), float(self.user_age), self.gender, self.user_activity, self.loss_per_week))
+    except ValueError: # imperial height causing error
+      pass
     self.edit_intake = QPushButton("Edit Daily Intake")
     self.edit_intake.clicked.connect(lambda: self.show_intake_entry())
     intake_button_layout.addWidget(self.calculate_intake)
@@ -468,7 +471,9 @@ class NotesPanel(QWidget):
               self.totals[i] += int(self.get_nutrient(subsubitem, self.nutrients[i][0]))
         self.totals[i] /= 28
         self.totals[i] = int(self.totals[i])
-        if self.nutrition_labels[i] != None: self.nutrition_labels[i].setText(self.nutrients[i][0] + ": " + str(self.totals[i]) + self.nutrients[i][2])  
+        if self.nutrition_labels[i] != None:
+          print(self.nutrients)
+          self.nutrition_labels[i].setText(self.temp_nutrients[i][0] + ": " + str(self.totals[i]) + self.temp_nutrients[i][2])  
 
   def open_meal_manager(self):
     global manager
