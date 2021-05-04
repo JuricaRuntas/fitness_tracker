@@ -66,7 +66,7 @@ class WorkoutPlanner(QWidget):
     self.calendar = QCalendarWidget(self)
     self.calendar.setLocale(QLocale(QLocale.English))
     self.calendar.setFirstDayOfWeek(Qt.DayOfWeek.Monday)
-    self.calendar.clicked.connect(lambda: self.show_date(self.calendar.selectedDate()))
+    self.calendar.clicked.connect(lambda: self.show_date())
     layout.addWidget(self.calendar)
 
     frame.setLayout(layout)
@@ -208,19 +208,23 @@ class WorkoutPlanner(QWidget):
 
     return frame
 
-  def show_date(self, date):
-    day = str(date.day()) if date.day() > 9 else "0"+str(date.day())
-    month = str(date.month()) if date.month() > 9 else "0"+str(date.month())
-    parsed_date = "/".join([day, month, str(date.year())])
-    self.current_date = parsed_date
+  def show_date(self):
+    self.current_date = self.get_calendar_date()
     if not self.current_date in self.fetched_workouts:
       self.fetched_workouts[self.current_date] = {"Personal Notes": "", "Workout Name": "None"}
     self.day_label.setText(self.current_date)
     self.refresh_workout_done(True, True)
     self.text_edit.setText(self.fetched_workouts[self.current_date]["Personal Notes"])
   
+  def get_calendar_date(self):
+    date = self.calendar.selectedDate()
+    day = str(date.day()) if date.day() > 9 else "0"+str(date.day())
+    month = str(date.month()) if date.month() > 9 else "0"+str(date.month())
+    parsed_date = "/".join([day, month, str(date.year())])
+    return parsed_date
+
   def show_1_time_window(self):
-    self.create_workout_window = CreateWorkoutWindow(one_time=True)
+    self.create_workout_window = CreateWorkoutWindow(one_time=True, date=self.get_calendar_date())
     self.create_workout_window.refresh_after_creating_signal.connect(lambda signal: self.refresh_workout_done(signal))
     self.create_workout_window.setGeometry(100, 200, 300, 300) 
     self.create_workout_window.show()
@@ -230,7 +234,7 @@ class WorkoutPlanner(QWidget):
     self.db_wrapper.update_table_column(self.table_name, "workouts", json.dumps(self.fetched_workouts))
 
   def change_workout_done(self):
-    self.select_workout_window = SelectWorkout()
+    self.select_workout_window = SelectWorkout(self.get_calendar_date())
     self.select_workout_window.refresh_workout_done_signal.connect(lambda signal: self.refresh_workout_done(signal))
     self.select_workout_window.setGeometry(100, 200, 300, 300) 
     self.select_workout_window.show()
@@ -238,19 +242,18 @@ class WorkoutPlanner(QWidget):
   @pyqtSlot(bool)
   def refresh_workout_done(self, signal, date_change=False):
     if signal:
-      if not date_change:
-        self.fetched_workouts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "workouts"))
+      if not date_change: self.fetched_workouts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "workouts"))
       self.workout_done_label.setText(" ".join(["Workout Done:", self.fetched_workouts[self.current_date]["Workout Name"]]))
       old_right_details_reference = self.grid.itemAt(3).widget()
       new_right_details = self.create_right_details()
       self.grid.replaceWidget(old_right_details_reference, new_right_details)
       old_right_details_reference.setParent(None)
-      
+
 
 class SelectWorkout(QWidget):
   refresh_workout_done_signal = pyqtSignal(bool)
 
-  def __init__(self):
+  def __init__(self, date):
     super().__init__()
     self.setStyleSheet("""
     QWidget{
@@ -285,7 +288,7 @@ class SelectWorkout(QWidget):
     self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
     self.setWindowModality(Qt.ApplicationModal)
     self.table_name = "Workouts"
-    self.current_date = datetime.today().strftime("%d/%m/%Y")
+    self.current_date = date
     self.fetched_my_workouts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "my_workouts"))
     self.setWindowModality(Qt.ApplicationModal)
     self.setWindowTitle("Select My Workout")
@@ -320,6 +323,8 @@ class SelectWorkout(QWidget):
     for button in self.radio_buttons:
       if button.isChecked():
         fetched_workouts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "workouts"))
+        if not self.current_date in fetched_workouts:
+          fetched_workouts[self.current_date] = {"Personal Notes": "", "Workout Name": "None"}
         fetched_workouts[self.current_date]["Workout Name"] = button.text()
         fetched_workouts[self.current_date]["Exercises"] = self.fetched_my_workouts[button.text()]
         self.db_wrapper.update_table_column(self.table_name, "workouts", json.dumps(fetched_workouts))

@@ -9,7 +9,7 @@ class CreateWorkoutWindow(QWidget):
   refresh_my_workouts_signal = pyqtSignal(str)
   refresh_after_creating_signal = pyqtSignal(bool)
 
-  def __init__(self, workout_name=None, one_time=False):
+  def __init__(self, workout_name=None, one_time=False, date=None):
     super().__init__()
     self.setStyleSheet("""
     QWidget{
@@ -48,7 +48,7 @@ class CreateWorkoutWindow(QWidget):
     self.table_name = "Workouts"
     self.workout_name = workout_name
     self.one_time = one_time
-    self.current_date = datetime.today().strftime("%d/%m/%Y")
+    self.current_date = date
     self.fetched_my_workouts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "my_workouts"))
     self.create_panel()
 
@@ -151,7 +151,7 @@ class CreateWorkoutWindow(QWidget):
       else:
         workouts = json.loads(self.db_wrapper.fetch_local_column(self.table_name, "workouts"))
         if not self.current_date in workouts:
-          self.fetched_workouts[self.current_date] = {"Personal Notes": "", "Workout Name": "None"}
+          workouts[self.current_date] = {"Personal Notes": "", "Workout Name": "None"}
         workouts[self.current_date]["Workout Name"] = workout_name
         workouts[self.current_date]["Exercises"] = new_workout
         self.db_wrapper.update_table_column(self.table_name, "workouts", json.dumps(workouts))
