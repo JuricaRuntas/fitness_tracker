@@ -23,6 +23,8 @@ class DatabaseWrapper(metaclass=Singleton):
     self.db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
                     "database": "postgres", "user": "admin", "password": os.environ["FT_ADMIN_PASSWORD"]}
 
+    with open(db_path, "a+") as f: pass
+
     self.sqlite_connection = sqlite3.connect(db_path)
     self.pg_connection = psycopg2.connect(**self.db_info)
     
