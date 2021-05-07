@@ -1,0 +1,63 @@
+# -*- mode: python ; coding: utf-8 -*-
+
+
+block_cipher = None
+
+
+a = Analysis(['__main__.py', 'database_wrapper.py', 'settings.py', 'titlebar.py', 'user_profile/main_panel.py',
+			'user_profile/profile.py', 'signup/signup.py', 'signup/signup_questions_panel.py', 
+			'signup/main_panel.py', 'notes/compound_exercises/compound_exercises.py', 'notes/compound_exercises/lift_history.py',
+			'notes/compound_exercises/main_panel.py', 'notes/compound_exercises/one_rm_graphs.py',
+			'notes/compound_exercises/preferred_lifts.py', 'notes/compound_exercises/update_1RM_window.py',
+			'notes/compound_exercises/update_lifts_for_reps_window.py', 'notes/nutrition/calorie_goal_calculator.py',
+			'notes/nutrition/change_weight_dialog.py', 'notes/nutrition/food_database_panel.py',
+			'notes/nutrition/food_db.py', 'notes/nutrition/food_panel.py', 'notes/nutrition/header.py',
+			'notes/nutrition/macronutrients_graph.py', 'notes/nutrition/notes_panel.py', 'notes/nutrition/nutrition.py',
+			'notes/nutrition/search_results_panel.py', 'notes/nutrition/spoonacular.py',
+			'notes/weight_loss/calories_burnt_dialog.py', 'notes/weight_loss/cardio_history.py',
+			'notes/weight_loss/header.py', 'notes/weight_loss/main_panel.py', 'notes/weight_loss/weight_loss.py',
+			'notes/weight_loss/weight_loss_edit_dialog.py', 'notes/weight_loss/weight_loss_graph.py',
+			'notes/weight_loss/weight_loss_history.py', 'notes/workouts/create_workout_window.py',
+			'notes/workouts/exercise_info.py', 'notes/workouts/exercises_and_workouts.py',
+			'notes/workouts/workout_planner.py', 'notes/workouts/workouts.py', 'notes/workouts/workouts_api.py',
+			'login/login.py', 'login/main_panel.py', 'homepage/header.py', 'homepage/side_panel.py', 
+			'common/units_conversion.py', 'calculators/body_fat/body_fat.py', 'calculators/body_fat/body_fat_formulas.py',
+			'calculators/body_fat/body_fat_calculator.py', 'calculators/body_fat/main_panel.py', 
+			'calculators/one_rep_max/main_panel.py', 'calculators/one_rep_max/one_rep_max.py', 
+			'calculators/one_rep_max/one_rep_max_calculator.py', 'calculators/strength_estimator/estimator.py',
+			'calculators/strength_estimator/exercise_standards.py', 'calculators/strength_estimator/main_panel.py',
+			'calculators/strength_estimator/strength_estimator.py'],
+             pathex=['C:\\Programiranje\\fitness_tracker\\fitness_tracker'],
+             binaries=[],
+             datas=[('fitness_tracker.db', '.')],
+             hiddenimports=['requests', 'multiprocessing', 'org', 'multiprocessing.set_start_method'
+			 , '_posixsubprocess', 'grp', 'pwd', '_posixshmem', 'multiprocessing.get_start_method',
+			 'urllib'],
+             hookspath=[],
+             runtime_hooks=[],
+             excludes=[],
+             win_no_prefer_redirects=False,
+             win_private_assemblies=False,
+             cipher=block_cipher,
+             noarchive=False)
+pyz = PYZ(a.pure, a.zipped_data,
+             cipher=block_cipher)
+exe = EXE(pyz,
+          a.scripts,
+          [],
+          exclude_binaries=True,
+          name='Tracker',
+          debug=False,
+          bootloader_ignore_signals=False,
+          strip=False,
+          upx=True,
+          console=True, 
+		  icon='icon.ico')
+coll = COLLECT(exe,
+               a.binaries,
+               a.zipfiles,
+               a.datas,
+               strip=False,
+               upx=True,
+               upx_exclude=[],
+               name='Tracker')
