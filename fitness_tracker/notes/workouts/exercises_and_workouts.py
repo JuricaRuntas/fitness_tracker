@@ -7,8 +7,11 @@ from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal
 from fitness_tracker.database_wrapper import DatabaseWrapper
 from .create_workout_window import CreateWorkoutWindow
+import sys
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)))
+if getattr(sys, 'frozen', False):
+    path = os.path.join(os.path.dirname(sys.executable), "notes", "workouts")
 muscle_groups_path = os.path.join(path, "muscle_groups")
 icons_path = os.path.join(path, "icons")
 

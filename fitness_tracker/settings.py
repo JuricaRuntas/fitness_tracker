@@ -3,7 +3,10 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from configparser import ConfigParser
 import os
+import sys
 config_path = os.path.join(os.path.dirname(__file__), "config", "settings.ini")
+if getattr(sys, 'frozen', False):
+    config_path = os.path.join(os.path.dirname(sys.executable), "config", "settings.ini")
 config = ConfigParser()
 config.read(config_path)
 
@@ -80,6 +83,6 @@ class SettingsWindow(QWidget):
             config.set('WINDOW', 'CenterAtStartup', 'yes')
         if btn.isChecked() == False:
             config.set('WINDOW', 'CenterAtStartup', 'no')
-        with open(os.path.join(os.path.dirname(__file__), "config", "settings.ini"), 'w') as configfile:
+        with open(config_path, 'w') as configfile:
             config.write(configfile)
 

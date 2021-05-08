@@ -1,0 +1,1 @@
+pyinstaller Tracker.spec 

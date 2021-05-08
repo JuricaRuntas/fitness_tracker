@@ -13,12 +13,17 @@ from fitness_tracker.database_wrapper import DatabaseWrapper
 from .change_weight_dialog import ChangeWeightDialog
 from .spoonacular import FoodDatabase
 from configparser import ConfigParser
+import sys
 
 config_path = os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir, "config", "settings.ini")
+if getattr(sys, 'frozen', False):
+    config_path = os.path.join(os.path.dirname(sys.executable), "config", "settings.ini")
 config = ConfigParser()
 config.read(config_path)
 
 path = os.path.abspath(os.path.dirname(__file__))
+if getattr(sys, 'frozen', False):
+    path = os.path.join(os.path.dirname(sys.executable), "notes", "nutrition")
 icons_path = os.path.join(path, "icons")
 
 icons = {"pencil": os.path.join(icons_path, "pencil.png"),
@@ -172,8 +177,8 @@ class NotesPanel(QWidget):
 
   def create_nutrients_panel(self):
     global nutrients
-    self.nutrients = NutrientsPanel(self)
-    self.nutrients.show()
+    nutrients = NutrientsPanel(self)
+    nutrients.show()
 
   def create_nutrition_summary(self):
     nsummary_layout = QVBoxLayout()
@@ -422,6 +427,7 @@ class NotesPanel(QWidget):
     self.recalculate_daily_totals()   
 
   def recalculate_daily_totals(self):
+    temp_nutrients = (["Calories", 1, 'kcal'], ["Protein", 21, 'g'], ["Carbohydrates", 32, 'g'], ["Fat", 24, 'g'], ["Fiber", 13, 'g'], ["Sugar", 6, 'g'])
     for i in range(len(self.totals)):
       self.totals[i] = 0
     for i in range(len(self.nutrition_labels)):
@@ -429,12 +435,12 @@ class NotesPanel(QWidget):
         if self.selected_week == 'Past':
           for item in self.meal_plans[self.selected_week][self.selected_past_week][self.selected_day]:
             for subitem in self.meal_plans[self.selected_week][self.selected_past_week][self.selected_day][item]:
-              self.totals[i] += int(self.get_nutrient(subitem, self.nutrients[i][0]))
+              self.totals[i] += int(self.get_nutrient(subitem, temp_nutrients[i][0]))
         else:
           for item in self.meal_plans[self.selected_week][self.selected_day]:
             for subitem in self.meal_plans[self.selected_week][self.selected_day][item]:
-              self.totals[i] += int(self.get_nutrient(subitem, self.nutrients[i][0]))
-        if self.nutrition_labels[i] != None: self.nutrition_labels[i].setText(self.nutrients[i][0] + ": " + str(self.totals[i]) + self.nutrients[i][2]) 
+              self.totals[i] += int(self.get_nutrient(subitem, temp_nutrients[i][0]))
+        if self.nutrition_labels[i] != None: self.nutrition_labels[i].setText(temp_nutrients[i][0] + ": " + str(self.totals[i]) + temp_nutrients[i][2]) 
 
   def update_nutrient_labels(self):
     temp_nutrients = (["Calories", 1, 'kcal'], ["Protein", 21, 'g'], ["Carbohydrates", 32, 'g'], ["Fat", 24, 'g'], ["Fiber", 13, 'g'], ["Sugar", 6, 'g'])
@@ -449,6 +455,7 @@ class NotesPanel(QWidget):
         self.nutrition_labels[i].setAlignment(Qt.AlignCenter)
 
   def calculate_monthly_totals(self):
+    temp_nutrients = (["Calories", 1, 'kcal'], ["Protein", 21, 'g'], ["Carbohydrates", 32, 'g'], ["Fat", 24, 'g'], ["Fiber", 13, 'g'], ["Sugar", 6, 'g'])
     for i in range(len(self.totals)):
       self.totals[i] = 0
     for i in range(len(self.nutrition_labels)):
@@ -456,24 +463,23 @@ class NotesPanel(QWidget):
         for item in self.meal_plans['Past'][0]:
           for subitem in self.meal_plans['Past'][0][item]:
             for subsubitem in self.meal_plans['Past'][0][item][subitem]:
-              self.totals[i] += int(self.get_nutrient(subsubitem, self.nutrients[i][0]))
+              self.totals[i] += int(self.get_nutrient(subsubitem, temp_nutrients[i][0]))
         for item in self.meal_plans['Past'][1]:
           for subitem in self.meal_plans['Past'][1][item]:
             for subsubitem in self.meal_plans['Past'][1][item][subitem]:
-              self.totals[i] += int(self.get_nutrient(subsubitem, self.nutrients[i][0]))
+              self.totals[i] += int(self.get_nutrient(subsubitem, temp_nutrients[i][0]))
         for item in self.meal_plans['Past'][2]:
           for subitem in self.meal_plans['Past'][2][item]:
             for subsubitem in self.meal_plans['Past'][2][item][subitem]:
-              self.totals[i] += int(self.get_nutrient(subsubitem, self.nutrients[i][0]))
+              self.totals[i] += int(self.get_nutrient(subsubitem, temp_nutrients[i][0]))
         for item in self.meal_plans['Present']:
           for subitem in self.meal_plans['Present'][item]:
             for subsubitem in self.meal_plans['Present'][item][subitem]:
-              self.totals[i] += int(self.get_nutrient(subsubitem, self.nutrients[i][0]))
+              self.totals[i] += int(self.get_nutrient(subsubitem, temp_nutrients[i][0]))
         self.totals[i] /= 28
         self.totals[i] = int(self.totals[i])
         if self.nutrition_labels[i] != None:
-          print(self.nutrients)
-          self.nutrition_labels[i].setText(self.temp_nutrients[i][0] + ": " + str(self.totals[i]) + self.temp_nutrients[i][2])  
+          self.nutrition_labels[i].setText(temp_nutrients[i][0] + ": " + str(self.totals[i]) + temp_nutrients[i][2])  
 
   def open_meal_manager(self):
     global manager
@@ -523,7 +529,8 @@ class NotesPanel(QWidget):
 
   def change_day(self, day):
     self.selected_day = day
-    self.recalculate_daily_totals()
+    if self.daily_summary == True:
+      self.recalculate_daily_totals()
     self.repopulate_table()
     self.update_calorie_goal()
 

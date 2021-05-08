@@ -24,6 +24,8 @@ from configparser import ConfigParser
 
 icon_path = os.path.join(os.path.dirname(__file__), "icon.png")
 config_path = os.path.join(os.path.dirname(__file__), "config", "settings.ini")
+if getattr(sys, 'frozen', False):
+    config_path = os.path.join(os.path.dirname(sys.executable), "config", "settings.ini")
 config = ConfigParser()
 config.read(config_path)
 
@@ -33,6 +35,9 @@ class FitnessTracker(QMainWindow):
     self.setWindowIcon(QIcon(icon_path))
     QFontDatabase.addApplicationFont(os.path.join(os.path.dirname(__file__), "font", "Montserrat-Regular.ttf"))
     QFontDatabase.addApplicationFont(os.path.join(os.path.dirname(__file__), "font", "Ubuntu-Regular.ttf"))
+    if getattr(sys, 'frozen', False):
+      QFontDatabase.addApplicationFont(os.path.join(os.path.dirname(sys.executable), "font", "Montserrat-Regular.ttf"))
+      QFontDatabase.addApplicationFont(os.path.join(os.path.dirname(sys.executable), "font", "Ubuntu-Regular.ttf"))
     
     self.db_wrapper = DatabaseWrapper()
     

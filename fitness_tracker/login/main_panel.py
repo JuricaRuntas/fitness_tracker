@@ -4,8 +4,11 @@ from PyQt5.QtGui import QFont, QCursor, QPixmap
 from PyQt5.QtCore import Qt, pyqtSignal
 from fitness_tracker.database_wrapper import DatabaseWrapper
 import os
+import sys
 
 icon_path = os.path.join(os.path.dirname(__file__), os.path.pardir, "icons", "ftarizonacalligraphy.png")
+if getattr(sys, 'frozen', False):
+    icon_path = os.path.join(os.path.dirname(sys.executable), "icons", "ftarizonacalligraphy.png")
 
 class MainPanel(QWidget):
   emit_layout_name = pyqtSignal(str)

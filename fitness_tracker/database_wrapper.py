@@ -4,6 +4,7 @@ import sqlite3
 import psycopg2
 import hashlib
 import json
+import sys
 from datetime import datetime
 from psycopg2 import sql
 
@@ -19,9 +20,12 @@ class DatabaseWrapper(metaclass=Singleton):
   
   def __init__(self, db_path=None):
     db_path = self.db_path if db_path == None else db_path
-
+    if getattr(sys, 'frozen', False):
+      db_path = os.path.join(os.path.dirname(sys.executable), "fitness_tracker.db")
     self.db_info = {"host": "fitnesstracker.cc7s2r4sjjv6.eu-west-3.rds.amazonaws.com", "port": 5432,
-                    "database": "postgres", "user": "admin", "password": os.environ["FT_ADMIN_PASSWORD"]}
+                    "database": "postgres", "user": "admin", "password": "xkK70g*BaQ@n"}
+
+    with open(db_path, "a+") as f: pass
 
     self.sqlite_connection = sqlite3.connect(db_path)
     self.pg_connection = psycopg2.connect(**self.db_info)

@@ -5,8 +5,11 @@ from PyQt5.QtGui import QFont, QIcon, QPainter, QBrush, QColor
 from PyQt5.QtCore import QPoint, Qt, QSize
 from fitness_tracker.settings import SettingsWindow
 from fitness_tracker.database_wrapper import DatabaseWrapper
+import sys
 
 path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "icons")
+if getattr(sys, 'frozen', False):
+    path = os.path.join(os.path.dirname(sys.executable), "icons")
 
 icons = {"close": os.path.join(path, "close.bmp"),
          "min": os.path.join(path, "min.bmp"),

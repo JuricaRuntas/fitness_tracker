@@ -65,7 +65,7 @@ class Spoonacular:
     return self.make_request(endpoint, params)
 
 class FoodDatabase(Spoonacular):
-  def __init__(self, api_key=os.environ["SPOONACULAR_API_KEY"]):
+  def __init__(self, api_key="fcd39bbf71a44b7fa6ea61880563728b"):
     Spoonacular.__init__(self, api_key)
 
   def food_search(self, food, number, intolerances=None):
