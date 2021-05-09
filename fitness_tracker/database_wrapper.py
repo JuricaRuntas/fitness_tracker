@@ -133,17 +133,25 @@ class DatabaseWrapper(metaclass=Singleton):
       days_in_a_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
       default_meal_names = ["Breakfast", "Lunch", "Snack", "Dinner"]
       meals = {"Past": [], "Present": [], "Future":[], "Current Week Number": int(datetime.now().strftime("%V"))}
-      for time in meals:
-        if not time == "Past" and not time == "Current Week Number":
-          this_week_meals = {}
-          for day in days_in_a_week:
-            day_dict = {}
-            for meal in default_meal_names:
-              day_dict[meal] = []
-            this_week_meals[day] = day_dict
-          meals[time] = this_week_meals
-         
-        default_values = {"email": self.user_email, "meal_plans": json.dumps(meals), "manage_meals": json.dumps(default_meal_names)}
+      
+      for i in range(8):
+        for time in meals:
+          if not time == "Current Week Number":
+            if time == "Present" and len(meals["Present"]) > 0: continue
+            if time == "Future" and len(meals["Future"]) > 0: continue
+            this_week_meals = {}
+            for day in days_in_a_week:
+              day_dict = {}
+              for meal in default_meal_names:
+                day_dict[meal] = []
+              this_week_meals[day] = day_dict
+            if not time == "Past":
+              meals[time] = this_week_meals
+            else:
+              meals["Past"].append(this_week_meals)
+              
+      
+      default_values = {"email": self.user_email, "meal_plans": json.dumps(meals), "manage_meals": json.dumps(default_meal_names)}
       if (calorie_goal != None): default_values["calorie_goal"] = calorie_goal
 
     elif table_name == "Compound Exercises":
