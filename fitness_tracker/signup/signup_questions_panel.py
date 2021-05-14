@@ -320,4 +320,7 @@ class SignupQuestions(QWidget):
                                                       float(weight), goal_params[0], goal, goal_params[1])
       calorie_goal = calorie_goal_calculator.calculate_calorie_goal()
       self.db_wrapper.insert_default_values("Nutrition", calorie_goal=calorie_goal)
+      self.db_wrapper.insert_default_values("Compound Exercises")
+      self.db_wrapper.insert_default_values("Weight Loss")
+      self.db_wrapper.insert_default_values("Workouts")
       self.display_layout_signal.emit("Compound Exercises")

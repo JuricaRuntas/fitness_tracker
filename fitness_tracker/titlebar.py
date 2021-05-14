@@ -35,6 +35,7 @@ class TitleBar(QWidget):
             self.version = QLabel()
         else:
             self.version = QLabel("-" + self.username)
+
         self.setFixedHeight(25)
 
         self.gridlayout = QHBoxLayout()
@@ -100,6 +101,14 @@ class TitleBar(QWidget):
         self.layout.addWidget(self.title)
         self.layout.addItem(version_space)
         self.layout.addWidget(self.version)
+
+        if not self.db_wrapper.connection_exists:
+          self.layout.addItem(QSpacerItem(20, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))
+          connection_label = QLabel("No internet connection. Changes will not be saved!")
+          connection_label.setStyleSheet("color: red;")
+          connection_label.setFont(title_font)
+          self.layout.addWidget(connection_label)
+
         self.layout.addStretch(-1)
 
         self.gridlayout.addLayout(self.layout)

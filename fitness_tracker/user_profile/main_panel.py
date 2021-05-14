@@ -212,7 +212,8 @@ class MainPanel(QWidget):
     
     current_index = 0 if self.user_data["Units"] == "metric" else 1
     self.display_units_combobox.setCurrentIndex(current_index)
-    self.display_units_combobox.activated.connect(lambda: self.change_units(self.display_units_combobox.currentText().lower()))
+    if self.db_wrapper.connection_exists:
+      self.display_units_combobox.activated.connect(lambda: self.change_units(self.display_units_combobox.currentText().lower()))
     
     display_units.addWidget(display_units_label)
     display_units.addWidget(self.display_units_combobox)

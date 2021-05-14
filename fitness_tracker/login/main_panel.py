@@ -59,7 +59,7 @@ class MainPanel(QWidget):
 
     login_label.setAlignment(Qt.AlignCenter)
     login_label.setStyleSheet("font-size: 48px;")
-
+    
     title_layout.addWidget(login_label)
     title_frame.setLayout(title_layout)
 
@@ -127,4 +127,5 @@ class MainPanel(QWidget):
   def login(self):
     email = self.email_entry.text()
     password = self.password_entry.text()
-    if self.db_wrapper.login_user(email, password): self.emit_layout_name.emit("Compound Exercises")
+    if self.db_wrapper.connection_exists and self.db_wrapper.login_user(email, password):
+      self.emit_layout_name.emit("Compound Exercises")

@@ -808,7 +808,8 @@ class FoodDBSearchPanel(QWidget):
 
     search_bar_button = QPushButton()
     search_bar_button.setIcon(search_icon)
-    search_bar_button.clicked.connect(lambda:self.update_search_results(search_bar_line_edit.text()))
+    if self.db_wrapper.connection_exists:
+      search_bar_button.clicked.connect(lambda:self.update_search_results(search_bar_line_edit.text()))
 
     search_bar_layout.addWidget(search_bar_line_edit)
     search_bar_layout.addWidget(self.search_bar_amount)

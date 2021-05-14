@@ -4,6 +4,7 @@ from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt, pyqtSignal
 from .spoonacular import FoodDatabase
 from fitness_tracker.homepage.side_panel import SidePanel
+from fitness_tracker.database_wrapper import DatabaseWrapper
 
 class FoodDatabasePanel(QWidget):
   search_signal = pyqtSignal(object)
@@ -74,7 +75,8 @@ class FoodDatabasePanel(QWidget):
       border: 1px solid;
       border-color: #cdcdcd;
     }
-    """) 
+    """)
+    self.db_wrapper = DatabaseWrapper()
 
   def create_panel(self):
     grid = QGridLayout()
@@ -122,7 +124,7 @@ class FoodDatabasePanel(QWidget):
     self.setLayout(grid)
 
   def emit_search_signal(self):
-    if not self.search_bar.text() == '':
+    if not self.search_bar.text() == '' and self.db_wrapper.connection_exists:
       api = FoodDatabase()
       search = self.search_bar.text()
       search_results = api.food_search(search, 6)

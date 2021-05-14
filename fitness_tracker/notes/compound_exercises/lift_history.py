@@ -59,7 +59,8 @@ class LiftHistory(QScrollArea):
     
     self.lift_history = self.db_wrapper.fetch_local_column(self.table_name, "lift_history")
     if create and not self.lift_history == None:
-      if not init_layout: 
+      if not init_layout:
+        if not self.db_wrapper.connection_exists: return
         self.delete_history()
       lift_history = json.loads(self.lift_history)
       self.labels = [None] * len(lift_history)

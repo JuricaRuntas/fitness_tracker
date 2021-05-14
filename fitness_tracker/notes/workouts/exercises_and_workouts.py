@@ -276,13 +276,16 @@ class ExercisesAndWorkouts(QWidget):
 
   def edit_workout(self):
     selected_button = None
-    for button in self.buttons:
-      if button.isFlat(): selected_button = button
-    if selected_button != None:
-      self.edit_workout_window = CreateWorkoutWindow(selected_button.text())
-      self.edit_workout_window.refresh_my_workouts_signal.connect(lambda workout_name: self.refresh_my_workouts(workout_name))
-      self.edit_workout_window.setGeometry(100, 200, 300, 300) 
-      self.edit_workout_window.show()
+    try:
+      for button in self.buttons:
+        if button.isFlat(): selected_button = button
+      if selected_button != None:
+        self.edit_workout_window = CreateWorkoutWindow(selected_button.text())
+        self.edit_workout_window.refresh_my_workouts_signal.connect(lambda workout_name: self.refresh_my_workouts(workout_name))
+        self.edit_workout_window.setGeometry(100, 200, 300, 300) 
+        self.edit_workout_window.show()
+    except AttributeError: # no workouts
+      return
 
   def select_button(self, button_index):
     for button in self.buttons:

@@ -46,7 +46,7 @@ class WorkoutPlanner(QWidget):
     self.current_date = datetime.today().strftime("%d/%m/%Y")
     if not self.current_date in self.fetched_workouts:
       self.fetched_workouts[self.current_date] = {"Personal Notes": "", "Workout Name": "None"}
-    self.db_wrapper.update_table_column(self.table_name, "workouts", json.dumps(self.fetched_workouts))
+      self.db_wrapper.update_table_column(self.table_name, "workouts", json.dumps(self.fetched_workouts))
     self.create_panel()
       
   def create_panel(self):
@@ -225,7 +225,8 @@ class WorkoutPlanner(QWidget):
 
   def show_1_time_window(self):
     self.create_workout_window = CreateWorkoutWindow(one_time=True, date=self.get_calendar_date())
-    self.create_workout_window.refresh_after_creating_signal.connect(lambda signal: self.refresh_workout_done(signal))
+    if self.db_wrapper.connection_exists:
+      self.create_workout_window.refresh_after_creating_signal.connect(lambda signal: self.refresh_workout_done(signal))
     self.create_workout_window.setGeometry(100, 200, 300, 300) 
     self.create_workout_window.show()
 

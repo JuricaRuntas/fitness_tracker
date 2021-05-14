@@ -82,7 +82,7 @@ class MainPanel(QWidget):
 
     sign_up_label = QLabel("Sign Up")
     sign_up_label.setAlignment(Qt.AlignCenter)
-    sign_up_label.setFixedSize(115, 30)
+    sign_up_label.setFixedSize(115, 30) 
 
     self.login_button = QPushButton("Sign In", self)
     self.login_button.setCursor(QCursor(Qt.PointingHandCursor))
@@ -136,6 +136,7 @@ class MainPanel(QWidget):
     email = self.email_entry.text()
     password = self.password_entry.text()
     confirmed_password = self.confirm_password_entry.text()
-    if password == confirmed_password and self.check_valid_password(password) and self.check_valid_email(email):
+    if (password == confirmed_password and self.check_valid_password(password)
+        and self.check_valid_email(email) and self.db_wrapper.connection_exists):
       if not self.db_wrapper.check_user_exists(email):
         self.emit_layout_name.emit(json.dumps(["Continue", email, password]))
