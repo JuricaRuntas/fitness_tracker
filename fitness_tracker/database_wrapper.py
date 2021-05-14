@@ -289,6 +289,7 @@ class DatabaseWrapper(metaclass=Singleton):
     values_string = "("+", ".join(["?"]*len(values))+")"
     insert = "INSERT INTO "+self.table_names[table_name]+" "+columns+" VALUES "+values_string
     if self.local_table_is_empty(table_name):
+      self.create_local_table(table_name)
       self.sqlite_cursor.execute(insert, (*values,))
       self.sqlite_connection.commit()
 
@@ -317,9 +318,11 @@ class DatabaseWrapper(metaclass=Singleton):
 
   def local_table_is_empty(self, table_name):
     assert table_name in self.table_names.keys()
-    self.sqlite_cursor.execute("SELECT COUNT(*) FROM "+self.table_names[table_name]+" WHERE email=?", (self.user_email,))
-    if self.sqlite_cursor.fetchone()[0] == 0: return True
-    return False
+    try:
+      self.sqlite_cursor.execute("SELECT COUNT(*) FROM "+self.table_names[table_name]+" WHERE email=?", (self.user_email,))
+      if self.sqlite_cursor.fetchone()[0] == 0: return True
+      return False
+    except: return True
   
 
   #################################

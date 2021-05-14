@@ -128,4 +128,7 @@ class MainPanel(QWidget):
     email = self.email_entry.text()
     password = self.password_entry.text()
     if self.db_wrapper.connection_exists and self.db_wrapper.login_user(email, password):
+      self.db_wrapper.insert_default_values("Weight Loss")
+      self.db_wrapper.insert_default_values("Workouts")
+      self.db_wrapper.insert_default_values("Nutrition")
       self.emit_layout_name.emit("Compound Exercises")
