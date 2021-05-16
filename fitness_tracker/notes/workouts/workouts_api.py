@@ -75,7 +75,7 @@ class WorkoutsAPI:
     else: exercise_ids = [exercise["exercise_id"] for exercise in exercises]
     for exercise_id in exercise_ids:
       for image in images["results"]:
-        if image["exercise"] == exercise_id:
+        if image["exercise_base"] == exercise_id:
           urls.append(image["image"])
     return urls
 
