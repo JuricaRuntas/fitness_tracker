@@ -55,8 +55,11 @@ class LiftHistory(QScrollArea):
     exercise_label.setAlignment(Qt.AlignCenter)
     delete_label = QLabel("Delete")
     delete_label.setAlignment(Qt.AlignCenter)
-    self.layout.addRow(exercise_label, delete_label)
+
+    helper_layout = QFormLayout()
     
+    helper_layout.addRow(exercise_label, delete_label)
+
     self.lift_history = self.db_wrapper.fetch_local_column(self.table_name, "lift_history")
     if create and not self.lift_history == None:
       if not init_layout:
@@ -79,7 +82,15 @@ class LiftHistory(QScrollArea):
         self.delete_buttons[j].setProperty("entry_index", exercise[-1])
         self.delete_buttons[j].clicked.connect(partial(self.delete_history_entry_from_layout, j, self.delete_buttons[j].property("entry_index")))
         
-        self.layout.addRow(self.labels[j], self.delete_buttons[j])
+        helper_layout.addRow(self.labels[j], self.delete_buttons[j])
+
+    scroll_area = QScrollArea()
+    scroll_area.setContentsMargins(3, 3, 3, 3)
+    scroll_area.setWidgetResizable(True)
+    helper_widget = QWidget()
+    helper_widget.setLayout(helper_layout)
+    scroll_area.setWidget(helper_widget)
+    self.layout.addRow(scroll_area)
 
     close_button = QPushButton("Close")
     close_button.clicked.connect(lambda:self.close())

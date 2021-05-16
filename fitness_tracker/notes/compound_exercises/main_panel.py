@@ -426,7 +426,7 @@ class MainPanel(QWidget):
     new_year = {}
     for month in self.db_wrapper.months:
       exercises_dict = {}
-      for lift_type in preferred_lifts:
+      for lift_type in self.preferred_lifts:
         exercises_dict[lift_type] = {self.preferred_lifts[lift_type]:[]}
       new_year[month] = exercises_dict
     self.rm_history[str(year)] = new_year

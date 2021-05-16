@@ -58,6 +58,8 @@ class WeightLossHistory(QScrollArea):
       if not init_layout:
         self.update_weight_loss_label_signal.emit(True)
         self.delete_history()
+
+      helper_layout = QGridLayout()
       
       date_label = QLabel("Date")
       date_label.setAlignment(Qt.AlignCenter)
@@ -69,10 +71,10 @@ class WeightLossHistory(QScrollArea):
       delete_label = QLabel("Delete")
       delete_label.setAlignment(Qt.AlignCenter)
       
-      self.layout.addWidget(date_label, 0, 0)
-      self.layout.addWidget(weight_label, 0, 1)
-      self.layout.addWidget(edit_label, 0, 2)
-      self.layout.addWidget(delete_label, 0, 3)
+      helper_layout.addWidget(date_label, 0, 0)
+      helper_layout.addWidget(weight_label, 0, 1)
+      helper_layout.addWidget(edit_label, 0, 2)
+      helper_layout.addWidget(delete_label, 0, 3)
       
       self.date_labels = [None] * len(self.weight_history)
       self.weight_labels = [None] * len(self.weight_history)
@@ -95,11 +97,19 @@ class WeightLossHistory(QScrollArea):
         self.delete_buttons[j].setProperty("date", date)
         self.delete_buttons[j].clicked.connect(partial(self.delete_history_entry_from_layout, j, self.delete_buttons[j].property("date")))
 
-        self.layout.addWidget(self.date_labels[j], row, 0, 1, 1)
-        self.layout.addWidget(self.weight_labels[j], row, 1, 1, 1)
-        self.layout.addWidget(self.edit_buttons[j], row, 2, 1, 1)
-        self.layout.addWidget(self.delete_buttons[j], row, 3, 1, 1)
+        helper_layout.addWidget(self.date_labels[j], row, 0, 1, 1)
+        helper_layout.addWidget(self.weight_labels[j], row, 1, 1, 1)
+        helper_layout.addWidget(self.edit_buttons[j], row, 2, 1, 1)
+        helper_layout.addWidget(self.delete_buttons[j], row, 3, 1, 1)
         row += 1
+
+    scroll_area = QScrollArea()
+    scroll_area.setContentsMargins(3, 3, 3, 3)
+    scroll_area.setWidgetResizable(True)
+    helper_widget = QWidget()
+    helper_widget.setLayout(helper_layout)
+    scroll_area.setWidget(helper_widget)
+    self.layout.addWidget(scroll_area, 0, 0, 1, 1)
         
     close_button = QPushButton("Close")
     close_button.clicked.connect(lambda:self.close())

@@ -107,6 +107,10 @@ class MainPanel(QWidget):
     self.continue_button.setCursor(QCursor(Qt.PointingHandCursor))
     self.continue_button.clicked.connect(lambda: self.continue_signup())
     self.continue_button.setFixedSize(300, 30)
+
+    self.password_entry.returnPressed.connect(self.continue_button.click)
+    self.email_entry.returnPressed.connect(self.continue_button.click)
+    self.confirm_password_entry.returnPressed.connect(self.continue_button.click)
     
     form_layout.addRow(self.login_button, sign_up_label)
     form_layout.addRow(self.email_entry)

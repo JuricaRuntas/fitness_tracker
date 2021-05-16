@@ -111,6 +111,7 @@ class FoodDatabasePanel(QWidget):
     search_button.setFixedWidth(240)
     search_button.setCursor(QCursor(Qt.PointingHandCursor))
     search_button.clicked.connect(self.emit_search_signal)
+    self.search_bar.returnPressed.connect(search_button.click)
 
     spacer2 = QSpacerItem(40, 20, QSizePolicy.Expanding)
     spacer3 = QSpacerItem(40, 20, QSizePolicy.Expanding)

@@ -116,6 +116,9 @@ class MainPanel(QWidget):
     self.login_button.setFixedSize(300, 30)
     self.login_button.frameGeometry().center()
 
+    self.password_entry.returnPressed.connect(self.login_button.click)
+    self.email_entry.returnPressed.connect(self.login_button.click)
+
     form_layout.addRow(sign_in_label, self.signup_button)
     form_layout.addRow(self.email_entry)
     form_layout.addRow(self.password_entry)

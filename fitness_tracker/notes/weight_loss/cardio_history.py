@@ -74,11 +74,13 @@ class CardioHistory(QScrollArea):
       edit_label.setAlignment(Qt.AlignCenter)
       delete_label = QLabel("Delete")
       delete_label.setAlignment(Qt.AlignCenter)
+
+      helper_layout = QGridLayout()
       
-      self.layout.addWidget(date_label, 0, 0)
-      self.layout.addWidget(activity_label, 0, 1)
-      self.layout.addWidget(edit_label, 0, 2)
-      self.layout.addWidget(delete_label, 0, 3)
+      helper_layout.addWidget(date_label, 0, 0)
+      helper_layout.addWidget(activity_label, 0, 1)
+      helper_layout.addWidget(edit_label, 0, 2)
+      helper_layout.addWidget(delete_label, 0, 3)
 
       self.date_labels = [None] * self.entry_count
       self.cardio_labels = [None] * self.entry_count
@@ -104,12 +106,20 @@ class CardioHistory(QScrollArea):
               self.delete_buttons[j].setProperty("data_index", data_index)
               self.delete_buttons[j].clicked.connect(partial(self.delete_entry, j, date, activity, self.edit_buttons[j].property("data_index")))
 
-              self.layout.addWidget(self.date_labels[j], row, 0, 1, 1)
-              self.layout.addWidget(self.cardio_labels[j], row, 1, 1, 1)
-              self.layout.addWidget(self.edit_buttons[j], row, 2, 1, 1)
-              self.layout.addWidget(self.delete_buttons[j], row, 3, 1, 1)
+              helper_layout.addWidget(self.date_labels[j], row, 0, 1, 1)
+              helper_layout.addWidget(self.cardio_labels[j], row, 1, 1, 1)
+              helper_layout.addWidget(self.edit_buttons[j], row, 2, 1, 1)
+              helper_layout.addWidget(self.delete_buttons[j], row, 3, 1, 1)
               j += 1
               row += 1
+
+    scroll_area = QScrollArea()
+    scroll_area.setContentsMargins(3, 3, 3, 3)
+    scroll_area.setWidgetResizable(True)
+    helper_widget = QWidget()
+    helper_widget.setLayout(helper_layout)
+    scroll_area.setWidget(helper_widget)
+    self.layout.addWidget(scroll_area, 0, 0, 1, 1)
 
     close_button = QPushButton("Close")
     close_button.clicked.connect(lambda:self.close())
@@ -142,6 +152,8 @@ class EditCardioHistoryEntry(QWidget):
   def __init__(self, cardio_history, date, activity, index):
     super().__init__()
     self.db_wrapper = DatabaseWrapper()
+    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
+    self.setWindowModality(Qt.ApplicationModal)
     self.table_name = "Weight Loss"
     self.cardio_history = cardio_history
     self.date = date

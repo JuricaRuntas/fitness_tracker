@@ -810,6 +810,8 @@ class FoodDBSearchPanel(QWidget):
     search_bar_button.setIcon(search_icon)
     if self.db_wrapper.connection_exists:
       search_bar_button.clicked.connect(lambda:self.update_search_results(search_bar_line_edit.text()))
+      search_bar_line_edit.returnPressed.connect(search_bar_button.click)
+      self.search_bar_amount.returnPressed.connect(search_bar_button.click)
 
     search_bar_layout.addWidget(search_bar_line_edit)
     search_bar_layout.addWidget(self.search_bar_amount)
@@ -845,17 +847,18 @@ class FoodDBSearchPanel(QWidget):
     return 0
 
   def update_search_results(self, query):
-    for i in reversed(range(self.result_layout.count())): 
-      self.result_layout.itemAt(i).widget().setParent(None)
-    api = FoodDatabase()
-    response = api.food_search(query, 512)
-    response_button = [None] * len(response)
-    food_info = [None] * len(response)
-    for i in range(len(response)):
-      food_info[i] = api.food_info(response[i]["id"], "g", float(self.search_bar_amount.text()))
-      response_button[i] = QPushButton(str(food_info[i]["name"]) + " " + str(self.get_nutrient(food_info[i], "Calories")))
-      response_button[i].clicked.connect(partial(self.result_to_data, food_info[i]))
-      self.result_layout.addWidget(response_button[i])
+    if self.search_bar_amount.text() != "":
+      for i in reversed(range(self.result_layout.count())): 
+        self.result_layout.itemAt(i).widget().setParent(None)
+      api = FoodDatabase()
+      response = api.food_search(query, 512)
+      response_button = [None] * len(response)
+      food_info = [None] * len(response)
+      for i in range(len(response)):
+        food_info[i] = api.food_info(response[i]["id"], "g", float(self.search_bar_amount.text()))
+        response_button[i] = QPushButton(str(food_info[i]["name"]) + " " + str(self.get_nutrient(food_info[i], "Calories")))
+        response_button[i].clicked.connect(partial(self.result_to_data, food_info[i]))
+        self.result_layout.addWidget(response_button[i])
 
   def create_confirm_cancel(self):
     layout = QHBoxLayout()
